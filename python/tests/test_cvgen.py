@@ -39,7 +39,7 @@ def test_escape_latex_specials():
     assert escape("30 % & #1_a") == r"30 \% \& \#1\_a"
 
 
-@pytest.mark.parametrize("profile", ["docente-cine-debate", "programador"])
+@pytest.mark.parametrize("profile", sorted(p.stem for p in (DATA / "perfiles").glob("*.json")))
 def test_every_profile_builds_and_renders(profile):
     cv = build_cv(DATA, profile)
     assert cv.photo.is_file()

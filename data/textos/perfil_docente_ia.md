@@ -1,0 +1,1 @@
+Doy clases particulares desde 2018 a alumnos secundarios y universitarios y trabajo como desarrollador de software en Obrok. Estudio la Tecnicatura Universitaria en Inteligencia Artificial en la UNR. Me interesa enseñar a usar la inteligencia artificial en tareas concretas de trabajo: qué hace cada herramienta, cuándo conviene usarla y cómo revisar lo que produce.
