@@ -20,10 +20,8 @@
 %----------------------------------------------------------------------------------------
 
 \usepackage{XCharter} % Use the Bitstream Charter font
-\usepackage[utf8]{inputenc} % Required for inputting international characters
-\usepackage[T1]{fontenc} % Output font encoding for international characters
 
-\usepackage[top=1cm,left=1cm,right=1cm,bottom=1cm]{geometry} % Modify margins
+\usepackage[top=1.2cm,left=1.2cm,right=1.2cm,bottom=1.2cm]{geometry} % Modify margins
 
 \usepackage{graphicx} % Required for figures
 
@@ -41,9 +39,9 @@
 \setlength{\columnsep}{\baselineskip} % Set the spacing between columns
 
 % Define the left frame (sidebar)
-\newflowframe{0.2\textwidth}{\textheight}{0pt}{0pt}[left]
+\newflowframe{0.26\textwidth}{\textheight}{0pt}{0pt}[left]
 \newlength{\LeftMainSep}
-\setlength{\LeftMainSep}{0.2\textwidth}
+\setlength{\LeftMainSep}{0.26\textwidth}
 \addtolength{\LeftMainSep}{1\columnsep}
  
 % Small static frame for the vertical line
@@ -59,7 +57,7 @@
 % Define the right frame (main body)
 \addtolength{\LeftMainSep}{1.5pt}
 \addtolength{\LeftMainSep}{1\columnsep}
-\newflowframe{0.7\textwidth}{\textheight}{\LeftMainSep}{0pt}[main01]
+\newflowframe{0.68\textwidth}{\textheight}{\LeftMainSep}{0pt}[main01]
 
 \pagestyle{empty} % Disable all page numbering
 
@@ -93,3 +91,16 @@
 }
 
 \newcommand{\bluebullet}{\textcolor{RoyalBlue}{$\circ$}~~} % New command for the blue bullets
+
+% Added for cvgen
+\newcommand{\SideHeading}[1]{\textbf{\color{RoyalBlue} #1} \\} % Heading of a block in the sidebar
+
+\newcommand{\CVEntry}[3]{ % Title, place, period
+\textbf{\color{RoyalBlue} #1}\hfill{\small #3}\par
+{\itshape #2}\par
+}
+
+\newcommand{\CVCompact}[3]{ % One-line entry: title, place, period
+\textbf{#1}\hfill{\small #3}\par
+{\small\itshape #2}\par
+}

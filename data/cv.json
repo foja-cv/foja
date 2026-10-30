@@ -1,0 +1,94 @@
+{
+    "nombres": ["Bautista", "Damián"],
+    "apellidos": ["Fiori"],
+    "foto": "img/foto.jpg",
+    "domicilio": {
+        "calle": "Calle Falsa 123",
+        "ciudad": "Rosario",
+        "provincia": "Santa Fe",
+        "pais": "Argentina"
+    },
+    "contactos": {
+        "telefono": "+54 9 341 000-0000",
+        "correo": "correo@ejemplo.com",
+        "github": "github.com/bafif"
+    },
+    "habilidades": {
+        "Idiomas": ["Español (nativo)", "Inglés general (C2)", "Inglés técnico (C1)"],
+        "Programación": ["C", "C++", "Python", "Racket"],
+        "Web": ["HTML", "JavaScript", "TypeScript"],
+        "Microcontroladores": ["Arduino (C++)", "AVR Assembly"]
+    },
+    "entradas": {
+        "obrok": {
+            "titulo": "Desarrollador de software",
+            "lugar": "Obrok",
+            "desde": "2026-05",
+            "hasta": null,
+            "nota": "Pasante de 05/2026 a 08/2026; desarrollador desde 08/2026",
+            "tareas": [
+                "Desarrollo full stack e ingeniería de software."
+            ]
+        },
+        "tecso": {
+            "titulo": "Pasante de desarrollo",
+            "lugar": "tecso",
+            "desde": "2024-09",
+            "hasta": "2024-10",
+            "tareas": "textos/tareas_tecso.md"
+        },
+        "reparacion": {
+            "titulo": "Reparación de equipos informáticos",
+            "lugar": "Independiente",
+            "desde": "2018-12",
+            "hasta": null,
+            "tareas": "textos/tareas_reparacion.md"
+        },
+        "docencia": {
+            "titulo": "Docente particular",
+            "lugar": "Independiente",
+            "desde": "2018-07",
+            "hasta": null,
+            "tareas": "textos/tareas_docencia.md"
+        },
+        "simulacro": {
+            "titulo": "Simulacro de sesión del Concejo Municipal",
+            "lugar": "Rosario",
+            "desde": "2026-10",
+            "tareas": "textos/tareas_simulacro.md"
+        },
+        "tuia": {
+            "titulo": "Tecnicatura Universitaria en Inteligencia Artificial",
+            "lugar": "Universidad Nacional de Rosario",
+            "nota": "En curso · 30,77 % de la carrera aprobada · promedio 8,50"
+        },
+        "lcc": {
+            "titulo": "Licenciatura en Ciencias de la Computación",
+            "lugar": "Universidad Nacional de Rosario",
+            "nota": "En curso"
+        },
+        "tecnico": {
+            "titulo": "Técnico en Electrónica",
+            "lugar": "Instituto Politécnico Superior",
+            "tareas": [
+                "Microprocesadores, automatización, sistemas de control, protocolos de red y electrónica de potencia."
+            ]
+        },
+        "mapa-enciclopedico": {
+            "titulo": "Mapa interactivo enciclopédico",
+            "lugar": "GDScript + Python · OpenAI · interfaz de usuario"
+        },
+        "wiki-estudio": {
+            "titulo": "Wiki de estudio",
+            "lugar": "Nginx + Arch Linux · MySQL/MariaDB · MediaWiki"
+        },
+        "mapa-oop": {
+            "titulo": "Mapa de referencias para POO",
+            "lugar": "TypeScript · Mermaid + UML · Node.js"
+        },
+        "acordes": {
+            "titulo": "Gestor de acordes para guitarra",
+            "lugar": "Racket"
+        }
+    }
+}

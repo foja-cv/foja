@@ -517,3 +517,6 @@ cython_debug/
 
 # Lo de vscode
 *.code-workspace
+
+# Generated CVs and C build output
+build/
