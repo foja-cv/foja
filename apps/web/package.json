@@ -1,0 +1,16 @@
+{
+  "name": "@foja/web",
+  "private": true,
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --host 0.0.0.0",
+    "build": "astro build"
+  },
+  "dependencies": {
+    "@myriaddreamin/typst-ts-renderer": "0.7.0",
+    "@myriaddreamin/typst-ts-web-compiler": "0.7.0",
+    "@myriaddreamin/typst.ts": "0.7.0",
+    "astro": "7.4.0"
+  }
+}

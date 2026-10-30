@@ -1,0 +1,10 @@
+{
+  "name": "foja-workspace",
+  "private": true,
+  "license": "GPL-3.0-only",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "npm run dev -w apps/web",
+    "convert": "node scripts/convert-curriculum.mjs"
+  }
+}

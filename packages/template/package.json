@@ -1,0 +1,6 @@
+{
+  "name": "@foja/template",
+  "private": true,
+  "license": "GPL-3.0-only",
+  "files": ["cv.typ"]
+}

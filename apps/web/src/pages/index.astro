@@ -1,0 +1,131 @@
+---
+// Phase 0 spike: edit the project JSON, see the Typst output. `?bench=N` runs N edits in a row
+// and prints the timings (used by scripts/bench.sh).
+import project from "../../../../examples/curriculum.project.json?raw";
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Foja — spike</title>
+    <style>
+      body { margin: 0; font: 14px system-ui, sans-serif; display: grid; grid-template-columns: minmax(20rem, 1fr) 2fr; height: 100vh; }
+      aside { display: flex; flex-direction: column; gap: .5rem; padding: .75rem; border-right: 1px solid #ccc; min-height: 0; }
+      textarea { flex: 1; font: 12px ui-monospace, monospace; }
+      main { overflow: auto; background: #eee; padding: 1rem; }
+      #preview svg { background: white; box-shadow: 0 1px 4px #0003; width: 100%; height: auto; max-width: 60rem; }
+      #status { font: 12px ui-monospace, monospace; white-space: pre-wrap; }
+      .error { color: #b00; }
+    </style>
+  </head>
+  <body>
+    <aside>
+      <label>Perfil <select id="perfil"></select></label>
+      <textarea id="project" spellcheck="false">{project}</textarea>
+      <div id="status">cargando compilador…</div>
+      <pre id="bench" hidden></pre>
+    </aside>
+    <main><div id="preview"></div></main>
+
+    <script>
+      import type { CompileReply, CompileRequest } from "../lib/typst.worker";
+
+      const worker = new Worker(new URL("../lib/typst.worker.ts", import.meta.url), { type: "module" });
+      const editor = document.querySelector<HTMLTextAreaElement>("#project")!;
+      const select = document.querySelector<HTMLSelectElement>("#perfil")!;
+      const preview = document.querySelector<HTMLDivElement>("#preview")!;
+      const status = document.querySelector<HTMLDivElement>("#status")!;
+
+      for (const name of Object.keys(JSON.parse(editor.value).perfiles)) {
+        select.append(new Option(name, name, false, name === "programador"));
+      }
+
+      let nextId = 0;
+      const waiting = new Map<number, (reply: CompileReply) => void>();
+      let initMs = 0;
+
+      worker.onerror = (event) => {
+        status.className = "error";
+        status.textContent = `worker: ${event.message || "failed to load"}`;
+      };
+      worker.onmessage = ({ data }: MessageEvent<CompileReply>) => {
+        if ("failed" in data) {
+          status.className = "error";
+          status.textContent = `worker: ${data.failed}`;
+          return;
+        }
+        if ("ready" in data) {
+          initMs = data.initMs;
+          return;
+        }
+        // The last good render stays on screen when there is an error.
+        if (data.svg) {
+          preview.innerHTML = data.svg;
+          // Size from the viewBox, so the page keeps its aspect ratio at any width.
+          preview.querySelector("svg")?.removeAttribute("height");
+        }
+        status.className = data.errors ? "error" : "";
+        status.textContent = data.errors
+          ? data.errors.join("\n")
+          : [`compilación ${data.compileMs.toFixed(1)} ms · SVG ${data.renderMs.toFixed(1)} ms`, ...(data.warnings ?? [])].join("\n");
+        waiting.get(data.id)?.(data);
+        waiting.delete(data.id);
+      };
+
+      function compile(): Promise<CompileReply> {
+        const id = nextId++;
+        const request: CompileRequest = { id, project: editor.value, perfil: select.value };
+        worker.postMessage(request);
+        return new Promise((resolve) => waiting.set(id, resolve));
+      }
+
+      let timer: number | undefined;
+      const schedule = () => {
+        clearTimeout(timer);
+        timer = window.setTimeout(compile, 80);
+      };
+      editor.addEventListener("input", schedule);
+      select.addEventListener("change", schedule);
+
+      async function bench(runs: number) {
+        const started = performance.now();
+        const first = await compile();
+        const firstMs = performance.now() - started;
+        const project = JSON.parse(editor.value);
+        const samples: { compileMs: number; renderMs: number; roundTripMs: number }[] = [];
+        for (let i = 0; i < runs; i++) {
+          // One keystroke: a character more in the subtitle.
+          project.perfiles[select.value].subtitulo += i % 2 ? "o" : "x";
+          editor.value = JSON.stringify(project, null, 2);
+          const t = performance.now();
+          const reply = await compile();
+          if (!("compileMs" in reply)) continue;
+          samples.push({ compileMs: reply.compileMs, renderMs: reply.renderMs, roundTripMs: performance.now() - t });
+        }
+        const stats = (key: keyof (typeof samples)[number]) => {
+          const values = samples.map((s) => s[key]).sort((a, b) => a - b);
+          const pick = (q: number) => +values[Math.min(values.length - 1, Math.floor(q * values.length))].toFixed(1);
+          return { p50: pick(0.5), p90: pick(0.9), max: +values.at(-1)!.toFixed(1) };
+        };
+        const out = document.querySelector<HTMLPreElement>("#bench")!;
+        out.hidden = false;
+        out.textContent = JSON.stringify({
+          userAgent: navigator.userAgent,
+          initMs: +initMs.toFixed(1),
+          first: { compileMs: "compileMs" in first ? +first.compileMs.toFixed(1) : null, roundTripMs: +firstMs.toFixed(1) },
+          runs: samples.length,
+          compile: stats("compileMs"),
+          render: stats("renderMs"),
+          roundTrip: stats("roundTripMs"),
+          errors: "errors" in first ? first.errors : undefined,
+        }, null, 1);
+        document.title = "bench-done";
+      }
+
+      const runs = Number(new URLSearchParams(location.search).get("bench"));
+      if (runs > 0) void bench(runs);
+      else void compile();
+    </script>
+  </body>
+</html>
