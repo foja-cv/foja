@@ -1,4 +1,4 @@
-# CV editor on Typst — research and plan
+# Foja: a CV editor on Typst — research and plan
 
 Status: **proposal, direction agreed, details open** (2026-10-30). Nothing here is built yet.
 
@@ -9,7 +9,7 @@ the real Typst output, and exports to Typst, PDF, JPG, LaTeX, Markdown, JSON and
 
 One product, three ways to run it, from the same release:
 
-1. **CLI** (`cvgen`), as today.
+1. **CLI** (`foja`), replacing today's `cvgen`.
 2. **Desktop app** installed like any other app on Linux, macOS and Windows.
 3. **Public web app** that anyone can open, to keep adding features to over time.
 
@@ -65,7 +65,7 @@ free individual account) and **Flathub**. Flathub does not accept thin web wrapp
 Linux app is the Tauri shell with real desktop integration: opening and saving project files
 through the file-chooser portal, its own file type and MIME association, fully offline with
 bundled assets, built from source with vendored npm/Cargo dependencies. App ID based on the
-GitHub organisation (`io.github.<org>.<App>`), which Flathub verifies for free.
+GitHub organisation (`io.github.foja_cv.Foja`), which Flathub verifies for free.
 
 ## 3. Architecture (Typst-first)
 
@@ -87,7 +87,7 @@ Everything is TypeScript, in a workspace:
 ```
 packages/core     schema, project format, layout options, exporters (LaTeX, Markdown, JSON, Word)
 packages/template the Typst template and fonts
-packages/cli      `cvgen` on Node, typst-ts-node-compiler for PDF/PNG
+packages/cli      `foja` on Node, typst-ts-node-compiler for PDF/PNG
 apps/web          Astro site: landing + the editor as a React island; PWA
 apps/desktop      Tauri 2 shell for Flathub (and unsigned builds elsewhere)
 ```
@@ -124,11 +124,11 @@ retired once the new CLI reaches parity.
   current LaTeX CV; more templates/fonts later.
 - **Storage (web):** IndexedDB in the browser, plus import/export of the project JSON. No
   accounts, no server in the first public version. Desktop: project files on disk.
-- **Hosting (web):** GitHub Pages, deployed by GitHub Actions, on the free `<org>.github.io`
+- **Hosting (web):** GitHub Pages, deployed by GitHub Actions, at the free `foja-cv.github.io/foja/`
   address of a GitHub organisation named after the product (a custom domain can be pointed at
   it later with a CNAME, without changing anything else). Installable as a PWA (manifest +
   service worker, offline). Publishing needs Bautista's explicit OK.
-- **`cvgen-c`:** stays in the repo, out of the GUI.
+- **`cvgen-c`:** stays in `bafif/curriculum`, out of the GUI.
 - **No access to version control.** Neither the app nor its exports touch any repository of the
   user. Committing the repo's `data/` stays manual and outside the app.
 
@@ -233,14 +233,14 @@ TanStack Query only where there is async work, dnd-kit, typst.ts, `docx`, Tauri 
 0. **Spike** (small): Typst template that reads JSON and reproduces one profile; typst.ts in a
    worker rendering it in a bare Astro page; measure compile time per keystroke.
 1. **Typst template + schema + project format v2** (and the `data/` converter); Node CLI
-   `cvgen --formato pdf|typ`; tests on every profile.
+   `foja --formato pdf|typ`; tests on every profile.
 2. **Exporters** in `packages/core`: LaTeX (port of `latex.py`), Markdown, JSON, Word, JPG;
    `.zip` bundles; tests.
 3. **Web app core**: editor, profiles, live preview, export dialog, IndexedDB; dev in Docker
    Compose with nginx and hot reload.
 4. **Polish**: drag-and-drop, undo/redo, click-to-edit, page-fit highlighting, palette,
    photo crop, Playwright tests.
-5. **PWA + public web**: manifest, service worker, offline; GitHub Pages on `<org>.github.io`;
+5. **PWA + public web**: manifest, service worker, offline; GitHub Pages at `foja-cv.github.io/foja/`;
    landing page and promotion (after Bautista's OK).
 6. **Microsoft Store**: the PWA packaged as MSIX with PWABuilder, free individual account
    (Bautista registers it: Microsoft account, ID and selfie).
@@ -264,14 +264,24 @@ TanStack Query only where there is async work, dnd-kit, typst.ts, `docx`, Tauri 
 
 All of them are free and open source.
 
-## 7. Open decisions
+## 7. Name, repository and addresses
 
-1. Product name, which also names the GitHub organisation and so the free `<org>.github.io`
-   address. Proposal: **Foja** (from *foja de servicios*, the record of someone's career), with
-   `foja-cv` as the handle (free on GitHub and npm as of 2026-10-30; `foja` alone is taken on
-   GitHub). Alternatives checked free on both: `legajo-cv`, `renglon`, `tipovitae`.
+The product is **Foja** (from *foja de servicios*, the record of someone's career). Handle
+`foja-cv` (`foja` alone is taken on GitHub).
 
-Settled on 2026-10-30: exporters in TypeScript; Astro; GitHub Pages; PWA, Microsoft Store
+- GitHub organisation `foja-cv`, created by Bautista from the web (the `gh` token has no
+  `admin:org`). Org setup like `capital-austral`: 2FA required.
+- Code in a new public repo **`foja-cv/foja`** (GPL-3.0, OSI-approved as SignPath requires),
+  separate from `bafif/curriculum`, which keeps Bautista's own data and the legacy generators.
+  This plan moves there in phase 0.
+- Web: GitHub Pages of `foja-cv/foja` → **`foja-cv.github.io/foja/`** (Astro `base: "/foja"`).
+  A custom domain later serves the same site at its root, with no other change.
+- npm: `foja` (CLI command `foja`). Flathub app ID: `io.github.foja_cv.Foja` (Flathub turns the
+  hyphen of a GitHub name into an underscore).
+
+## 8. Decisions log
+
+Settled on 2026-10-30: the name Foja and the `foja-cv` organisation; exporters in TypeScript; Astro; GitHub Pages; PWA, Microsoft Store
 (MSIX) and Flathub as channels; no paid service of any kind.
 
 Also settled on 2026-10-30: Typst is the main generator and the preview; exports to LaTeX, Markdown,
