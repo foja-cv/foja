@@ -1,6 +1,6 @@
 [project]
 name = "curriculum"
-version = "0.1.0"
+version = "1.0.0"
 description = "CV generators (Python and C) sharing the data in data/"
 requires-python = ">=3.13"
 dependencies = ["cvgen"]

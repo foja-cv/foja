@@ -74,9 +74,10 @@ static void test_metrics(void) {
 }
 
 static void test_profiles(Arena *arena, const char *data) {
-    const char *profiles[] = {"docente-cine-debate", "programador"};
+    const char *profiles[] = {"docente-cine-debate", "docente-ia", "programador"};
+    size_t nprofiles = sizeof profiles / sizeof profiles[0];
     char err[512];
-    for (size_t p = 0; p < 2; p++) {
+    for (size_t p = 0; p < nprofiles; p++) {
         Cv cv;
         Jpeg photo;
         Pdf pdf = {0};
@@ -88,7 +89,8 @@ static void test_profiles(Arena *arena, const char *data) {
         CHECK(jpeg_load(arena, cv.photo, &photo, err, sizeof err));
         CHECK(photo.width > 0 && photo.height > 0);
         CHECK(layout_cv(arena, &cv, &photo, &pdf, err, sizeof err));
-        CHECK(pdf.npages == 1 || p > 0); /* the cine debate CV fits on one page */
+        /* The teacher CVs fit on one page; the programmer one overflows onto a second. */
+        CHECK(p + 1 < nprofiles ? pdf.npages == 1 : pdf.npages > 1);
 
         const char *out = arena_printf(arena, "build/test-%s.pdf", profiles[p]);
         CHECK(pdf_save(&pdf, out, err, sizeof err));
