@@ -10,6 +10,8 @@ export to JSON, LaTeX, Typst, PDF, JPG and Word (`.docx`).
 - `data/cv.json` (personal data, contacts, skill groups, every entry by id), `data/perfiles/*.json`
   (one CV per profile: which sections/entries, order, `compacto`, `lateral`), `data/textos/*.md`
   (profile texts, task lists, strengths), `data/img/foto.jpg`.
+- `data/privado.json` (git-ignored): the address. Only profiles with `"domicilio": true` show it;
+  today that is only `docente-cine-debate`, because the posting asks for it.
 - `python/` (`cvgen`): layered — `sources` → `model` → `build` → `latex` → `compile` (tectonic).
 - `c/` (`cvgen-c`): dependency-free C17, writes the PDF directly with Helvetica.
 
@@ -151,6 +153,9 @@ Layout (desktop first, resizable split, light/dark):
 - **Two levels, made explicit:** the *data bank* (all entries, shared by every profile) and the
   *profile* (which entries, in which section, order, compact, sidebar). Editing an entry warns
   "used in 3 profiles". Toggling an entry for a profile is a checkbox, not a delete.
+- **Address:** per-profile checkbox «Mostrar domicilio», **unchecked by default** (new profiles
+  included). The address is edited and saved only in `data/privado.json`, never in `cv.json` or
+  anything else under git, and never sent to GitHub.
 - Sections and entries reorder by drag-and-drop (with keyboard alternative); per section toggles
   for `compacto` and `lateral`.
 - Tasks/strengths edited as a list of items (optional heading + paragraph), serialised back to
