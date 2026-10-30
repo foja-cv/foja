@@ -43,10 +43,27 @@ code). No form-based Typst CV builder showed up in the search.
 **Chosen direction: C.** Docker stays for development only (hot reload + nginx, as usual), not as
 the way people run the app.
 
-Signing still costs money if we want no warnings: macOS needs the Apple Developer Program
-(99 USD/year) to notarise, otherwise Gatekeeper blocks a downloaded app; Windows shows a
-SmartScreen warning without a code-signing certificate. Linux packages need nothing. First
-releases can ship unsigned with instructions, and signing comes later.
+### Zero cost, always
+
+Hard rule: **the project never pays for anything** — no code-signing certificates, no Apple
+Developer Program, no paid hosting, no paid domain. Every choice below is the best free option.
+
+| Need | Free solution |
+| :--- | :--- |
+| Web hosting | Static site on GitHub Pages (public repo) or Cloudflare Pages; free subdomain (`*.github.io` / `*.pages.dev`) |
+| Builds and releases | GitHub Actions (free for public repos, Linux/macOS/Windows runners) + GitHub Releases |
+| "Installed like any app", all three systems | **PWA**: the web app installs from Chrome/Edge on Linux, macOS and Windows (and Safari "Add to Dock" on macOS), appears in the system's app menu, works offline, updates itself, and needs no signing at all |
+| Windows without SmartScreen warnings | **Microsoft Store**: individual registration is free (ID check with a Microsoft account); MSIX packages are signed by Microsoft for free. The PWA can be packaged as MSIX with PWABuilder. (A plain MSI/EXE in the Store would need a paid certificate, so not that route.) |
+| Signed Windows installers outside the Store | **SignPath Foundation**: free signing for OSI-licensed open source (GPL-3.0 qualifies), built on public GitHub Actions, each release approved by hand; publisher shows as "SignPath Foundation"; asks for some project reputation, so apply once there are users |
+| Linux | **Flathub** (free, appears in GNOME Software/Discover, auto-updates), AUR, AppImage/.deb/.rpm on GitHub Releases; no signing needed |
+| macOS native app | No free notarisation exists, and since 2026-09-01 Homebrew's main cask repo refuses apps that fail Gatekeeper. So on macOS the **PWA is the primary way**. An ad-hoc-signed Tauri `.dmg` can still be offered on GitHub Releases with the "System Settings → Privacy & Security → Open Anyway" instructions, or through our own Homebrew tap |
+| App updates | Tauri updater with our own (free) signing key pair — not a CA certificate |
+| CLI | PyPI (`uv tool install cvgen`), AUR |
+
+Consequence for the plan: the **PWA becomes the main desktop distribution** (free and identical
+on the three systems), and the Tauri shell becomes secondary — useful for Flathub/AUR on Linux,
+for opening and saving project files directly on disk, and as an unsigned extra for whoever
+wants it.
 
 ## 3. Architecture (Typst-first)
 
@@ -92,8 +109,8 @@ releases can ship unsigned with instructions, and signing comes later.
   current LaTeX CV; more templates/fonts later.
 - **Storage (web):** IndexedDB in the browser, plus import/export of the project JSON. No
   accounts, no server in the first public version. Desktop: project files on disk.
-- **Hosting (web):** static site (GitHub Pages or Cloudflare Pages). Publishing needs Bautista's
-  explicit OK.
+- **Hosting (web):** static site on GitHub Pages or Cloudflare Pages, free subdomain, installable
+  as a PWA (manifest + service worker, offline). Publishing needs Bautista's explicit OK.
 - **`cvgen-c`:** stays in the repo, out of the GUI.
 - **No access to version control.** Neither the app nor its exports touch any repository of the
   user. Committing the repo's `data/` stays manual and outside the app.
@@ -187,9 +204,12 @@ undo/redo), TanStack Query only where there is async work, dnd-kit, typst.ts, Ta
    Compose with nginx and hot reload.
 4. **Polish**: drag-and-drop, undo/redo, click-to-edit, page-fit highlighting, palette,
    photo crop, Playwright tests.
-5. **Desktop**: Tauri 2 wrapping the static build; GitHub Actions matrix producing the
-   installers for the three systems; unsigned at first.
-6. **Public web**: static hosting, domain, landing page and promotion (after Bautista's OK).
+5. **PWA + public web**: manifest, service worker, offline; GitHub Pages or Cloudflare Pages
+   on a free subdomain; landing page and promotion (after Bautista's OK).
+6. **Stores and packages, all free**: Microsoft Store (PWA as MSIX via PWABuilder), Flathub,
+   AUR, PyPI for the CLI.
+7. **Tauri shell (optional)**: native file access; Linux packages; unsigned ad-hoc builds for
+   macOS/Windows on GitHub Releases; SignPath Foundation for Windows once the project qualifies.
 
 ## 6. New dependencies (approved 2026-10-30)
 
@@ -200,15 +220,16 @@ undo/redo), TanStack Query only where there is async work, dnd-kit, typst.ts, Ta
 - Browser (npm, inside the container only): `@myriaddreamin/typst.ts` (and its compiler/renderer
   WASM), `pyodide` (if option 1), `next` or `astro`, `react`, `tailwindcss`, `zustand`, `zundo`,
   `@dnd-kit/core`, `@dnd-kit/sortable`, `@playwright/test` (dev).
-- Desktop: Rust toolchain + `@tauri-apps/cli` (Tauri 2).
-- Docker images for development: `node:24-alpine`, `nginx:alpine`.
+- Desktop (phase 7, optional): Rust toolchain + `@tauri-apps/cli` (Tauri 2).
 - Fonts: XCharter OTF from CTAN.
+
+All of them are free and open source.
 
 ## 7. Open decisions
 
 1. Exporters in Python via Pyodide or rewritten in TypeScript (spike decides; Python preferred).
 2. Next.js static export or Astro for the web app.
-3. Product name and domain for the public version.
+3. Product name (and which free subdomain) for the public version.
 
 Settled on 2026-10-30: Typst is the main generator and the preview; exports to LaTeX, Markdown,
 JSON and Word; Word in one or two columns driven by the layout options; JSON Resume
@@ -227,6 +248,12 @@ app itself.
   <https://github.com/phoson-lat/Phoson-Desktop/pull/11>,
   <https://github.com/gptme/gptme/pull/4510>, <https://github.com/ActivityWatch/activitywatch/issues/1249>
 - LaTeX in the browser: <https://github.com/TeXlyre/texlyre-busytex>, <https://github.com/SwiftLaTeX/SwiftLaTeX>
+- Free distribution: Microsoft Store free registration and Store signing
+  <https://blogs.windows.com/windowsdeveloper/2025/05/19/microsoft-store-expands-opportunities-for-windows-app-developers/>,
+  <https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/code-signing-options>;
+  SignPath Foundation <https://github.com/SignPath/github-actions-demo>;
+  Homebrew and Gatekeeper <https://brew.sh/2025/11/12/homebrew-5.0.0/>,
+  <https://github.com/Homebrew/brew/issues/20755>
 - Reactive Resume: <https://github.com/amruthpillai/reactive-resume>
 - python-docx: <https://skelmis-docx.readthedocs.io/>
 - Table-layout résumés and parsers: <https://github.com/geektechlive/blastjob/issues/33>
