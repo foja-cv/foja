@@ -1,7 +1,11 @@
+import re
+import shutil
+import subprocess
 from pathlib import Path
 
 import pytest
 from cvgen.build import build_cv, format_period
+from cvgen.compile import compile_pdf
 from cvgen.latex import escape, render
 from cvgen.sources import DataError, parse_markdown
 
@@ -61,3 +65,22 @@ def test_unknown_entry_is_reported(tmp_path):
     (tmp_path / "p.md").write_text("perfil")
     with pytest.raises(DataError, match="nope"):
         build_cv(tmp_path, "x")
+
+
+@pytest.mark.skipif(
+    not (shutil.which("tectonic") and shutil.which("pdftotext")),
+    reason="needs tectonic and pdftotext",
+)
+def test_overflow_continues_in_main_column(tmp_path):
+    cv = build_cv(DATA, "programador")
+    output = tmp_path / "cv.pdf"
+    compile_pdf(render(cv), cv.photo, output)
+    bbox = subprocess.run(
+        ["pdftotext", "-bbox", str(output), "-"], capture_output=True, text=True, check=True
+    ).stdout
+    pages = bbox.split("<page ")[1:]
+    assert len(pages) == 2
+    words = re.findall(r'xMin="([\d.]+)"[^>]*>([^<]*)<', pages[1])
+    assert "Racket" in [word for _, word in words]
+    # On A4 the sidebar ends around x = 170pt; nothing on page 2 may start there.
+    assert min(float(x) for x, _ in words) > 170

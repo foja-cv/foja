@@ -59,6 +59,13 @@
 \addtolength{\LeftMainSep}{1\columnsep}
 \newflowframe{0.68\textwidth}{\textheight}{\LeftMainSep}{0pt}[main01]
 
+% The sidebar and the dotted line only exist on the first page; anything that
+% overflows the main column continues in the same column on later pages.
+\setflowframe{1}{pages=1}
+\setflowframe{2}{pages=1}
+\setstaticframe{1}{pages=1}
+\newflowframe[>1]{0.68\textwidth}{\textheight}{\LeftMainSep}{0pt}[continuation]
+
 \pagestyle{empty} % Disable all page numbering
 
 \setlength{\parindent}{0pt} % Stop paragraph indentation
