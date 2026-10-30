@@ -2,6 +2,7 @@
     "subtitulo": "Docente de cine debate",
     "postulacion": "Cine debate",
     "perfil": "textos/perfil_cine_debate.md",
+    "domicilio": true,
     "contactos": ["telefono", "correo"],
     "habilidades": ["Idiomas"],
     "secciones": [

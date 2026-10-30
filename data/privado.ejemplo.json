@@ -1,0 +1,8 @@
+{
+    "domicilio": {
+        "calle": "Calle Falsa 123",
+        "ciudad": "Rosario",
+        "provincia": "Santa Fe",
+        "pais": "Argentina"
+    }
+}

@@ -2,12 +2,6 @@
     "nombres": ["Bautista", "Damián"],
     "apellidos": ["Fiori"],
     "foto": "img/foto.jpg",
-    "domicilio": {
-        "calle": "Calle Falsa 123",
-        "ciudad": "Rosario",
-        "provincia": "Santa Fe",
-        "pais": "Argentina"
-    },
     "contactos": {
         "telefono": "+54 9 341 000-0000",
         "correo": "correo@ejemplo.com",

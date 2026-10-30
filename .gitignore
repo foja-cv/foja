@@ -518,5 +518,8 @@ cython_debug/
 # Lo de vscode
 *.code-workspace
 
+# Private data (address): never committed
+data/privado.json
+
 # Generated CVs and C build output
 build/

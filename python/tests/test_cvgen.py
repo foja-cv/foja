@@ -10,6 +10,8 @@ from cvgen.latex import escape, render
 from cvgen.sources import DataError, parse_markdown
 
 DATA = Path(__file__).resolve().parents[2] / "data"
+# Tests never read the real address: they use the example private file.
+PRIVATE = DATA / "privado.ejemplo.json"
 
 
 def test_parse_markdown_joins_lines_under_each_heading():
@@ -41,7 +43,7 @@ def test_escape_latex_specials():
 
 @pytest.mark.parametrize("profile", sorted(p.stem for p in (DATA / "perfiles").glob("*.json")))
 def test_every_profile_builds_and_renders(profile):
-    cv = build_cv(DATA, profile)
+    cv = build_cv(DATA, profile, PRIVATE)
     assert cv.photo.is_file()
     tex = render(cv)
     assert tex.count(r"\begin{itemize}") == tex.count(r"\end{itemize}")
@@ -49,14 +51,31 @@ def test_every_profile_builds_and_renders(profile):
 
 
 def test_cine_debate_profile_contents():
-    cv = build_cv(DATA, "docente-cine-debate")
+    cv = build_cv(DATA, "docente-cine-debate", PRIVATE)
     assert cv.application == "Cine debate"
     assert cv.sections[0].entries[0].title == "Docente particular"
     assert ("Correo", "correo@ejemplo.com") in cv.contacts
 
 
+@pytest.mark.parametrize("profile", sorted(p.stem for p in (DATA / "perfiles").glob("*.json")))
+def test_address_only_where_the_profile_asks(profile):
+    cv = build_cv(DATA, profile, PRIVATE)
+    if profile == "docente-cine-debate":
+        assert cv.address[0] == "Calle Falsa 123"
+        assert r"\SideHeading{Domicilio}" in render(cv)
+    else:
+        assert cv.address == []
+        assert "Domicilio" not in render(cv)
+
+
+def test_missing_private_file_is_reported(tmp_path):
+    with pytest.raises(DataError, match="address"):
+        build_cv(DATA, "docente-cine-debate", tmp_path / "privado.json")
+    assert build_cv(DATA, "programador", tmp_path / "privado.json").address == []
+
+
 def test_side_sections_go_in_the_sidebar():
-    cv = build_cv(DATA, "docente-ia")
+    cv = build_cv(DATA, "docente-ia", PRIVATE)
     assert [section.title for section in cv.sections if section.side] == ["Fortalezas"]
     sidebar, _, body = render(cv).partition(r"\begin{document}")
     assert r"\SideHeading{Fortalezas}" in sidebar
@@ -80,7 +99,7 @@ def test_unknown_entry_is_reported(tmp_path):
     reason="needs tectonic and pdftotext",
 )
 def test_overflow_continues_in_main_column(tmp_path):
-    cv = build_cv(DATA, "programador")
+    cv = build_cv(DATA, "programador", PRIVATE)
     output = tmp_path / "cv.pdf"
     compile_pdf(render(cv), cv.photo, output)
     bbox = subprocess.run(

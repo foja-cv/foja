@@ -34,7 +34,7 @@ class Cv:
     subtitle: str
     profile: str
     photo: Path
-    address: list[str]
+    address: list[str]  # empty unless the profile opts in
     contacts: list[tuple[str, str]]
     skills: list[tuple[str, list[str]]]
     sections: list[Section]

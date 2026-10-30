@@ -14,6 +14,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="cvgen", description="Build the CV as a PDF.")
     parser.add_argument("--datos", type=Path, default=Path("data"), help="data directory")
     parser.add_argument("--perfil", default="docente-cine-debate", help="profile in data/perfiles")
+    parser.add_argument(
+        "--privado", type=Path, help="private data, kept out of git (default <datos>/privado.json)"
+    )
     parser.add_argument("--salida", type=Path, help="output file (default build/cv-<perfil>.pdf)")
     parser.add_argument("--tex", action="store_true", help="write the .tex instead of the PDF")
     args = parser.parse_args(argv)
@@ -21,7 +24,7 @@ def main(argv: list[str] | None = None) -> int:
     suffix = ".tex" if args.tex else ".pdf"
     output = args.salida or Path("build") / f"cv-{args.perfil}{suffix}"
     try:
-        cv = build_cv(args.datos, args.perfil)
+        cv = build_cv(args.datos, args.perfil, args.privado)
         tex = render(cv)
         if args.tex:
             output.parent.mkdir(parents=True, exist_ok=True)

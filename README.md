@@ -26,8 +26,8 @@ make lint                       # ruff check + format check
 The generators can also be called directly:
 
 ```sh
-uv run cvgen --perfil docente-ia [--datos data] [--salida out.pdf] [--tex]
-c/build/cvgen-c -p docente-ia [-d data] [-o out.pdf]
+uv run cvgen --perfil docente-ia [--datos data] [--privado privado.json] [--salida out.pdf] [--tex]
+c/build/cvgen-c -p docente-ia [-d data] [-P privado.json] [-o out.pdf]
 ```
 
 `--tex` writes the LaTeX source instead of compiling it. Both print the output path on success
@@ -37,6 +37,7 @@ and exit with status 1 and a message on stderr when the data is invalid.
 ```
 data/
 ├── cv.json          personal data, contacts, skill groups and every entry, keyed by id
+├── privado.json     the address; git-ignored, see privado.ejemplo.json
 ├── img/foto.jpg     photo for the sidebar
 ├── perfiles/*.json  one file per CV
 └── textos/*.md      prose: profile texts, task lists, strengths
@@ -44,7 +45,6 @@ data/
 
 ### `cv.json`
 - `nombres`, `apellidos`, `foto` (path relative to `data/`).
-- `domicilio`: `calle`, `ciudad`, `provincia`, `pais`.
 - `contactos`: `telefono`, `correo`, `github`, `linkedin`, `web`.
 - `habilidades`: groups of skills for the sidebar, e.g. `{"Idiomas": ["Español (nativo)", …]}`.
 - `entradas`: every experience, education or project entry, keyed by id:
@@ -64,6 +64,12 @@ Dates are `YYYY-MM`. An entry with only `desde` is a single date; `"hasta": null
 `tareas` points to a Markdown file with the details; `nota` is a short line that is shown even
 in compact sections.
 
+### `privado.json`
+The address is not in the repository. It goes in `data/privado.json` (git-ignored; copy
+`privado.ejemplo.json`), as `domicilio`: `calle`, `ciudad`, `provincia`, `pais`. It is only read,
+and only shown, by profiles with `"domicilio": true`; without that key the CV has no address.
+A profile that asks for it fails if the file is missing.
+
 ### Profiles
 `data/perfiles/<perfil>.json` describes one CV:
 
@@ -72,6 +78,7 @@ in compact sections.
     "subtitulo": "Docente de Inteligencia Artificial",
     "perfil": "textos/perfil_docente_ia.md",
     "postulacion": "optional; shown as a «Curso» block in the sidebar",
+    "domicilio": false,
     "contactos": ["telefono", "correo", "github"],
     "habilidades": ["Programación", "Idiomas"],
     "secciones": [

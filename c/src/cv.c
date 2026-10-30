@@ -8,6 +8,7 @@
 typedef struct {
     Arena *arena;
     const char *dir;
+    const char *private_path; /* the address, kept out of git */
     char *err;
     size_t errlen;
 } Ctx;
@@ -26,8 +27,7 @@ static const char *data_path(Ctx *ctx, const char *relative) {
     return arena_printf(ctx->arena, "%s/%s", ctx->dir, relative);
 }
 
-static const Json *load_json(Ctx *ctx, const char *relative) {
-    const char *path = data_path(ctx, relative);
+static const Json *load_json_at(Ctx *ctx, const char *path) {
     const char *text = read_file(ctx->arena, path, NULL);
     if (text == NULL) {
         fail(ctx, "missing file: %s", path);
@@ -37,6 +37,10 @@ static const Json *load_json(Ctx *ctx, const char *relative) {
     const Json *json = json_parse(ctx->arena, text, why, sizeof why);
     if (json == NULL) fail(ctx, "invalid JSON in %s: %s", path, why);
     return json;
+}
+
+static const Json *load_json(Ctx *ctx, const char *relative) {
+    return load_json_at(ctx, data_path(ctx, relative));
 }
 
 static const char *load_text(Ctx *ctx, const char *relative) {
@@ -170,21 +174,29 @@ static bool build_side(Ctx *ctx, const Json *base, const Json *profile, Cv *cv) 
     const char *application = json_string(profile, "postulacion");
     if (application != NULL) add_block(cv, "Curso", 1, ctx->arena)->lines[0] = application;
 
-    const Json *address = json_get(base, "domicilio");
-    const char *street = required(ctx, address, "calle", "domicilio");
-    const char *city = required(ctx, address, "ciudad", "domicilio");
-    const char *province = required(ctx, address, "provincia", "domicilio");
-    const char *country = required(ctx, address, "pais", "domicilio");
-    if (!street || !city || !province || !country) return false;
-    SideBlock *block = add_block(cv, "Domicilio", 3, ctx->arena);
-    block->lines[0] = street;
-    block->lines[1] = city;
-    block->lines[2] = arena_printf(ctx->arena, "%s, %s", province, country);
+    /* Only profiles that ask for it show the address. */
+    const Json *show_address = json_get(profile, "domicilio");
+    if (show_address != NULL && show_address->type == JSON_BOOL && show_address->boolean) {
+        if (read_file(ctx->arena, ctx->private_path, NULL) == NULL)
+            return fail(ctx, "profile shows the address but %s is missing", ctx->private_path);
+        const Json *private = load_json_at(ctx, ctx->private_path);
+        if (private == NULL) return false;
+        const Json *address = json_get(private, "domicilio");
+        const char *street = required(ctx, address, "calle", "domicilio");
+        const char *city = required(ctx, address, "ciudad", "domicilio");
+        const char *province = required(ctx, address, "provincia", "domicilio");
+        const char *country = required(ctx, address, "pais", "domicilio");
+        if (!street || !city || !province || !country) return false;
+        SideBlock *address_block = add_block(cv, "Domicilio", 3, ctx->arena);
+        address_block->lines[0] = street;
+        address_block->lines[1] = city;
+        address_block->lines[2] = arena_printf(ctx->arena, "%s, %s", province, country);
+    }
 
     const char **keys;
     size_t nkeys;
     if (!string_list(ctx, json_get(profile, "contactos"), "contactos", &keys, &nkeys)) return false;
-    block = add_block(cv, "Contacto", nkeys, ctx->arena);
+    SideBlock *block = add_block(cv, "Contacto", nkeys, ctx->arena);
     for (size_t i = 0; i < nkeys; i++) {
         bool known = false;
         for (size_t k = 0; k < sizeof CONTACTS / sizeof *CONTACTS; k++)
@@ -228,9 +240,10 @@ static bool build_name(Ctx *ctx, const Json *base, Cv *cv) {
     return true;
 }
 
-bool cv_build(Arena *arena, const char *data_dir, const char *profile_name, Cv *cv, char *err,
-              size_t errlen) {
-    Ctx ctx = {arena, data_dir, err, errlen};
+bool cv_build(Arena *arena, const char *data_dir, const char *private_path,
+              const char *profile_name, Cv *cv, char *err, size_t errlen) {
+    Ctx ctx = {arena, data_dir, private_path, err, errlen};
+    if (ctx.private_path == NULL) ctx.private_path = data_path(&ctx, "privado.json");
     *cv = (Cv){0};
     const Json *base = load_json(&ctx, "cv.json");
     if (base == NULL) return false;

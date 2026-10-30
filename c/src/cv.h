@@ -35,8 +35,10 @@ typedef struct {
     size_t nsections;
 } Cv;
 
-bool cv_build(Arena *arena, const char *data_dir, const char *profile, Cv *cv, char *err,
-              size_t errlen);
+/* private_path holds the address (NULL: <data_dir>/privado.json); it is only read when the
+   profile has "domicilio": true. */
+bool cv_build(Arena *arena, const char *data_dir, const char *private_path, const char *profile,
+              Cv *cv, char *err, size_t errlen);
 
 /* "desde" alone is one date, "hasta": null means ongoing. "" without dates, NULL on error. */
 const char *cv_format_period(Arena *arena, const Json *raw, char *err, size_t errlen);

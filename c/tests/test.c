@@ -77,11 +77,13 @@ static void test_profiles(Arena *arena, const char *data) {
     const char *profiles[] = {"docente-cine-debate", "docente-ia", "programador"};
     size_t nprofiles = sizeof profiles / sizeof profiles[0];
     char err[512];
+    /* Never the real address: the example private file. */
+    const char *private = arena_printf(arena, "%s/privado.ejemplo.json", data);
     for (size_t p = 0; p < nprofiles; p++) {
         Cv cv;
         Jpeg photo;
         Pdf pdf = {0};
-        bool built = cv_build(arena, data, profiles[p], &cv, err, sizeof err);
+        bool built = cv_build(arena, data, private, profiles[p], &cv, err, sizeof err);
         if (!built) fprintf(stderr, "%s: %s\n", profiles[p], err);
         CHECK(built);
         if (!built) continue;
@@ -100,16 +102,28 @@ static void test_profiles(Arena *arena, const char *data) {
         CHECK(bytes != NULL && memcmp(bytes + len - 6, "%%EOF\n", 6) == 0);
         pdf_free(&pdf);
 
+        /* Only the cine debate CV opts in to the address. */
+        bool has_address = false;
+        for (size_t b = 0; b < cv.nside; b++)
+            has_address = has_address || strcmp(cv.side[b].title, "Domicilio") == 0;
+        CHECK(has_address == (p == 0));
+
         if (p == 0) {
             CHECK(strcmp(cv.subtitle, "Docente de cine debate") == 0);
             CHECK(strcmp(cv.side[0].title, "Curso") == 0);
+            CHECK(strcmp(cv.side[1].title, "Domicilio") == 0);
+            CHECK(strcmp(cv.side[1].lines[0], "Calle Falsa 123") == 0);
             CHECK(strcmp(cv.sections[0].entries[0].title, "Docente particular") == 0);
             CHECK(cv.sections[0].entries[0].ntasks == 4);
         }
     }
     Cv cv;
-    CHECK(!cv_build(arena, data, "does-not-exist", &cv, err, sizeof err));
+    CHECK(!cv_build(arena, data, private, "does-not-exist", &cv, err, sizeof err));
     CHECK(strstr(err, "does-not-exist") != NULL);
+    const char *missing = arena_printf(arena, "%s/no-such-private.json", data);
+    CHECK(!cv_build(arena, data, missing, "docente-cine-debate", &cv, err, sizeof err));
+    CHECK(strstr(err, "address") != NULL);
+    CHECK(cv_build(arena, data, missing, "programador", &cv, err, sizeof err));
 }
 
 int main(int argc, char **argv) {

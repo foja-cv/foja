@@ -38,7 +38,8 @@ def render_sidebar(cv: Cv) -> str:
 
     if cv.application:
         block("Curso", [cv.application])
-    block("Domicilio", cv.address)
+    if cv.address:
+        block("Domicilio", cv.address)
     lines.append(r"\SideHeading{Contacto}")
     lines.extend(
         rf"\url{{{value}}} \\" if label in URL_CONTACTS else rf"{escape(value)} \\"

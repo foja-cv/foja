@@ -13,6 +13,7 @@ CONTACT_LABELS = {
     "web": "Web",
 }
 ONGOING = "actualidad"
+PRIVATE = "privado.json"
 
 
 def format_month(value: str) -> str:
@@ -66,10 +67,21 @@ def build_section(data_dir: Path, raw: dict, entries: dict) -> Section:
     )
 
 
-def build_cv(data_dir: Path, profile_name: str) -> Cv:
+def load_address(private: Path) -> list[str]:
+    """The address is private: it lives outside the repo and only profiles that ask get it."""
+    if not private.is_file():
+        raise DataError(f"profile shows the address but {private} is missing")
+    address = read_json(private)["domicilio"]
+    return [
+        address["calle"],
+        address["ciudad"],
+        f"{address['provincia']}, {address['pais']}",
+    ]
+
+
+def build_cv(data_dir: Path, profile_name: str, private: Path | None = None) -> Cv:
     base = read_json(data_dir / "cv.json")
     profile = read_json(data_dir / "perfiles" / f"{profile_name}.json")
-    address = base["domicilio"]
     skills = base["habilidades"]
     missing = [group for group in profile.get("habilidades", []) if group not in skills]
     if missing:
@@ -81,11 +93,7 @@ def build_cv(data_dir: Path, profile_name: str) -> Cv:
         application=profile.get("postulacion", ""),
         profile=read_text(data_dir / profile["perfil"]),
         photo=data_dir / base["foto"],
-        address=[
-            address["calle"],
-            address["ciudad"],
-            f"{address['provincia']}, {address['pais']}",
-        ],
+        address=load_address(private or data_dir / PRIVATE) if profile.get("domicilio") else [],
         contacts=[(CONTACT_LABELS[key], base["contactos"][key]) for key in profile["contactos"]],
         skills=[(group, skills[group]) for group in profile.get("habilidades", [])],
         sections=[
