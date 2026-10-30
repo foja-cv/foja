@@ -3,7 +3,7 @@
 from cvgen.model import Cv, Entry, Item, Section
 
 PHOTO_NAME = "foto.jpg"
-URL_CONTACTS = {"Correo", "GitHub"}
+URL_CONTACTS = {"Correo", "GitHub", "LinkedIn", "Web"}
 
 _SPECIAL = {
     "\\": r"\textbackslash{}",
@@ -47,8 +47,27 @@ def render_sidebar(cv: Cv) -> str:
     lines.append(r"\Sep")
     for group, values in cv.skills:
         block(group, values)
+    for section in cv.sections:
+        if section.side:
+            lines += render_side_section(section)
     lines += [r"\vfill", r"\end{flushright}", "}"]
     return "\n".join(lines)
+
+
+def render_side_section(section: Section) -> list[str]:
+    """Entries as title, place and dates; items as paragraphs, all aligned to the right."""
+    lines = [rf"\SideHeading{{{escape(section.title)}}}"]
+    for entry in section.entries:
+        lines.append(rf"\textbf{{{escape(entry.title)}}} \\")
+        lines.extend(
+            rf"{{\itshape {escape(value)}}} \\" for value in (entry.place, entry.period) if value
+        )
+        lines.append(r"\SmallSep")
+    for item in section.items:
+        heading = rf"\textbf{{{escape(item.heading)}.}} " if item.heading else ""
+        lines.append(rf"{heading}{escape(item.text)}\par\SmallSep")
+    lines.append(r"\Sep")
+    return lines
 
 
 def render_items(items: list[Item]) -> str:
@@ -94,7 +113,7 @@ def render(cv: Cv) -> str:
             rf"\cvheading{{{escape(cv.name)}}}",
             rf"\cvsubheading{{{escape(cv.subtitle)}}}",
             rf"\aboutme{{Perfil}}{{{escape(cv.profile)}}}",
-            *[render_section(section) for section in cv.sections],
+            *[render_section(section) for section in cv.sections if not section.side],
             r"\end{document}",
             "",
         ]

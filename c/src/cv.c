@@ -12,7 +12,7 @@ typedef struct {
     size_t errlen;
 } Ctx;
 
-static const char *const CONTACTS[] = {"telefono", "correo", "github"};
+static const char *const CONTACTS[] = {"telefono", "correo", "github", "linkedin", "web"};
 
 __attribute__((format(printf, 2, 3))) static bool fail(Ctx *ctx, const char *fmt, ...) {
     va_list args;
@@ -137,6 +137,8 @@ static bool build_section(Ctx *ctx, const Json *raw, const Json *entries, Sectio
     const char *where = arena_printf(ctx->arena, "section \"%s\"", section->title);
     const Json *compact = json_get(raw, "compacto");
     section->compact = compact != NULL && compact->type == JSON_BOOL && compact->boolean;
+    const Json *side = json_get(raw, "lateral");
+    section->side = side != NULL && side->type == JSON_BOOL && side->boolean;
 
     const Json *ids = json_get(raw, "entradas");
     if (ids != NULL) {

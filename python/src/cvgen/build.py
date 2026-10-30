@@ -5,7 +5,13 @@ from pathlib import Path
 from cvgen.model import Cv, Entry, Item, Section
 from cvgen.sources import DataError, parse_markdown, read_json, read_text
 
-CONTACT_LABELS = {"telefono": "Teléfono", "correo": "Correo", "github": "GitHub"}
+CONTACT_LABELS = {
+    "telefono": "Teléfono",
+    "correo": "Correo",
+    "github": "GitHub",
+    "linkedin": "LinkedIn",
+    "web": "Web",
+}
 ONGOING = "actualidad"
 
 
@@ -56,6 +62,7 @@ def build_section(data_dir: Path, raw: dict, entries: dict) -> Section:
         entries=[build_entry(data_dir, entries[key]) for key in raw.get("entradas", [])],
         items=load_items(data_dir, raw.get("items")),
         compact=raw.get("compacto", False),
+        side=raw.get("lateral", False),
     )
 
 

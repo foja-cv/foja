@@ -45,7 +45,7 @@ data/
 ### `cv.json`
 - `nombres`, `apellidos`, `foto` (path relative to `data/`).
 - `domicilio`: `calle`, `ciudad`, `provincia`, `pais`.
-- `contactos`: `telefono`, `correo`, `github`.
+- `contactos`: `telefono`, `correo`, `github`, `linkedin`, `web`.
 - `habilidades`: groups of skills for the sidebar, e.g. `{"Idiomas": ["Español (nativo)", …]}`.
 - `entradas`: every experience, education or project entry, keyed by id:
 
@@ -85,6 +85,9 @@ in compact sections.
 A section lists either `entradas` (ids from `cv.json`) or `items` (a Markdown file of headed
 paragraphs). `"compacto": true` shows each entry as title, place, dates and `nota`, without its
 `tareas`.
+`"lateral": true` moves the section to the sidebar, below the skills, as entry titles with
+their place and dates, or as plain paragraphs. The sidebar never breaks across pages: the C
+generator stops with an error if it does not fit, and LaTeX spills it into the main column.
 
 ### Texts
 `data/textos/*.md` hold plain paragraphs (profile texts) or `# Heading` lines each followed by a

@@ -132,14 +132,19 @@ static void title_line(Column *col, Font font, Color color, float size, const ch
                  first_baseline, period_ansi);
 }
 
+/* The heading in bold followed by the text. Returns the number of spans. */
+static size_t item_spans(Column *col, const Item *item, Span spans[2]) {
+    size_t n = 0;
+    if (item->heading != NULL)
+        spans[n++] = (Span){FONT_BOLD, BLACK, arena_printf(col->arena, "%s.", item->heading)};
+    spans[n++] = (Span){FONT_REGULAR, BLACK, item->text};
+    return n;
+}
+
 static void bullets(Column *col, const Item *items, size_t n) {
     for (size_t i = 0; i < n; i++) {
         Span spans[2];
-        size_t nspans = 0;
-        if (items[i].heading != NULL)
-            spans[nspans++] = (Span){FONT_BOLD, BLACK,
-                                     arena_printf(col->arena, "%s.", items[i].heading)};
-        spans[nspans++] = (Span){FONT_REGULAR, BLACK, items[i].text};
+        size_t nspans = item_spans(col, &items[i], spans);
         flow(col, spans, nspans, 9.5f, 12.0f, BULLET_INDENT, ALIGN_LEFT, "\x95");
     }
 }
@@ -154,6 +159,26 @@ static void entry(Column *col, const Entry *e, bool compact) {
     col->y -= compact ? 4 : 6;
 }
 
+/* Entries as title, place and dates; items as paragraphs, all aligned to the right. */
+static void side_section(Column *col, const Section *section) {
+    text_line(col, FONT_BOLD, BLUE, 9.5f, 12.0f, ALIGN_RIGHT, section->title);
+    for (size_t i = 0; i < section->nentries; i++) {
+        const Entry *e = &section->entries[i];
+        text_line(col, FONT_BOLD, BLACK, 9.0f, 11.5f, ALIGN_RIGHT, e->title);
+        if (e->place[0] != '\0') text_line(col, FONT_ITALIC, GREY, 9.0f, 11.5f, ALIGN_RIGHT, e->place);
+        if (e->period[0] != '\0')
+            text_line(col, FONT_ITALIC, GREY, 9.0f, 11.5f, ALIGN_RIGHT, e->period);
+        col->y -= 4;
+    }
+    for (size_t i = 0; i < section->nitems; i++) {
+        Span spans[2];
+        size_t nspans = item_spans(col, &section->items[i], spans);
+        flow(col, spans, nspans, 9.0f, 11.5f, 0, ALIGN_RIGHT, NULL);
+        col->y -= 4;
+    }
+    col->y -= 9;
+}
+
 static void sidebar(Column *col, const Cv *cv, const Jpeg *photo) {
     float height = col->width * (float)photo->height / (float)photo->width;
     pdf_image(col->page, col->x, col->y - height, col->width, height);
@@ -165,6 +190,8 @@ static void sidebar(Column *col, const Cv *cv, const Jpeg *photo) {
             text_line(col, FONT_REGULAR, BLACK, 9.0f, 11.5f, ALIGN_RIGHT, block->lines[i]);
         col->y -= 9;
     }
+    for (size_t s = 0; s < cv->nsections; s++)
+        if (cv->sections[s].side) side_section(col, &cv->sections[s]);
 }
 
 bool layout_cv(Arena *arena, const Cv *cv, const Jpeg *photo, Pdf *pdf, char *err,
@@ -191,6 +218,7 @@ bool layout_cv(Arena *arena, const Cv *cv, const Jpeg *photo, Pdf *pdf, char *er
 
     for (size_t s = 0; s < cv->nsections; s++) {
         const Section *section = &cv->sections[s];
+        if (section->side) continue;
         ensure_space(&main, 60); /* keep the heading with its first entry */
         text_line(&main, FONT_BOLD, BLACK, 13.0f, 17.0f, ALIGN_LEFT, section->title);
         main.y -= 3;

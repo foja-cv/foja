@@ -18,6 +18,7 @@ typedef struct {
     Item *items;
     size_t nitems;
     bool compact; /* entries without tasks */
+    bool side;    /* drawn in the sidebar instead of the main column */
 } Section;
 
 typedef struct {

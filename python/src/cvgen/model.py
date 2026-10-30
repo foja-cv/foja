@@ -25,6 +25,7 @@ class Section:
     entries: list[Entry] = field(default_factory=list)
     items: list[Item] = field(default_factory=list)
     compact: bool = False
+    side: bool = False  # rendered in the sidebar instead of the main column
 
 
 @dataclass(frozen=True)
