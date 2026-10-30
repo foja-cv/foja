@@ -1,7 +1,7 @@
 {
     "subtitulo": "Programador",
     "perfil": "textos/perfil_programador.md",
-    "contactos": ["telefono", "correo", "github", "web"],
+    "contactos": ["telefono", "correo", "github", "linkedin", "web"],
     "habilidades": ["Programación", "Web", "Microcontroladores", "Idiomas"],
     "secciones": [
         {"titulo": "Experiencia", "entradas": ["obrok", "tecso", "reparacion", "docencia"]},
