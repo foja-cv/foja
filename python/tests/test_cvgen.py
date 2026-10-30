@@ -1,6 +1,7 @@
 import re
 import shutil
 import subprocess
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -82,15 +83,35 @@ def test_side_sections_go_in_the_sidebar():
     assert r"\CVSection{Fortalezas}" not in body
 
 
-def test_unknown_entry_is_reported(tmp_path):
+def test_skill_pairs_share_a_row():
+    cv = build_cv(DATA, "programador", PRIVATE)
+    assert [[group for group, _ in row] for row in cv.skills] == [
+        ["Web", "Programación"],
+        ["Microcontroladores"],
+        ["Idiomas"],
+    ]
+    sidebar = render(cv).partition(r"\begin{document}")[0]
+    assert sidebar.count(r"\begin{tabular}") == 2
+
+
+def write_profile(tmp_path, body: str) -> None:
     (tmp_path / "perfiles").mkdir()
     (tmp_path / "cv.json").write_text((DATA / "cv.json").read_text())
     (tmp_path / "perfiles" / "x.json").write_text(
-        '{"subtitulo": "", "perfil": "p.md", "contactos": [],'
-        ' "secciones": [{"titulo": "S", "entradas": ["nope"]}]}'
+        '{"subtitulo": "", "perfil": "p.md", "contactos": [], ' + body + "}"
     )
     (tmp_path / "p.md").write_text("perfil")
+
+
+def test_unknown_entry_is_reported(tmp_path):
+    write_profile(tmp_path, '"secciones": [{"titulo": "S", "entradas": ["nope"]}]')
     with pytest.raises(DataError, match="nope"):
+        build_cv(tmp_path, "x")
+
+
+def test_rows_of_three_skill_groups_are_rejected(tmp_path):
+    write_profile(tmp_path, '"habilidades": [["Web", "Programación", "Idiomas"]], "secciones": []')
+    with pytest.raises(DataError, match="one or two"):
         build_cv(tmp_path, "x")
 
 
@@ -100,6 +121,8 @@ def test_unknown_entry_is_reported(tmp_path):
 )
 def test_overflow_continues_in_main_column(tmp_path):
     cv = build_cv(DATA, "programador", PRIVATE)
+    # It fits on one page; with the experience twice it no longer does.
+    cv = replace(cv, sections=[*cv.sections, cv.sections[0]])
     output = tmp_path / "cv.pdf"
     compile_pdf(render(cv), cv.photo, output)
     bbox = subprocess.run(
@@ -108,6 +131,6 @@ def test_overflow_continues_in_main_column(tmp_path):
     pages = bbox.split("<page ")[1:]
     assert len(pages) == 2
     words = re.findall(r'xMin="([\d.]+)"[^>]*>([^<]*)<', pages[1])
-    assert "Fortalezas" in [word for _, word in words]
+    assert words
     # On A4 the sidebar ends around x = 170pt; nothing on page 2 may start there.
     assert min(float(x) for x, _ in words) > 170

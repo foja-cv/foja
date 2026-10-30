@@ -169,7 +169,7 @@ static SideBlock *add_block(Cv *cv, const char *title, size_t nlines, Arena *are
 static bool build_side(Ctx *ctx, const Json *base, const Json *profile, Cv *cv) {
     const Json *groups = json_get(profile, "habilidades");
     size_t ngroups = groups != NULL && groups->type == JSON_ARRAY ? groups->len : 0;
-    cv->side = arena_alloc(ctx->arena, (3 + ngroups) * sizeof *cv->side);
+    cv->side = arena_alloc(ctx->arena, (3 + 2 * ngroups) * sizeof *cv->side); /* rows of 1-2 */
 
     const char *application = json_string(profile, "postulacion");
     if (application != NULL) add_block(cv, "Curso", 1, ctx->arena)->lines[0] = application;
@@ -208,14 +208,21 @@ static bool build_side(Ctx *ctx, const Json *base, const Json *profile, Cv *cv) 
 
     const Json *skills = json_get(base, "habilidades");
     for (size_t i = 0; i < ngroups; i++) {
-        const char *group = groups->items[i]->string;
-        if (group == NULL) return fail(ctx, "habilidades must be a list of strings");
-        const char **values;
-        size_t nvalues;
-        const Json *list = json_get(skills, group);
-        if (list == NULL) return fail(ctx, "profile uses unknown skill group \"%s\"", group);
-        if (!string_list(ctx, list, group, &values, &nvalues)) return false;
-        cv->side[cv->nside++] = (SideBlock){group, values, nvalues};
+        /* A row is a group name, or a list of one or two set side by side. */
+        const Json *row = groups->items[i];
+        bool is_list = row->type == JSON_ARRAY;
+        size_t nrow = is_list ? row->len : 1;
+        if (nrow == 0 || nrow > 2) return fail(ctx, "a row of skill groups holds one or two groups");
+        for (size_t g = 0; g < nrow; g++) {
+            const char *group = is_list ? row->items[g]->string : row->string;
+            if (group == NULL) return fail(ctx, "habilidades must hold group names");
+            const char **values;
+            size_t nvalues;
+            const Json *list = json_get(skills, group);
+            if (list == NULL) return fail(ctx, "profile uses unknown skill group \"%s\"", group);
+            if (!string_list(ctx, list, group, &values, &nvalues)) return false;
+            cv->side[cv->nside++] = (SideBlock){group, values, nvalues, g + 1 < nrow};
+        }
     }
     return true;
 }

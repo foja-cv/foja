@@ -83,7 +83,10 @@ def build_cv(data_dir: Path, profile_name: str, private: Path | None = None) -> 
     base = read_json(data_dir / "cv.json")
     profile = read_json(data_dir / "perfiles" / f"{profile_name}.json")
     skills = base["habilidades"]
-    missing = [group for group in profile.get("habilidades", []) if group not in skills]
+    rows = [[row] if isinstance(row, str) else row for row in profile.get("habilidades", [])]
+    if any(len(row) not in (1, 2) for row in rows):
+        raise DataError("a row of skill groups holds one or two groups")
+    missing = [group for row in rows for group in row if group not in skills]
     if missing:
         raise DataError(f"profile uses unknown skill groups: {', '.join(missing)}")
 
@@ -95,7 +98,7 @@ def build_cv(data_dir: Path, profile_name: str, private: Path | None = None) -> 
         photo=data_dir / base["foto"],
         address=load_address(private or data_dir / PRIVATE) if profile.get("domicilio") else [],
         contacts=[(CONTACT_LABELS[key], base["contactos"][key]) for key in profile["contactos"]],
-        skills=[(group, skills[group]) for group in profile.get("habilidades", [])],
+        skills=[[(group, skills[group]) for group in row] for row in rows],
         sections=[
             build_section(data_dir, section, base["entradas"]) for section in profile["secciones"]
         ],

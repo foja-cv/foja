@@ -46,13 +46,23 @@ def render_sidebar(cv: Cv) -> str:
         for label, value in cv.contacts
     )
     lines.append(r"\Sep")
-    for group, values in cv.skills:
-        block(group, values)
+    for row in cv.skills:
+        if len(row) == 1:
+            block(*row[0])
+        else:
+            lines.append(r"\hspace{1em}".join(side_column(*group) for group in row) + r" \\")
+            lines.append(r"\Sep")
     for section in cv.sections:
         if section.side:
             lines += render_side_section(section)
     lines += [r"\vfill", r"\end{flushright}", "}"]
     return "\n".join(lines)
+
+
+def side_column(title: str, values: list[str]) -> str:
+    """A skill group as a right-aligned column, to set two of them side by side."""
+    rows = [rf"\textbf{{\color{{RoyalBlue}} {escape(title)}}}", *map(escape, values)]
+    return r"\begin{tabular}[t]{@{}r@{}}" + r" \\ ".join(rows) + r"\end{tabular}"
 
 
 def render_side_section(section: Section) -> list[str]:

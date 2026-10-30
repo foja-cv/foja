@@ -91,8 +91,7 @@ static void test_profiles(Arena *arena, const char *data) {
         CHECK(jpeg_load(arena, cv.photo, &photo, err, sizeof err));
         CHECK(photo.width > 0 && photo.height > 0);
         CHECK(layout_cv(arena, &cv, &photo, &pdf, err, sizeof err));
-        /* The teacher CVs fit on one page; the programmer one overflows onto a second. */
-        CHECK(p + 1 < nprofiles ? pdf.npages == 1 : pdf.npages > 1);
+        CHECK(pdf.npages == 1);
 
         const char *out = arena_printf(arena, "build/test-%s.pdf", profiles[p]);
         CHECK(pdf_save(&pdf, out, err, sizeof err));
@@ -115,6 +114,20 @@ static void test_profiles(Arena *arena, const char *data) {
             CHECK(strcmp(cv.side[1].lines[0], "Calle Falsa 123") == 0);
             CHECK(strcmp(cv.sections[0].entries[0].title, "Docente particular") == 0);
             CHECK(cv.sections[0].entries[0].ntasks == 4);
+        }
+        if (p == 2) {
+            CHECK(strcmp(cv.side[1].title, "Web") == 0 && cv.side[1].paired);
+            CHECK(strcmp(cv.side[2].title, "Programación") == 0 && !cv.side[2].paired);
+
+            /* With the experience twice, the main column runs onto a second page. */
+            Section *longer = arena_alloc(arena, (cv.nsections + 1) * sizeof *longer);
+            memcpy(longer, cv.sections, cv.nsections * sizeof *longer);
+            longer[cv.nsections++] = cv.sections[0];
+            cv.sections = longer;
+            Pdf two = {0};
+            CHECK(layout_cv(arena, &cv, &photo, &two, err, sizeof err));
+            CHECK(two.npages > 1);
+            pdf_free(&two);
         }
     }
     Cv cv;

@@ -79,8 +79,8 @@ A profile that asks for it fails if the file is missing.
     "perfil": "textos/perfil_docente_ia.md",
     "postulacion": "optional; shown as a «Curso» block in the sidebar",
     "domicilio": false,
-    "contactos": ["telefono", "correo", "github"],
-    "habilidades": ["Programación", "Idiomas"],
+    "contactos": ["telefono", "correo", "linkedin"],
+    "habilidades": [["Web", "Programación"], "Idiomas"],
     "secciones": [
         {"titulo": "Experiencia docente", "entradas": ["docencia"]},
         {"titulo": "Fortalezas", "items": "textos/fortalezas_docente_ia.md"},
@@ -89,8 +89,11 @@ A profile that asks for it fails if the file is missing.
 }
 ```
 
-A section lists either `entradas` (ids from `cv.json`) or `items` (a Markdown file of headed
-paragraphs). `"compacto": true` shows each entry as title, place, dates and `nota`, without its
+Each `habilidades` row is a group name, or a pair of them shown side by side: the right one as
+wide as its longest line, the left one in the rest of the sidebar.
+
+A section lists `entradas` (ids from `cv.json`), `items` (a Markdown file of headed paragraphs,
+or a list of plain lines), or both. `"compacto": true` shows each entry as title, place, dates and `nota`, without its
 `tareas`.
 `"lateral": true` moves the section to the sidebar, below the skills, as entry titles with
 their place and dates, or as plain paragraphs. The sidebar never breaks across pages: the C

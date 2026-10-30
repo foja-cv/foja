@@ -10,6 +10,7 @@
 #define MAIN_WIDTH (PAGE_WIDTH - MARGIN - MAIN_X)
 #define TOP (PAGE_HEIGHT - MARGIN)
 #define BULLET_INDENT 12.0f
+#define PAIR_GAP 10.0f /* between two skill groups that share a row */
 
 static const Color BLUE = {0.0f, 0.5f, 1.0f}; /* RoyalBlue, as in the LaTeX template */
 static const Color BLACK = {0.0f, 0.0f, 0.0f};
@@ -145,7 +146,7 @@ static void bullets(Column *col, const Item *items, size_t n) {
     for (size_t i = 0; i < n; i++) {
         Span spans[2];
         size_t nspans = item_spans(col, &items[i], spans);
-        flow(col, spans, nspans, 9.5f, 12.0f, BULLET_INDENT, ALIGN_LEFT, "\x95");
+        flow(col, spans, nspans, 9.5f, 11.5f, BULLET_INDENT, ALIGN_LEFT, "\x95");
     }
 }
 
@@ -156,7 +157,7 @@ static void entry(Column *col, const Entry *e, bool compact) {
     if (e->place[0] != '\0') text_line(col, FONT_ITALIC, GREY, 9.0f, 11.5f, ALIGN_LEFT, e->place);
     if (e->note[0] != '\0') text_line(col, FONT_REGULAR, BLACK, 9.0f, 11.5f, ALIGN_LEFT, e->note);
     if (!compact) bullets(col, e->tasks, e->ntasks);
-    col->y -= compact ? 4 : 6;
+    col->y -= compact ? 4 : 5;
 }
 
 /* Entries as title, place and dates; items as paragraphs, all aligned to the right. */
@@ -179,15 +180,37 @@ static void side_section(Column *col, const Section *section) {
     col->y -= 9;
 }
 
+static void side_block(Column *col, const SideBlock *block) {
+    text_line(col, FONT_BOLD, BLUE, 9.5f, 12.0f, ALIGN_RIGHT, block->title);
+    for (size_t i = 0; i < block->nlines; i++)
+        text_line(col, FONT_REGULAR, BLACK, 9.0f, 11.5f, ALIGN_RIGHT, block->lines[i]);
+}
+
+static float block_width(Column *col, const SideBlock *block) {
+    float width = text_width(FONT_BOLD, utf8_to_winansi(col->arena, block->title), 9.5f);
+    for (size_t i = 0; i < block->nlines; i++) {
+        float line = text_width(FONT_REGULAR, utf8_to_winansi(col->arena, block->lines[i]), 9.0f);
+        if (line > width) width = line;
+    }
+    return width;
+}
+
 static void sidebar(Column *col, const Cv *cv, const Jpeg *photo) {
     float height = col->width * (float)photo->height / (float)photo->width;
     pdf_image(col->page, col->x, col->y - height, col->width, height);
     col->y -= height + 16;
     for (size_t b = 0; b < cv->nside; b++) {
-        const SideBlock *block = &cv->side[b];
-        text_line(col, FONT_BOLD, BLUE, 9.5f, 12.0f, ALIGN_RIGHT, block->title);
-        for (size_t i = 0; i < block->nlines; i++)
-            text_line(col, FONT_REGULAR, BLACK, 9.0f, 11.5f, ALIGN_RIGHT, block->lines[i]);
+        if (cv->side[b].paired && b + 1 < cv->nside) {
+            /* The right block as wide as its longest line, the left one in the rest. */
+            Column left = *col, right = *col;
+            left.width -= block_width(col, &cv->side[b + 1]) + PAIR_GAP;
+            side_block(&left, &cv->side[b]);
+            side_block(&right, &cv->side[++b]);
+            col->y = left.y < right.y ? left.y : right.y;
+            col->overflow = left.overflow || right.overflow;
+        } else {
+            side_block(col, &cv->side[b]);
+        }
         col->y -= 9;
     }
     for (size_t s = 0; s < cv->nsections; s++)
@@ -225,7 +248,7 @@ bool layout_cv(Arena *arena, const Cv *cv, const Jpeg *photo, Pdf *pdf, char *er
         for (size_t i = 0; i < section->nentries; i++)
             entry(&main, &section->entries[i], section->compact);
         bullets(&main, section->items, section->nitems);
-        main.y -= 10;
+        main.y -= 8;
     }
     if (main.overflow) {
         snprintf(err, errlen, "the CV needs more than %d pages", PDF_MAX_PAGES);

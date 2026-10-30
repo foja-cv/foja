@@ -36,6 +36,6 @@ class Cv:
     photo: Path
     address: list[str]  # empty unless the profile opts in
     contacts: list[tuple[str, str]]
-    skills: list[tuple[str, list[str]]]
+    skills: list[list[tuple[str, list[str]]]]  # rows of one group, or two side by side
     sections: list[Section]
     application: str = ""

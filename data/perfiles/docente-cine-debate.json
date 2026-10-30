@@ -3,7 +3,7 @@
     "postulacion": "Cine debate",
     "perfil": "textos/perfil_cine_debate.md",
     "domicilio": true,
-    "contactos": ["telefono", "correo"],
+    "contactos": ["telefono", "correo", "linkedin"],
     "habilidades": ["Idiomas"],
     "secciones": [
         {"titulo": "Experiencia docente y de debate", "entradas": ["docencia", "simulacro"]},

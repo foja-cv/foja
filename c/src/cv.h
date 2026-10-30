@@ -25,6 +25,7 @@ typedef struct {
     const char *title;
     const char **lines;
     size_t nlines;
+    bool paired; /* drawn on the left of the next block, in the same row */
 } SideBlock;
 
 typedef struct {
