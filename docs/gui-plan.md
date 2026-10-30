@@ -58,12 +58,14 @@ Developer Program, no paid hosting, no paid domain. Every choice below is the be
 | Linux | **Flathub** (free, appears in GNOME Software/Discover, auto-updates), AUR, AppImage/.deb/.rpm on GitHub Releases; no signing needed |
 | macOS native app | No free notarisation exists, and since 2026-09-01 Homebrew's main cask repo refuses apps that fail Gatekeeper. So on macOS the **PWA is the primary way**. An ad-hoc-signed Tauri `.dmg` can still be offered on GitHub Releases with the "System Settings → Privacy & Security → Open Anyway" instructions, or through our own Homebrew tap |
 | App updates | Tauri updater with our own (free) signing key pair — not a CA certificate |
-| CLI | PyPI (`uv tool install cvgen`), AUR |
+| CLI | npm (`npx`), Node single-executable binaries on GitHub Releases, AUR |
 
-Consequence for the plan: the **PWA becomes the main desktop distribution** (free and identical
-on the three systems), and the Tauri shell becomes secondary — useful for Flathub/AUR on Linux,
-for opening and saving project files directly on disk, and as an unsigned extra for whoever
-wants it.
+Chosen channels (2026-10-30): **PWA on GitHub Pages**, **Microsoft Store** (the PWA as MSIX,
+free individual account) and **Flathub**. Flathub does not accept thin web wrappers, so the
+Linux app is the Tauri shell with real desktop integration: opening and saving project files
+through the file-chooser portal, its own file type and MIME association, fully offline with
+bundled assets, built from source with vendored npm/Cargo dependencies. App ID based on the
+GitHub organisation (`io.github.<org>.<App>`), which Flathub verifies for free.
 
 ## 3. Architecture (Typst-first)
 
@@ -77,8 +79,21 @@ wants it.
      │               JSON · Word                drag-and-drop
      ▼
  typst compiler ── PDF · SVG (preview) · PNG → JPG
- (typst.ts in the browser, typst-py in the CLI)
+ (typst.ts: WASM in the browser, native addon in the CLI)
 ```
+
+Everything is TypeScript, in a workspace:
+
+```
+packages/core     schema, project format, layout options, exporters (LaTeX, Markdown, JSON, Word)
+packages/template the Typst template and fonts
+packages/cli      `cvgen` on Node, typst-ts-node-compiler for PDF/PNG
+apps/web          Astro site: landing + the editor as a React island; PWA
+apps/desktop      Tauri 2 shell for Flathub (and unsigned builds elsewhere)
+```
+
+The Python and C generators stay in the repo as they are (they build the current CVs) and are
+retired once the new CLI reaches parity.
 
 - **The Typst template is the generator.** It reads the project JSON (`json(...)` /
   `sys.inputs`) and lays out the CV itself, so the browser, the desktop app and the CLI all run
@@ -87,8 +102,8 @@ wants it.
   `typst compile` and opens in typst.app.
 - **Project format v2:** one JSON document per user with base data, profiles and texts inline
   (the current multi-file `data/` layout does not fit a browser). A JSON Schema
-  (`schema/cv.schema.json`) is the contract for the template, the exporters and the UI. The CLI
-  keeps reading the current `data/` layout through a converter.
+  (`schema/cv.schema.json`) is the contract for the template, the exporters and the UI. A
+  converter imports the current `data/` layout.
 - **Preview:** typst.ts in a Web Worker compiles on every change (debounced) and renders SVG
   pages; the last good render stays on screen while compiling or when there is an error. Anchors
   emitted by the template (`context metadata((id: …, pos: here().position()))`) give
@@ -109,8 +124,10 @@ wants it.
   current LaTeX CV; more templates/fonts later.
 - **Storage (web):** IndexedDB in the browser, plus import/export of the project JSON. No
   accounts, no server in the first public version. Desktop: project files on disk.
-- **Hosting (web):** static site on GitHub Pages or Cloudflare Pages, free subdomain, installable
-  as a PWA (manifest + service worker, offline). Publishing needs Bautista's explicit OK.
+- **Hosting (web):** GitHub Pages, deployed by GitHub Actions, on the free `<org>.github.io`
+  address of a GitHub organisation named after the product (a custom domain can be pointed at
+  it later with a CNAME, without changing anything else). Installable as a PWA (manifest +
+  service worker, offline). Publishing needs Bautista's explicit OK.
 - **`cvgen-c`:** stays in the repo, out of the GUI.
 - **No access to version control.** Neither the app nor its exports touch any repository of the
   user. Committing the repo's `data/` stays manual and outside the app.
@@ -144,19 +161,38 @@ open without building it now, the data model uses typed blocks (an entry, a list
 paragraph) and the template renders blocks by type, so new block types and layouts can be added
 later. Until then, everything is scoped to CVs.
 
-### Open decision: where the exporters live
+### Decision: exporters in TypeScript
 
-LaTeX, Markdown, JSON and Word are small text/data transforms, but they must run in three places.
+Compared on quality first, then speed (download size was not a concern):
 
-1. **Python core everywhere (recommended to try first).** `cvgen` keeps the exporters (LaTeX
-   already exists); the CLI runs them natively (Typst via the `typst` PyPI binding), the browser
-   and desktop run the same code through **Pyodide** in a Web Worker (`python-docx` needs `lxml`,
-   which Pyodide ships). One implementation, Python as usual. Cost: ~10 MB downloaded once and
-   cached; startup of a couple of seconds, off the main thread.
-2. **TypeScript core.** Exporters rewritten in TS (`docx` npm for Word); the CLI becomes a Node
-   program. Lighter web app, but the Python generator is retired and the CLI changes language.
+| | Python via Pyodide | **TypeScript** |
+| :--- | :--- | :--- |
+| Word quality | `python-docx`: solid for paragraphs and tables, but cell shading, section columns, frames and floating images need raw OOXML by hand | `docx` (npm) 9.9: native API for table shading and merges, section columns, floating images and text frames, and a layout engine that places things the way Word does |
+| LaTeX, Markdown, JSON | Existing `latex.py` (~120 lines) reused | Ported once; plain string building, same output |
+| Correctness | Schema checked twice (Python and the UI's TypeScript) and kept in sync by hand | One schema and one set of types shared by the forms, validation, exporters and CLI |
+| Speed in the browser | Pyodide start-up of seconds on first export, CPython in WASM slower than native JS, data copied across a bridge | Native JS, instant |
+| CLI | Python, `typst` binding | Node 24, `typst-ts-node-compiler` (native addon of the same typst.ts project the browser uses) |
+| Failure modes | Two runtimes and a JS↔Python bridge | One runtime |
 
-Phase 0 is a spike that settles this with numbers (Pyodide load time and docx output).
+**TypeScript wins on quality** (better Word output, one source of truth for the data model)
+and on speed. The Python packages installed earlier (`typst`, `python-docx`, `pillow`) were
+removed again.
+
+### Decision: Astro, not Next.js
+
+Same criterion. The app is a fully client-side editor (WASM in workers, IndexedDB, no server)
+plus public pages (landing, docs) that should load fast and rank well.
+
+| | Next.js (static export) | **Astro** |
+| :--- | :--- | :--- |
+| Fit | Its strengths (server rendering, server actions, image optimisation, middleware) are unusable in a static export | Static output by default; the editor is a React island (`client:only`), the rest ships no JS |
+| WASM and workers (typst.ts) | Needs webpack/Turbopack configuration for WASM in workers | Built on Vite, which handles WASM and module workers natively |
+| Landing page performance | React runtime on every page | Zero JS on the landing and docs pages |
+| PWA | Community plugins for the App Router, extra wiring for static export | `@vite-pwa/astro` integration |
+| GitHub Pages | `basePath`, `.nojekyll` (the `_next/` folder is otherwise dropped) | Official `withastro/action` deployment, `base` option |
+| Tauri | Works with static export | Works (static `dist/`) |
+
+**Astro** it is; React, Tailwind, Zustand (+ `zundo`) and dnd-kit inside the editor island.
 
 ## 4. UX design
 
@@ -189,49 +225,56 @@ Phase 0 is a spike that settles this with numbers (Pyodide load time and docx ou
 - First run: start from an example CV or import JSON; template picker later.
 - Interface in Spanish first (i18n-ready for English); light/dark; keyboard reachable.
 
-Stack: Next.js (static export) or Astro + TypeScript + Tailwind, Zustand (+ `zundo` for
-undo/redo), TanStack Query only where there is async work, dnd-kit, typst.ts, Tauri 2.
+Stack: Astro + React island + TypeScript + Tailwind, Zustand (+ `zundo` for undo/redo),
+TanStack Query only where there is async work, dnd-kit, typst.ts, `docx`, Tauri 2.
 
 ## 5. Phases
 
 0. **Spike** (small): Typst template that reads JSON and reproduces one profile; typst.ts in a
-   worker rendering it in a bare page; Pyodide loading `cvgen` and producing `.tex` and `.docx`.
-   Measure and decide section 3's open point.
-1. **Typst template + schema + project format v2** (and the `data/` converter); CLI
-   `cvgen --formato pdf|typ` via the PyPI `typst` binding; tests on every profile.
-2. **Exporters**: LaTeX (existing), Markdown, JSON, Word, JPG; `.zip` bundles; tests.
+   worker rendering it in a bare Astro page; measure compile time per keystroke.
+1. **Typst template + schema + project format v2** (and the `data/` converter); Node CLI
+   `cvgen --formato pdf|typ`; tests on every profile.
+2. **Exporters** in `packages/core`: LaTeX (port of `latex.py`), Markdown, JSON, Word, JPG;
+   `.zip` bundles; tests.
 3. **Web app core**: editor, profiles, live preview, export dialog, IndexedDB; dev in Docker
    Compose with nginx and hot reload.
 4. **Polish**: drag-and-drop, undo/redo, click-to-edit, page-fit highlighting, palette,
    photo crop, Playwright tests.
-5. **PWA + public web**: manifest, service worker, offline; GitHub Pages or Cloudflare Pages
-   on a free subdomain; landing page and promotion (after Bautista's OK).
-6. **Stores and packages, all free**: Microsoft Store (PWA as MSIX via PWABuilder), Flathub,
-   AUR, PyPI for the CLI.
-7. **Tauri shell (optional)**: native file access; Linux packages; unsigned ad-hoc builds for
-   macOS/Windows on GitHub Releases; SignPath Foundation for Windows once the project qualifies.
+5. **PWA + public web**: manifest, service worker, offline; GitHub Pages on `<org>.github.io`;
+   landing page and promotion (after Bautista's OK).
+6. **Microsoft Store**: the PWA packaged as MSIX with PWABuilder, free individual account
+   (Bautista registers it: Microsoft account, ID and selfie).
+7. **Tauri shell + Flathub**: native file access and desktop integration, Flatpak built from
+   source; also AUR, unsigned builds for macOS/Windows on GitHub Releases, and SignPath
+   Foundation for Windows once the project qualifies. CLI on npm.
 
 ## 6. New dependencies (approved 2026-10-30)
 
-- Python (PyPI), **installed** in `cvgen`: `typst` 0.15.0, `python-docx` 1.2.0, `pillow` 13.0.0.
 - Docker images, **pulled**: `node:24-alpine`, `nginx:alpine`.
-- Still to install, each in the phase that needs it (npm needs the `web/` project; Rust and
+- Python: none (the `typst`, `python-docx` and `pillow` packages were added and then removed
+  when the exporters moved to TypeScript).
+- Still to install, each in the phase that needs it (npm needs the workspace; Rust and
   `webkit2gtk-4.1` are system packages installed with pkexec, with Bautista at the PC):
-- Browser (npm, inside the container only): `@myriaddreamin/typst.ts` (and its compiler/renderer
-  WASM), `pyodide` (if option 1), `next` or `astro`, `react`, `tailwindcss`, `zustand`, `zundo`,
-  `@dnd-kit/core`, `@dnd-kit/sortable`, `@playwright/test` (dev).
-- Desktop (phase 7, optional): Rust toolchain + `@tauri-apps/cli` (Tauri 2).
+- npm (inside the container only): `astro`, `@astrojs/react`, `@vite-pwa/astro`, `react`,
+  `tailwindcss`, `@myriaddreamin/typst.ts` (+ web compiler/renderer), 
+  `@myriaddreamin/typst-ts-node-compiler` (CLI), `docx`, `zustand`, `zundo`, `@dnd-kit/core`,
+  `@dnd-kit/sortable`, `vitest` and `@playwright/test` (dev).
+- Desktop (phase 7): Rust toolchain + `@tauri-apps/cli` (Tauri 2), `flatpak-builder`.
 - Fonts: XCharter OTF from CTAN.
 
 All of them are free and open source.
 
 ## 7. Open decisions
 
-1. Exporters in Python via Pyodide or rewritten in TypeScript (spike decides; Python preferred).
-2. Next.js static export or Astro for the web app.
-3. Product name (and which free subdomain) for the public version.
+1. Product name, which also names the GitHub organisation and so the free `<org>.github.io`
+   address. Proposal: **Foja** (from *foja de servicios*, the record of someone's career), with
+   `foja-cv` as the handle (free on GitHub and npm as of 2026-10-30; `foja` alone is taken on
+   GitHub). Alternatives checked free on both: `legajo-cv`, `renglon`, `tipovitae`.
 
-Settled on 2026-10-30: Typst is the main generator and the preview; exports to LaTeX, Markdown,
+Settled on 2026-10-30: exporters in TypeScript; Astro; GitHub Pages; PWA, Microsoft Store
+(MSIX) and Flathub as channels; no paid service of any kind.
+
+Also settled on 2026-10-30: Typst is the main generator and the preview; exports to LaTeX, Markdown,
 JSON and Word; Word in one or two columns driven by the layout options; JSON Resume
 (<https://jsonresume.org>, the open JSON schema for résumés) left for a later import/export;
 the app never accesses the user's repositories, version history is an opt-in feature of the
@@ -254,6 +297,11 @@ app itself.
   SignPath Foundation <https://github.com/SignPath/github-actions-demo>;
   Homebrew and Gatekeeper <https://brew.sh/2025/11/12/homebrew-5.0.0/>,
   <https://github.com/Homebrew/brew/issues/20755>
+- docx (npm) 9.9.0: <https://github.com/dolanmiu/docx/releases/tag/9.9.0>,
+  <https://github.com/dolanmiu/docx/blob/master/docs/usage/tables.md>
+- typst.ts Node compiler: <https://www.npmjs.com/package/@myriaddreamin/typst-ts-node-compiler>
+- Flathub requirements: <https://docs.flathub.org/docs/for-app-authors/requirements>,
+  Tauri on Flathub: <https://v2.tauri.app/distribute/flatpak/>
 - Reactive Resume: <https://github.com/amruthpillai/reactive-resume>
 - python-docx: <https://skelmis-docx.readthedocs.io/>
 - Table-layout résumés and parsers: <https://github.com/geektechlive/blastjob/issues/33>
