@@ -8,6 +8,6 @@
         {"titulo": "Experiencia laboral", "entradas": ["obrok", "reparacion"]},
         {"titulo": "Fortalezas", "lateral": true, "items": "textos/fortalezas_docente_ia.md"},
         {"titulo": "Educación", "entradas": ["tuia", "tecnico"], "compacto": true},
-        {"titulo": "Proyecto personal", "entradas": ["mapa-enciclopedico"], "items": ["Más proyectos en bafif.github.io."], "compacto": true}
+        {"titulo": "Proyecto personal", "entradas": ["mapa-enciclopedico"], "items": ["Más proyectos en **bafif.github.io**."], "compacto": true}
     ]
 }

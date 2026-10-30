@@ -7,6 +7,6 @@
         {"titulo": "Experiencia", "entradas": ["obrok", "tecso", "reparacion", "docencia"]},
         {"titulo": "Educación", "entradas": ["tuia", "lcc", "tecnico"]},
         {"titulo": "Fortalezas", "lateral": true, "items": "textos/fortalezas.md"},
-        {"titulo": "Proyectos personales", "lateral": true, "items": ["En bafif.github.io"]}
+        {"titulo": "Proyectos personales", "lateral": true, "items": ["En **bafif.github.io**"]}
     ]
 }

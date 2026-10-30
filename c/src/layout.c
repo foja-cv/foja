@@ -16,12 +16,13 @@ static const Color BLUE = {0.0f, 0.5f, 1.0f}; /* RoyalBlue, as in the LaTeX temp
 static const Color BLACK = {0.0f, 0.0f, 0.0f};
 static const Color GREY = {0.3f, 0.3f, 0.3f};
 
-typedef enum { ALIGN_LEFT, ALIGN_RIGHT } Align;
+typedef enum { ALIGN_LEFT, ALIGN_RIGHT, ALIGN_JUSTIFY } Align; /* justified: last line left */
 
 typedef struct {
     Font font;
     Color color;
     const char *text; /* UTF-8 */
+    bool joined;      /* no space between its first word and the previous span */
 } Span;
 
 typedef struct {
@@ -29,6 +30,7 @@ typedef struct {
     Color color;
     const char *word; /* WinAnsi */
     float width;
+    bool glued; /* to the previous word: no space and no line break between them */
 } Word;
 
 typedef struct {
@@ -63,17 +65,24 @@ static void ensure_space(Column *col, float height) {
 static size_t split_words(Column *col, const Span *spans, size_t nspans, float size, Buf *words) {
     for (size_t s = 0; s < nspans; s++) {
         const char *text = utf8_to_winansi(col->arena, spans[s].text);
+        bool glued = spans[s].joined && words->len > 0 && *text != ' ';
         while (*text != '\0') {
             while (*text == ' ') text++;
             size_t len = strcspn(text, " ");
             if (len == 0) break;
-            Word word = {spans[s].font, spans[s].color, arena_strndup(col->arena, text, len), 0};
+            Word word = {spans[s].font, spans[s].color, arena_strndup(col->arena, text, len), 0,
+                         glued};
             word.width = text_width(word.font, word.word, size);
             buf_append(words, &word, sizeof word);
+            glued = false;
             text += len;
         }
     }
     return words->len / sizeof(Word);
+}
+
+static float gap_before(const Word *word, float space) {
+    return word->glued ? 0 : space;
 }
 
 /* Word-wraps the spans into lines of `leading` height. `marker` (WinAnsi) is drawn before the
@@ -89,8 +98,19 @@ static void flow(Column *col, const Span *spans, size_t nspans, float size, floa
     for (size_t i = 0; i < n;) {
         size_t j = i + 1;
         float line = words[i].width;
-        while (j < n && line + space + words[j].width <= available)
-            line += space + words[j++].width;
+        while (j < n && line + gap_before(&words[j], space) + words[j].width <= available) {
+            line += gap_before(&words[j], space) + words[j].width;
+            j++;
+        }
+        while (j < n && j > i + 1 && words[j].glued) {
+            j--;
+            line -= gap_before(&words[j], space) + words[j].width;
+        }
+
+        /* Justified lines share the room left over among their spaces, except the last one. */
+        size_t gaps = 0;
+        for (size_t k = i + 1; k < j; k++) gaps += !words[k].glued;
+        float stretch = align == ALIGN_JUSTIFY && j < n && gaps > 0 ? (available - line) / gaps : 0;
 
         ensure_space(col, leading);
         col->y -= leading;
@@ -100,8 +120,9 @@ static void flow(Column *col, const Span *spans, size_t nspans, float size, floa
             pdf_text(col->page, FONT_REGULAR, size, BLUE, col->x + indent - BULLET_INDENT, baseline,
                      marker);
         for (size_t k = i; k < j; k++) {
+            if (k > i && !words[k].glued) x += space + stretch;
             pdf_text(col->page, words[k].font, size, words[k].color, x, baseline, words[k].word);
-            x += words[k].width + space;
+            x += words[k].width;
         }
         i = j;
     }
@@ -110,7 +131,7 @@ static void flow(Column *col, const Span *spans, size_t nspans, float size, floa
 
 static void text_line(Column *col, Font font, Color color, float size, float leading,
                       Align align, const char *text) {
-    Span span = {font, color, text};
+    Span span = {font, color, text, false};
     flow(col, &span, 1, size, leading, 0, align, NULL);
 }
 
@@ -133,18 +154,34 @@ static void title_line(Column *col, Font font, Color color, float size, const ch
                  first_baseline, period_ansi);
 }
 
-/* The heading in bold followed by the text. Returns the number of spans. */
-static size_t item_spans(Column *col, const Item *item, Span spans[2]) {
+#define MAX_SPANS 9
+
+/* The heading in bold followed by the text, where **...** is bold too. Returns the number of
+   spans. */
+static size_t item_spans(Column *col, const Item *item, Span spans[MAX_SPANS]) {
     size_t n = 0;
     if (item->heading != NULL)
-        spans[n++] = (Span){FONT_BOLD, BLACK, arena_printf(col->arena, "%s.", item->heading)};
-    spans[n++] = (Span){FONT_REGULAR, BLACK, item->text};
+        spans[n++] =
+            (Span){FONT_BOLD, BLACK, arena_printf(col->arena, "%s.", item->heading), false};
+    bool bold = false, joined = false;
+    for (const char *text = item->text; n < MAX_SPANS;) {
+        const char *mark = n + 1 < MAX_SPANS ? strstr(text, "**") : NULL;
+        size_t len = mark != NULL ? (size_t)(mark - text) : strlen(text);
+        if (len > 0) {
+            spans[n++] = (Span){bold ? FONT_BOLD : FONT_REGULAR, BLACK,
+                                arena_strndup(col->arena, text, len), joined};
+            joined = text[len - 1] != ' ';
+        }
+        if (mark == NULL) break;
+        bold = !bold;
+        text = mark + 2;
+    }
     return n;
 }
 
 static void bullets(Column *col, const Item *items, size_t n) {
     for (size_t i = 0; i < n; i++) {
-        Span spans[2];
+        Span spans[MAX_SPANS];
         size_t nspans = item_spans(col, &items[i], spans);
         flow(col, spans, nspans, 9.5f, 11.5f, BULLET_INDENT, ALIGN_LEFT, "\x95");
     }
@@ -160,7 +197,8 @@ static void entry(Column *col, const Entry *e, bool compact) {
     col->y -= compact ? 4 : 5;
 }
 
-/* Entries as title, place and dates; items as paragraphs, all aligned to the right. */
+/* Entries as title, place and dates, aligned to the right; headed items are paragraphs to read,
+   so they are justified, and plain items are right-aligned lines. */
 static void side_section(Column *col, const Section *section) {
     text_line(col, FONT_BOLD, BLUE, 9.5f, 12.0f, ALIGN_RIGHT, section->title);
     for (size_t i = 0; i < section->nentries; i++) {
@@ -172,9 +210,11 @@ static void side_section(Column *col, const Section *section) {
         col->y -= 4;
     }
     for (size_t i = 0; i < section->nitems; i++) {
-        Span spans[2];
-        size_t nspans = item_spans(col, &section->items[i], spans);
-        flow(col, spans, nspans, 9.0f, 11.5f, 0, ALIGN_RIGHT, NULL);
+        const Item *item = &section->items[i];
+        Span spans[MAX_SPANS];
+        size_t nspans = item_spans(col, item, spans);
+        flow(col, spans, nspans, 9.0f, 11.5f, 0, item->heading ? ALIGN_JUSTIFY : ALIGN_RIGHT,
+             NULL);
         col->y -= 4;
     }
     col->y -= 9;
@@ -235,7 +275,8 @@ bool layout_cv(Arena *arena, const Cv *cv, const Jpeg *photo, Pdf *pdf, char *er
     main.y -= 2;
     text_line(&main, FONT_BOLD, BLACK, 14.0f, 18.0f, ALIGN_LEFT, cv->subtitle);
     main.y -= 8;
-    Span profile[2] = {{FONT_BOLD, BLUE, "Perfil"}, {FONT_REGULAR, BLACK, cv->profile}};
+    Span profile[2] = {{FONT_BOLD, BLUE, "Perfil", false},
+                       {FONT_REGULAR, BLACK, cv->profile, false}};
     flow(&main, profile, 2, 9.5f, 12.5f, 0, ALIGN_LEFT, NULL);
     main.y -= 12;
 

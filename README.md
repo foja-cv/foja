@@ -96,7 +96,8 @@ A section lists `entradas` (ids from `cv.json`), `items` (a Markdown file of hea
 or a list of plain lines), or both. `"compacto": true` shows each entry as title, place, dates and `nota`, without its
 `tareas`.
 `"lateral": true` moves the section to the sidebar, below the skills, as entry titles with
-their place and dates, or as plain paragraphs. The sidebar never breaks across pages: the C
+their place and dates, headed paragraphs justified and plain lines right-aligned. In any item,
+`**text**` is bold. The sidebar never breaks across pages: the C
 generator stops with an error if it does not fit, and LaTeX spills it into the main column.
 
 ### Texts

@@ -1,5 +1,7 @@
 """Layer 4: render a `Cv` as a LaTeX document for the Wenneker template."""
 
+import re
+
 from cvgen.model import Cv, Entry, Item, Section
 
 PHOTO_NAME = "foto.jpg"
@@ -21,6 +23,11 @@ _SPECIAL = {
 
 def escape(text: str) -> str:
     return "".join(_SPECIAL.get(char, char) for char in text)
+
+
+def inline(text: str) -> str:
+    """Escaped text where `**...**` is bold."""
+    return re.sub(r"\*\*(.+?)\*\*", r"\\textbf{\1}", escape(text))
 
 
 def render_sidebar(cv: Cv) -> str:
@@ -66,7 +73,8 @@ def side_column(title: str, values: list[str]) -> str:
 
 
 def render_side_section(section: Section) -> list[str]:
-    """Entries as title, place and dates; items as paragraphs, all aligned to the right."""
+    """Entries as title, place and dates, aligned to the right; headed items are paragraphs to
+    read, so they are justified, and plain items are right-aligned lines."""
     lines = [rf"\SideHeading{{{escape(section.title)}}}"]
     for entry in section.entries:
         lines.append(rf"\textbf{{{escape(entry.title)}}} \\")
@@ -75,8 +83,13 @@ def render_side_section(section: Section) -> list[str]:
         )
         lines.append(r"\SmallSep")
     for item in section.items:
-        heading = rf"\textbf{{{escape(item.heading)}.}} " if item.heading else ""
-        lines.append(rf"{heading}{escape(item.text)}\par\SmallSep")
+        if item.heading:
+            lines.append(
+                r"{\leftskip=0pt \parfillskip=0pt plus 1fil "
+                rf"\textbf{{{escape(item.heading)}.}} {inline(item.text)}\par}}\SmallSep"
+            )
+        else:
+            lines.append(rf"{inline(item.text)}\par\SmallSep")
     lines.append(r"\Sep")
     return lines
 
@@ -87,7 +100,7 @@ def render_items(items: list[Item]) -> str:
     lines = [r"\begin{itemize}[leftmargin=1.2em,label=\bluebullet]"]
     for item in items:
         heading = rf"\textbf{{{escape(item.heading)}.}} " if item.heading else ""
-        lines.append(rf"\item {heading}{escape(item.text)}")
+        lines.append(rf"\item {heading}{inline(item.text)}")
     lines.append(r"\end{itemize}")
     return "\n".join(lines)
 
