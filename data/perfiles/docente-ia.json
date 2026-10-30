@@ -1,12 +1,12 @@
 {
     "subtitulo": "Docente de Inteligencia Artificial",
     "perfil": "textos/perfil_docente_ia.md",
-    "contactos": ["telefono", "correo", "github"],
+    "contactos": ["telefono", "correo", "github", "web"],
     "habilidades": ["Programación", "Idiomas"],
     "secciones": [
         {"titulo": "Experiencia docente", "entradas": ["docencia"]},
         {"titulo": "Experiencia laboral", "entradas": ["obrok", "reparacion"]},
-        {"titulo": "Fortalezas", "items": "textos/fortalezas_docente_ia.md"},
+        {"titulo": "Fortalezas", "lateral": true, "items": "textos/fortalezas_docente_ia.md"},
         {"titulo": "Educación", "entradas": ["tuia", "tecnico"], "compacto": true},
         {"titulo": "Proyecto personal", "entradas": ["mapa-enciclopedico"], "compacto": true}
     ]

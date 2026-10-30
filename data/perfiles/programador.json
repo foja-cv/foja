@@ -1,12 +1,12 @@
 {
     "subtitulo": "Programador",
     "perfil": "textos/perfil_programador.md",
-    "contactos": ["telefono", "correo", "github"],
+    "contactos": ["telefono", "correo", "github", "web"],
     "habilidades": ["Programación", "Web", "Microcontroladores", "Idiomas"],
     "secciones": [
         {"titulo": "Experiencia", "entradas": ["obrok", "tecso", "reparacion", "docencia"]},
         {"titulo": "Educación", "entradas": ["tuia", "lcc", "tecnico"]},
         {"titulo": "Fortalezas", "items": "textos/fortalezas.md"},
-        {"titulo": "Proyectos personales", "entradas": ["mapa-enciclopedico", "wiki-estudio", "mapa-oop", "acordes"], "compacto": true}
+        {"titulo": "Proyectos personales", "lateral": true, "entradas": ["mapa-enciclopedico", "wiki-estudio", "mapa-oop", "acordes"], "compacto": true}
     ]
 }

@@ -104,7 +104,7 @@ static void test_profiles(Arena *arena, const char *data) {
             CHECK(strcmp(cv.subtitle, "Docente de cine debate") == 0);
             CHECK(strcmp(cv.side[0].title, "Curso") == 0);
             CHECK(strcmp(cv.sections[0].entries[0].title, "Docente particular") == 0);
-            CHECK(cv.sections[0].entries[0].ntasks == 3);
+            CHECK(cv.sections[0].entries[0].ntasks == 4);
         }
     }
     Cv cv;

@@ -11,7 +11,8 @@
     "contactos": {
         "telefono": "+54 9 341 000-0000",
         "correo": "correo@ejemplo.com",
-        "github": "github.com/bafif"
+        "github": "github.com/bafif",
+        "web": "bafif.github.io"
     },
     "habilidades": {
         "Idiomas": ["Español (nativo)", "Inglés general (C2)", "Inglés técnico (C1)"],

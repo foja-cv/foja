@@ -55,6 +55,14 @@ def test_cine_debate_profile_contents():
     assert ("Correo", "correo@ejemplo.com") in cv.contacts
 
 
+def test_side_sections_go_in_the_sidebar():
+    cv = build_cv(DATA, "docente-ia")
+    assert [section.title for section in cv.sections if section.side] == ["Fortalezas"]
+    sidebar, _, body = render(cv).partition(r"\begin{document}")
+    assert r"\SideHeading{Fortalezas}" in sidebar
+    assert r"\CVSection{Fortalezas}" not in body
+
+
 def test_unknown_entry_is_reported(tmp_path):
     (tmp_path / "perfiles").mkdir()
     (tmp_path / "cv.json").write_text((DATA / "cv.json").read_text())
@@ -81,6 +89,6 @@ def test_overflow_continues_in_main_column(tmp_path):
     pages = bbox.split("<page ")[1:]
     assert len(pages) == 2
     words = re.findall(r'xMin="([\d.]+)"[^>]*>([^<]*)<', pages[1])
-    assert "Racket" in [word for _, word in words]
+    assert "Fortalezas" in [word for _, word in words]
     # On A4 the sidebar ends around x = 170pt; nothing on page 2 may start there.
     assert min(float(x) for x, _ in words) > 170
