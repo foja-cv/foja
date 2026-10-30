@@ -41,6 +41,7 @@
         "reparacion": {
             "titulo": "Reparación de equipos informáticos",
             "lugar": "Kernel Computación",
+            "nota": "Independiente desde 12/2018; en Kernel Computación desde 02/2026",
             "desde": "2018-12",
             "hasta": null,
             "tareas": "textos/tareas_reparacion.md"
