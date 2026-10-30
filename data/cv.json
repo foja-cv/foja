@@ -39,7 +39,7 @@
         },
         "reparacion": {
             "titulo": "Reparación de equipos informáticos",
-            "lugar": "Independiente",
+            "lugar": "Kernel Computación",
             "desde": "2018-12",
             "hasta": null,
             "tareas": "textos/tareas_reparacion.md"
