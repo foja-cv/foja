@@ -1,144 +1,153 @@
-# GUI for the CV generator — research and plan
+# CV editor on Typst — research and plan
 
-Status: **proposal, waiting for approval** (2026-10-30). Nothing here is built yet.
+Status: **proposal, direction agreed, details open** (2026-10-30). Nothing here is built yet.
 
-Goal: a graphical editor for the data in `data/` with the best UX possible, a live preview, and
-export to JSON, LaTeX, Typst, PDF, JPG and Word (`.docx`).
+## Goal
+
+A CV editor where the main generator is **Typst**: forms instead of code, a live preview that is
+the real Typst output, and exports to Typst, PDF, JPG, LaTeX, Markdown, JSON and Word.
+
+One product, three ways to run it, from the same release:
+
+1. **CLI** (`cvgen`), as today.
+2. **Desktop app** installed like any other app on Linux, macOS and Windows.
+3. **Public web app** that anyone can open, to keep adding features to over time.
+
+Positioning: *a no-code CV editor built on Typst*. Note that "the Overleaf of Typst" is already
+typst.app (the official, collaborative Typst editor, where you write code), so the pitch should
+stress forms + live preview + exports, not the editor itself. Closest existing products:
+RenderCV (YAML → Typst, CLI and a web app) and the CV templates on Typst Universe (edited as
+code). No form-based Typst CV builder showed up in the search.
 
 ## 1. What exists today
 
-- `data/cv.json` (personal data, contacts, skill groups, every entry by id), `data/perfiles/*.json`
-  (one CV per profile: which sections/entries, order, `compacto`, `lateral`), `data/textos/*.md`
-  (profile texts, task lists, strengths), `data/img/foto.jpg`.
-- `data/privado.json` (git-ignored): the address. Only profiles with `"domicilio": true` show it;
-  today that is only `docente-cine-debate`, because the posting asks for it.
-- `python/` (`cvgen`): layered — `sources` → `model` → `build` → `latex` → `compile` (tectonic).
-- `c/` (`cvgen-c`): dependency-free C17, writes the PDF directly with Helvetica.
+- `data/cv.json`, `data/perfiles/*.json`, `data/textos/*.md`, `data/img/foto.jpg`.
+- `python/` (`cvgen`): `sources` → `model` → `build` → `latex` → `compile` (tectonic, ~1.9 s warm).
+- `c/` (`cvgen-c`): dependency-free C, PDF with Helvetica, < 10 ms.
 
-Measured on BAFLIN (`programador` profile):
+## 2. Comparison of the delivery options
 
-| Step | Time |
-| :--- | ---: |
-| `cvgen` (LaTeX + tectonic, warm cache) | ~1.9 s |
-| `cvgen-c` | < 10 ms |
-| `pdftoppm -jpeg -r 150`, one page | ~60 ms |
+| | A. Local web app in Docker | B. Tauri + Python sidecar | **C. Local-first web core + Tauri shell** |
+| :--- | :--- | :--- | :--- |
+| How it runs | `docker compose up`, browser on localhost | Native app; FastAPI frozen with PyInstaller/Nuitka next to it | Static web app; all rendering in the browser (WASM); Tauri wraps the same build |
+| Shows up as a normal app | No | Yes (.deb/.rpm/AppImage, .dmg, .msi/.exe) | Yes (same installers) |
+| Install for non-technical people | Bad: needs Docker Desktop on macOS/Windows | Good | Good |
+| Installer size | n/a (images of hundreds of MB) | Large: Python + deps per OS | Small: Tauri uses the system webview; Typst WASM a few MB |
+| Same code for the public web | Needs a server per user or shared | Needs a server | **Yes: the web build is the product**, static hosting |
+| Server cost / attack surface for the web | Server that compiles untrusted input | Same | **None**: no server, CV data never leaves the user's browser |
+| Signing / packaging pain | — | High: sidecar must be signed separately; macOS hardened runtime breaks PyInstaller's Python.framework without extra entitlements and inside-out signing | Low: only Tauri's own binary |
+| Preview latency | Server round-trip | Local round-trip | In-process WASM, no network |
+| Offline | Yes | Yes | Yes (assets cached; bundled in the desktop app) |
+| LaTeX PDF compile in-app | Yes (tectonic) | Yes | No (BusyTeX WASM exists but downloads ~120 MB); export `.tex` instead |
 
-tectonic is too slow to recompile on every keystroke; it can only be an on-demand preview.
+**Chosen direction: C.** Docker stays for development only (hot reload + nginx, as usual), not as
+the way people run the app.
 
-Installed on the host: tectonic 0.17, poppler (`pdftoppm`), ImageMagick, Docker, node 24.
-Not installed: typst, pandoc, LibreOffice.
+Signing still costs money if we want no warnings: macOS needs the Apple Developer Program
+(99 USD/year) to notarise, otherwise Gatekeeper blocks a downloaded app; Windows shows a
+SmartScreen warning without a code-signing certificate. Linux packages need nothing. First
+releases can ship unsigned with instructions, and signing comes later.
 
-## 2. Research findings
-
-### Typst
-- **Python binding `typst`** (PyPI, typst-py, Apache-2.0, prebuilt abi3 wheels): compiles to PDF,
-  PNG (with `ppi`) and SVG, returns bytes when no `output` is given, takes the sources as a
-  `{filename: bytes}` dict (no temp files), and `typst.Compiler()` keeps the world (fonts) loaded
-  between compilations. Also `typst.query(...)` to read `metadata` back out of a document.
-  Tracks upstream Typst 0.14/0.15. Docs: <https://typst-py.readthedocs.io/>.
-- **In the browser** (`typst.ts`, Myriad-Dreamin): stable 0.7.0 targets Typst 0.14.2; 0.8.0 is
-  still in release candidates (Typst 0.15). Using it would mean generating the `.typ` source in
-  TypeScript too (duplicating the Python generator) or shipping it from the server anyway, so it
-  buys little here. **Not chosen**; server-side compile with typst-py is a single source of truth.
-- Upstream Typst: 0.15.1 (2026-07-17).
-- Fonts: the LaTeX output uses XCharter. Typst only bundles Libertinus, New Computer Modern and
-  DejaVu Sans Mono, so the XCharter OTF files (CTAN `xcharter`, free Bitstream licence — verify
-  before bundling) go in the repo and are passed with `font_paths`, so both engines look alike.
-- Click-to-edit from the preview is feasible without IDE APIs: the template emits
-  `context metadata((id: ..., pos: here().position()))` next to each entry and section, the
-  backend reads them with `typst.query`, and the frontend overlays clickable hotspots on the SVG.
-  The same trick gives the page-fit indicator (where the main column ends, how many pages).
-
-### Word (`.docx`)
-- `python-docx` (backend) and `docx` (npm) can both build the usual CV layout: a borderless
-  two-column table with a shaded narrow sidebar (photo, contacts, skills) and the main column.
-- Caveat: some ATS parsers read only paragraphs and skip table content. Mitigation: keep the
-  table to the two columns and use real headings/paragraphs inside the cells; offer a
-  "single column (ATS)" variant of the Word export.
-- Word cannot be pixel-identical to Typst/LaTeX (fonts are not embedded, Word reflows). The goal
-  is a clean, editable document with the same content and order. A Word preview would need
-  LibreOffice to render it; not planned.
-- **Chosen:** `python-docx`, so every generator lives in the same Python package.
-
-### JPG
-- Rasterise the PDF of the chosen engine with `pdftoppm -jpeg -r <dpi>` (poppler; ~60 ms per
-  page), so the JPG always matches the PDF. One JPG per page; several pages go in a `.zip`.
-  Typst can also emit PNG directly (`format="png"`), which avoids poppler for the Typst engine.
-
-### UX patterns in existing open-source CV builders
-Looked at Reactive Resume (v5/v6), Resume Stack, OpenResume and RenderCV for patterns, not to
-copy any of them:
-- Split view: editor on the left, live preview on the right, preview never blanks while
-  recompiling (keep the last good render, show a small "compiling" state).
-- Drag-and-drop ordering of sections and of entries inside a section (dnd-kit is the usual
-  choice in React).
-- Click on the preview to jump to the field; inline validation; structured dates.
-- Autosave plus undo/redo (Reactive Resume keeps up to 200 steps) and recovery of drafts.
-- Live controls for page size, spacing and font (later, not in the first version).
-- JSON export/import as the portable format; JSON Resume is the common interchange schema.
-
-## 3. Proposed architecture
-
-A **local web app** (only on `127.0.0.1`, nothing exposed), in the repo, following the usual stack:
+## 3. Architecture (Typst-first)
 
 ```
-curriculum/
-├── python/            cvgen: + typst.py, docx.py, raster.py, export.py (new layers)
-├── api/               cvgen-api: FastAPI over cvgen (new uv workspace member)
-├── web/               Next.js App Router + TypeScript + Tailwind, Zustand + TanStack Query
-├── fonts/             XCharter OTF for Typst
-├── nginx/             reverse proxy: / → web, /api → api
-└── compose.yaml       api (uvicorn --reload), web (next dev), nginx; bound to 127.0.0.1
+                    project.json  (one self-contained document, validated by cv.schema.json)
+                          │
+     ┌────────────────────┼─────────────────────────┐
+     ▼                    ▼                         ▼
+ Typst template      exporters                  editor UI
+ (reads the JSON)    LaTeX · Markdown ·         forms, profiles,
+     │               JSON · Word                drag-and-drop
+     ▼
+ typst compiler ── PDF · SVG (preview) · PNG → JPG
+ (typst.ts in the browser, typst-py in the CLI)
 ```
 
-- **Data stays in `data/`** (the repo, versioned with git). The API reads and writes those files
-  in place; there is no database. The UI shows "unsaved" and "uncommitted" states.
-- **Single source of truth for rendering:** every format comes out of `cvgen`. The CLI gains
-  `--formato {pdf,tex,typ,json,jpg,docx}` and `--motor {typst,latex,c}` for PDF/JPG.
-- **Preview engine:** Typst by default (compile in tens of ms with a warm `typst.Compiler`, sent
-  as SVG per page: sharp at any zoom and light). C is also instant and can be live. LaTeX is
-  on demand ("Update" button, ~2 s), since its line breaking differs from the other two. Each
-  engine has its own page-fit badge because they fill pages differently.
-- **Draft vs. saved:** the frontend keeps the edited document in a Zustand store (with `zundo`
-  for undo/redo); preview requests send the draft (`POST /api/preview`, debounced ~200 ms, the
-  previous request aborted); saving writes the files.
-- **Types:** Pydantic models in the API → OpenAPI → TypeScript types with `openapi-typescript`,
-  so the frontend and backend share one schema.
-- Docker images: `python:3.13-slim` + uv + tectonic + poppler-utils (tectonic package cache in a
-  volume), `node:24-alpine` (all npm installs inside the container), `nginx:alpine`.
+- **The Typst template is the generator.** It reads the project JSON (`json(...)` /
+  `sys.inputs`) and lays out the CV itself, so the browser, the desktop app and the CLI all run
+  the exact same `.typ` files. No Typst source is generated by Python or TypeScript.
+- **Exported `.typ`** = the template + `cv.json` + photo in a `.zip`; it compiles with plain
+  `typst compile` and opens in typst.app.
+- **Project format v2:** one JSON document per user with base data, profiles and texts inline
+  (the current multi-file `data/` layout does not fit a browser). A JSON Schema
+  (`schema/cv.schema.json`) is the contract for the template, the exporters and the UI. The CLI
+  keeps reading the current `data/` layout through a converter.
+- **Preview:** typst.ts in a Web Worker compiles on every change (debounced) and renders SVG
+  pages; the last good render stays on screen while compiling or when there is an error. Anchors
+  emitted by the template (`context metadata((id: …, pos: here().position()))`) give
+  click-to-edit and the page-fit indicator.
+- **Exports:**
 
-### API sketch
-
-| Method | Path | Does |
-| :--- | :--- | :--- |
-| GET | `/api/data` | `cv.json`, every profile and text, resolved into one document |
-| PUT | `/api/data` | validate and write back to `data/` (atomic writes) |
-| POST | `/api/preview?motor=typst` | draft + profile → SVG pages, anchors, page count, warnings |
-| POST | `/api/export?formato=…&motor=…` | draft + profile → file (or `.zip` for multi-file) |
-| POST | `/api/foto` | upload/crop the photo |
-| GET | `/api/git` | dirty files, last commit (read-only; committing stays manual) |
-
-### Export details
-
-| Format | Content |
+| Format | How |
 | :--- | :--- |
-| JSON | the profile fully resolved (texts inlined) — self-contained; optional JSON Resume variant |
-| LaTeX | `.zip` with `cv.tex`, `structure.tex` and the photo (compiles as is, Overleaf-ready) |
-| Typst | `.zip` with `cv.typ`, the photo (and fonts note) |
-| PDF | engine selectable: Typst (default), LaTeX, C |
-| JPG | per page from the chosen engine's PDF, dpi selectable (150/300) |
-| Word | `.docx`, two-column table layout; optional single-column ATS variant |
-| All | one `.zip` with every format for the profile |
+| Typst | `.zip` with template, `cv.json`, photo (and fonts) |
+| PDF | Typst |
+| JPG | Typst PNG/canvas → JPEG, dpi selectable; one file per page |
+| LaTeX | `.zip` with `cv.tex`, `structure.tex`, photo; optional "Open in Overleaf" button (verify their API) |
+| Markdown | plain CV for READMEs, GitHub profiles, pasting into forms |
+| JSON | the project file (import/export) and the resolved profile; JSON Resume later |
+| Word | `.docx`, one or two columns following the layout options |
+
+- **Fonts:** XCharter OTF bundled (CTAN `xcharter`, verify the licence) so the look matches the
+  current LaTeX CV; more templates/fonts later.
+- **Storage (web):** IndexedDB in the browser, plus import/export of the project JSON. No
+  accounts, no server in the first public version. Desktop: project files on disk.
+- **Hosting (web):** static site (GitHub Pages or Cloudflare Pages). Publishing needs Bautista's
+  explicit OK.
+- **`cvgen-c`:** stays in the repo, out of the GUI.
+- **No access to version control.** Neither the app nor its exports touch any repository of the
+  user. Committing the repo's `data/` stays manual and outside the app.
+
+### Layout options (the user shapes the CV)
+
+The layout is data, not code: a `diseño` object per profile that the Typst template and the
+Word exporter both read. First set of options:
+
+- columns: one or two; sidebar left or right, its width;
+- show/hide photo, its shape; section order and which column each one goes in;
+- font family and size, accent colour, margins, spacing density, page size (A4/Letter);
+- date format and language of the fixed labels.
+
+Word honours the same options (one column, or a two-column table). More options are added over
+time without changing the data model.
+
+### Versions (opt-in)
+
+Off by default. When the user enables it, the app keeps its own history of the project:
+snapshots on save and named versions ("sent to Kuepa"), with preview, diff of fields and
+restore. Stored with the project (IndexedDB on the web, next to the project file on desktop).
+It is not a VCS integration and never reads or writes a repository.
+
+### Long-term vision
+
+A general live, graphical Typst editor built around freedom: the user accumulates objects
+(blocks: text, lists, entries, images, shapes) and organises them on the page, and the
+template turns them into Typst. The CV is the first product on top of it. To keep that door
+open without building it now, the data model uses typed blocks (an entry, a list of items, a
+paragraph) and the template renders blocks by type, so new block types and layouts can be added
+later. Until then, everything is scoped to CVs.
+
+### Open decision: where the exporters live
+
+LaTeX, Markdown, JSON and Word are small text/data transforms, but they must run in three places.
+
+1. **Python core everywhere (recommended to try first).** `cvgen` keeps the exporters (LaTeX
+   already exists); the CLI runs them natively (Typst via the `typst` PyPI binding), the browser
+   and desktop run the same code through **Pyodide** in a Web Worker (`python-docx` needs `lxml`,
+   which Pyodide ships). One implementation, Python as usual. Cost: ~10 MB downloaded once and
+   cached; startup of a couple of seconds, off the main thread.
+2. **TypeScript core.** Exporters rewritten in TS (`docx` npm for Word); the CLI becomes a Node
+   program. Lighter web app, but the Python generator is retired and the CLI changes language.
+
+Phase 0 is a spike that settles this with numbers (Pyodide load time and docx output).
 
 ## 4. UX design
-
-Layout (desktop first, resizable split, light/dark):
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────┐
 │ CV ▸ [programador ▾]  [+ perfil] [duplicar]     ● sin guardar   ↶ ↷   [Exportar ▾]│
 ├──────────────┬────────────────────────────┬──────────────────────────────────────┤
-│ Datos        │  Editor of the selection   │  Preview  [Typst|C|LaTeX]  1/1 pág ✓  │
+│ Datos        │  Editor of the selection   │  Preview                 1/1 pág ✓    │
 │  Personales  │                            │  ┌──────────────────────────┐         │
 │  Contactos   │  Obrok — Desarrollador…    │  │                          │ zoom    │
 │  Habilidades │  Lugar   [Obrok        ]   │  │   (SVG pages, hotspots   │ fit     │
@@ -146,71 +155,78 @@ Layout (desktop first, resizable split, light/dark):
 │  Texto       │  Nota    [...          ]   │  │                          │         │
 │  Secciones ≡ │  Tareas  ≡ item  ≡ item  + │  └──────────────────────────┘         │
 │   Experiencia│                            │  ⚠ main column overflows by 4 lines   │
-│   Educación  │                            │                                      │
 └──────────────┴────────────────────────────┴──────────────────────────────────────┘
 ```
 
-- **Two levels, made explicit:** the *data bank* (all entries, shared by every profile) and the
+- **Two levels, explicit:** the *data bank* (all entries, shared by every profile) and the
   *profile* (which entries, in which section, order, compact, sidebar). Editing an entry warns
-  "used in 3 profiles". Toggling an entry for a profile is a checkbox, not a delete.
-- **Address:** per-profile checkbox «Mostrar domicilio», **unchecked by default** (new profiles
-  included). The address is edited and saved only in `data/privado.json`, never in `cv.json` or
-  anything else under git, and never sent to GitHub.
-- Sections and entries reorder by drag-and-drop (with keyboard alternative); per section toggles
-  for `compacto` and `lateral`.
-- Tasks/strengths edited as a list of items (optional heading + paragraph), serialised back to
-  the existing Markdown subset, so the files stay hand-editable.
-- Month pickers for dates, "ongoing" switch for `hasta: null`; inline validation messages next to
-  the field (the same rules as `DataError`).
-- **One-page discipline:** permanent badge "1 page ✓ / overflows by N lines" per engine, and the
-  overflowing entries highlighted in the preview.
-- Click on the preview → selects the field in the editor; selecting a field → scrolls and
-  highlights it in the preview.
-- Autosave of the draft in the browser (recovery after a crash); explicit "Save" writes `data/`
-  (Ctrl+S). Undo/redo (Ctrl+Z / Ctrl+Shift+Z). Command palette (Ctrl+K) for profiles and exports.
-- Export dialog: format, engine, dpi, and "all formats (.zip)"; remembers the last choice.
-- Interface in Spanish; code, docs and commits in English.
-- Accessibility: keyboard reachable, visible focus, contrast checked in both themes.
+  "used in 3 profiles". Including an entry in a profile is a checkbox, not a delete.
+- Drag-and-drop for sections and entries (with a keyboard alternative); per-section toggles for
+  compact and sidebar.
+- Month pickers and an "ongoing" switch for dates; inline validation from the JSON Schema.
+- **One-page discipline:** permanent "1 page ✓ / overflows by N lines" badge; overflowing
+  entries highlighted in the preview.
+- Click on the preview → selects the field; selecting a field → highlights it in the preview.
+- Autosave, undo/redo (Ctrl+Z / Ctrl+Shift+Z), Ctrl+S, command palette (Ctrl+K).
+- Export dialog: format, dpi, "all formats (.zip)"; remembers the last choice.
+- First run: start from an example CV or import JSON; template picker later.
+- Interface in Spanish first (i18n-ready for English); light/dark; keyboard reachable.
+
+Stack: Next.js (static export) or Astro + TypeScript + Tailwind, Zustand (+ `zundo` for
+undo/redo), TanStack Query only where there is async work, dnd-kit, typst.ts, Tauri 2.
 
 ## 5. Phases
 
-Each phase is meant for its own session, with its own commit(s) on `main`.
+0. **Spike** (small): Typst template that reads JSON and reproduces one profile; typst.ts in a
+   worker rendering it in a bare page; Pyodide loading `cvgen` and producing `.tex` and `.docx`.
+   Measure and decide section 3's open point.
+1. **Typst template + schema + project format v2** (and the `data/` converter); CLI
+   `cvgen --formato pdf|typ` via the PyPI `typst` binding; tests on every profile.
+2. **Exporters**: LaTeX (existing), Markdown, JSON, Word, JPG; `.zip` bundles; tests.
+3. **Web app core**: editor, profiles, live preview, export dialog, IndexedDB; dev in Docker
+   Compose with nginx and hot reload.
+4. **Polish**: drag-and-drop, undo/redo, click-to-edit, page-fit highlighting, palette,
+   photo crop, Playwright tests.
+5. **Desktop**: Tauri 2 wrapping the static build; GitHub Actions matrix producing the
+   installers for the three systems; unsigned at first.
+6. **Public web**: static hosting, domain, landing page and promotion (after Bautista's OK).
 
-1. **Typst generator** (`cvgen.typst` + template + XCharter fonts): same layout as LaTeX,
-   tests that build every profile and compare page counts; `--formato typ` and `--motor typst`.
-2. **Remaining exports**: JSON (resolved), Word (`python-docx`), JPG (poppler / Typst PNG),
-   multi-file `.zip`s; CLI flags; tests.
-3. **API + Docker Compose + nginx** skeleton: read/write `data/`, preview, export; bound to
-   localhost; hot reload in both containers.
-4. **Frontend core**: layout, profile switcher, data bank, profile editor, live preview,
-   export dialog.
-5. **Polish**: drag-and-drop, undo/redo, click-to-edit hotspots, page-fit highlighting, command
-   palette, photo crop, Playwright end-to-end tests.
+## 6. New dependencies (approved 2026-10-30)
 
-## 6. New dependencies (need approval before installing)
-
-- Python (PyPI): `typst`, `python-docx`, `fastapi`, `uvicorn`, `pydantic`, `python-multipart`.
-- npm (inside the container only): `next`, `react`, `tailwindcss`, `zustand`, `zundo`,
-  `@tanstack/react-query`, `@dnd-kit/core`, `@dnd-kit/sortable`, `openapi-typescript`,
-  `@playwright/test` (dev).
-- Docker images: `python:3.13-slim`, `node:24-alpine`, `nginx:alpine`.
+- Python (PyPI), **installed** in `cvgen`: `typst` 0.15.0, `python-docx` 1.2.0, `pillow` 13.0.0.
+- Docker images, **pulled**: `node:24-alpine`, `nginx:alpine`.
+- Still to install, each in the phase that needs it (npm needs the `web/` project; Rust and
+  `webkit2gtk-4.1` are system packages installed with pkexec, with Bautista at the PC):
+- Browser (npm, inside the container only): `@myriaddreamin/typst.ts` (and its compiler/renderer
+  WASM), `pyodide` (if option 1), `next` or `astro`, `react`, `tailwindcss`, `zustand`, `zundo`,
+  `@dnd-kit/core`, `@dnd-kit/sortable`, `@playwright/test` (dev).
+- Desktop: Rust toolchain + `@tauri-apps/cli` (Tauri 2).
+- Docker images for development: `node:24-alpine`, `nginx:alpine`.
 - Fonts: XCharter OTF from CTAN.
 
 ## 7. Open decisions
 
-1. Local web app in Docker (recommended, matches the usual stack) vs. a desktop app (Tauri).
-2. JSON export: the repo's own resolved format only, or also JSON Resume.
-3. Word: two-column layout only, or also a single-column ATS variant.
-4. Whether the GUI should also commit (`git commit` button) or leave git to the terminal
-   (recommended: read-only git status).
+1. Exporters in Python via Pyodide or rewritten in TypeScript (spike decides; Python preferred).
+2. Next.js static export or Astro for the web app.
+3. Product name and domain for the public version.
+
+Settled on 2026-10-30: Typst is the main generator and the preview; exports to LaTeX, Markdown,
+JSON and Word; Word in one or two columns driven by the layout options; JSON Resume
+(<https://jsonresume.org>, the open JSON schema for résumés) left for a later import/export;
+the app never accesses the user's repositories, version history is an opt-in feature of the
+app itself.
 
 ## Sources
 
 - typst-py: <https://pypi.org/project/typst/>, <https://typst-py.readthedocs.io/en/latest/>
 - typst.ts releases: <https://github.com/Myriad-Dreamin/typst.ts/releases>
 - Typst releases: <https://github.com/typst/typst/releases>
-- Reactive Resume: <https://github.com/amruthpillai/reactive-resume>,
-  <https://hub.docker.com/r/amruthpillai/reactive-resume>
-- Resume Stack: <https://github.com/arunike/Resume-Stack>
-- python-docx docs: <https://skelmis-docx.readthedocs.io/>
+- Typst CV templates and RenderCV: <https://typst.app/universe/package/rendercv/>,
+  <https://typst.app/universe/package/brilliant-cv/>, <https://typst.pages.dev/>
+- Tauri + PyInstaller sidecar signing issues:
+  <https://github.com/phoson-lat/Phoson-Desktop/pull/11>,
+  <https://github.com/gptme/gptme/pull/4510>, <https://github.com/ActivityWatch/activitywatch/issues/1249>
+- LaTeX in the browser: <https://github.com/TeXlyre/texlyre-busytex>, <https://github.com/SwiftLaTeX/SwiftLaTeX>
+- Reactive Resume: <https://github.com/amruthpillai/reactive-resume>
+- python-docx: <https://skelmis-docx.readthedocs.io/>
 - Table-layout résumés and parsers: <https://github.com/geektechlive/blastjob/issues/33>
