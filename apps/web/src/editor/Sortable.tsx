@@ -33,7 +33,7 @@ export function SortableItem({ id, children, as: Tag = "div", className }: { id:
       ref={setActivatorNodeRef}
       type="button"
       aria-label={t.dragHandle}
-      className="cursor-grab touch-none px-1 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
+      className="cursor-grab touch-none px-1 text-muted hover:text-muted"
       {...attributes}
       {...listeners}
     >

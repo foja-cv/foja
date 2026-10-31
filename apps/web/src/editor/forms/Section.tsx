@@ -28,9 +28,9 @@ export function SectionForm({ index }: { index: number }) {
     if (block.type === "entry") {
       const entry = project.entries[block.entry];
       return (
-        <div key={i} className="flex items-center gap-2 rounded border border-neutral-200 p-2 dark:border-neutral-700">
-          <span className="text-xs text-neutral-500">{t.sectionKinds.entry}</span>
-          <button className="flex-1 text-left text-sm font-medium text-sky-800 hover:underline dark:text-sky-300" onClick={() => select({ kind: "entry", id: block.entry })}>
+        <div key={i} className="flex items-center gap-2 rounded border border-line p-2">
+          <span className="text-xs text-muted">{t.sectionKinds.entry}</span>
+          <button className="flex-1 text-left text-sm font-medium text-accent hover:underline" onClick={() => select({ kind: "entry", id: block.entry })}>
             {entry?.title ?? block.entry}
           </button>
           {controls}
@@ -45,7 +45,7 @@ export function SectionForm({ index }: { index: number }) {
       );
     }
     return (
-      <div key={i} className="flex gap-2 rounded border border-neutral-200 p-2 dark:border-neutral-700">
+      <div key={i} className="flex gap-2 rounded border border-line p-2">
         <div className="flex-1">
           <TextArea rows={3} value={block.text} onChange={(v) => editBlock((b) => ((b as { text: string }).text = v))} />
         </div>
@@ -121,7 +121,7 @@ export function SectionForm({ index }: { index: number }) {
       </SortableList>
       <div className="flex flex-wrap gap-2">
         <select
-          className="rounded border border-neutral-300 bg-white px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-900"
+          className="rounded border border-line bg-surface px-2 py-1 text-sm"
           value=""
           aria-label={t.includeEntry}
           onChange={(e) => e.target.value && edit((s) => s.blocks.push({ type: "entry", entry: e.target.value }))}

@@ -1,8 +1,10 @@
 # Foja: a CV editor on Typst — research and plan
 
-Status: **phase 5 ready to publish** (2026-10-31): PWA, offline, landing page and the GitHub
-Pages workflow are done and tested locally; **nothing is published** (needs Bautista's OK, see
-[What is left](#what-is-left-2026-10-31)). Results: [phase 5](#phase-5-results-2026-10-31),
+Status: **phase 5 ready to publish, with Foja's own identity** (2026-10-31): three CV styles of
+its own (the Wenneker look is gone), styles written in Typst by the user, and three interface
+themes with a plugin API; see [Own identity](#own-identity-2026-10-31). **Nothing is published**
+(needs Bautista's OK, see [What is left](#what-is-left-2026-10-31)). Results:
+[phase 5](#phase-5-results-2026-10-31),
 [phase 4](#phase-4-results-2026-10-31),
 [phase 3](#phase-3-results-2026-10-31),
 [phase 2](#phase-2-results-2026-10-31), [phase 1](#phase-1-results-2026-10-31),
@@ -461,15 +463,36 @@ service worker); a stale Astro lock after a container is killed (`--force` for d
 **Not checked**: the workflows have not run on GitHub (they run after a push). The lockfile
 carries the glibc variants of the native packages the runner needs.
 
+## Own identity (2026-10-31)
+
+Bautista's decision: no look of someone else's. The Typst template, the LaTeX and the Word
+exports reproduced the Wenneker LaTeX template (his CV in `bafif/curriculum` is built on it);
+all three were replaced. He chose the directions with previews: **Legajo** for the CV and
+**Papel y tinta** for the interface, then asked for a style selector with three styles, for
+"edit in Typst" on any style and a creator of styles written by hand, and for three interface
+themes that plugins can extend through an easy API.
+
+| Piece | Where |
+| :--- | :--- |
+| **Template library**: `lib.typ` resolves the profile for any style (`cv`: name, contacts with links, skill rows, sections with entries looked up and periods formatted), reads the layout options, and gives `anchored` (marks, now with their column) and `geometry` (where the columns are) for click-to-edit | `packages/template/lib.typ` |
+| **Legajo** (default): XCharter; the name in small caps over a rule in the accent colour, the subtitle in italics; the sidebar as a card on a light tint; small-caps section titles with a hairline; the dates in a column of their own, like a record; en-dash bullets; deep teal ink `#1f5f5b`. One or two columns, sidebar on either side | `styles/legajo.typ` |
+| **Banda**: a band of the accent colour across page 1 with the name and the photo, one column in Noto Sans, section titles marked with a block of colour | `styles/banda.typ` |
+| **Minimal**: black on white with a lot of air, hierarchy from size and weight only, the accent colour on the name | `styles/minimal.typ` |
+| **Styles of one's own**: the project keeps them (`templates`, validated; a profile picks one with `layout.template`). In the editor, "Editar en Typst" copies the profile's style into an editable one; "Nuevo estilo desde cero" starts from a skeleton; the style editor (name, code, use in this profile, duplicate, delete when unused) shows Typst errors above the preview, which keeps the last good render. The Typst export carries every style. The API is documented | `docs/templates.md`, `forms/StyleEditor.tsx`, `forms/Layout.tsx` |
+| **Options per style**: the layout panel shows only the options the chosen style honours (`styles.json`) | `forms/Layout.tsx` |
+| **Exports**: LaTeX and Word follow the Legajo look whatever the style (they cannot run Typst code); the LaTeX sidebar is scaled to fit page 1 when it would overflow (it used to push the main column off the page) | `export/latex.ts`, `export/docx.ts` |
+| **Fonts**: Noto Sans (OFL 1.1, from Arch's `noto-fonts`, subset to Latin and unhinted, 730 kB for five weights) joins XCharter and LM Mono | `packages/template/fonts/` |
+| **Interface themes**: Papel y tinta (cream paper, ink, deep teal, serif headings in XCharter), Neutro (cool grey, indigo) and Vivo (warm, orange, round corners), each light and dark; a mode switch (automatic, light, dark). The components use semantic colours (`bg`, `surface`, `ink`, `muted`, `line`, `accent`, …) mapped to CSS variables | `editor/themes.ts`, `styles/global.css` |
+| **Theme plugins**: a `.foja-theme.json` imported from the theme menu, or `window.foja.themes.register(…)` from a script; values are validated against a closed list (colours, a length, font names; no `url()` or other CSS). "Descargar este tema como base" gives a starting file | `docs/themes.md`, `ThemeMenu.tsx` |
+| **Identity**: favicon, icons, manifest colours and the landing page in Papel y tinta | `apps/web/public/`, `pages/index.astro` |
+| **Tests**: 42 unit (every style × every profile, marks and geometry, layout variants on every style, a custom style, a style with an error, the bundle), 20 end-to-end (3 new: pick a style, edit it in Typst, an error in the code, a style from scratch on another profile; themes, mode, import with validation, the plugin API) | `packages/*/test/`, `tests/e2e/identity.spec.ts` |
+
 ## What is left (2026-10-31)
 
 Needs Bautista:
 
 1. **Push** (`git -C ~/foja push origin main`). After it, CI runs on GitHub.
-2. **Template look before publishing**: the default layout reproduces the Wenneker LaTeX template
-   (CC BY-NC-SA 3.0). The Typst and LaTeX code is Foja's own, but the look is theirs: credit it in
-   the landing and README, or change the default enough to be our own (another accent, header,
-   rule) and keep the Wenneker look as a credited option.
+2. ~~**Template look**~~: resolved, see [Own identity](#own-identity-2026-10-31).
 3. **Publish** (phase 5): Settings → Pages → Source "GitHub Actions", then run "Deploy to GitHub
    Pages" by hand (or add `push: branches: [main]` to `pages.yml`). Promotion after that.
 4. **Phase 6, Microsoft Store**: the Partner Center account is his (Microsoft account, ID, selfie);

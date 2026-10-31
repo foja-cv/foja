@@ -9,12 +9,12 @@ export function Welcome() {
   return (
     <main className="mx-auto flex min-h-full max-w-xl flex-col justify-center gap-6 p-6">
       <h1 className="text-3xl font-semibold">{t.welcomeTitle}</h1>
-      <p className="text-neutral-700 dark:text-neutral-300">{t.welcomeText}</p>
+      <p className="text-muted">{t.welcomeText}</p>
       <div className="flex flex-wrap gap-3">
-        <button className="rounded bg-sky-700 px-4 py-2 text-white hover:bg-sky-800" onClick={() => load(exampleProject())}>
+        <button className="rounded bg-accent px-4 py-2 text-on-accent hover:opacity-90" onClick={() => load(exampleProject())}>
           {t.startExample}
         </button>
-        <button className="rounded border border-neutral-400 px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800" onClick={() => load(emptyProject())}>
+        <button className="rounded border border-line px-4 py-2 hover:bg-surface-2" onClick={() => load(emptyProject())}>
           {t.startEmpty}
         </button>
         <ImportButton onError={setError} />
@@ -33,7 +33,7 @@ export function Welcome() {
 export function ImportButton({ onError, className }: { onError: (message?: string) => void; className?: string }) {
   const load = useEditor((s) => s.load);
   return (
-    <label className={className ?? "cursor-pointer rounded border border-neutral-400 px-4 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800"}>
+    <label className={className ?? "cursor-pointer rounded border border-line px-4 py-2 hover:bg-surface-2"}>
       {t.importJson}
       <input
         type="file"

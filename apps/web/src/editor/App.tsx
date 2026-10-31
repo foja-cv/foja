@@ -11,6 +11,7 @@ import { PersonForm } from "./forms/Person";
 import { addSection, ProfileTextForm } from "./forms/ProfileText";
 import { SectionForm } from "./forms/Section";
 import { SkillsForm } from "./forms/Skills";
+import { StyleEditor } from "./forms/StyleEditor";
 import { t } from "./i18n";
 import { connectPreview, usePreview } from "./preview";
 import { overflowingSections } from "./selection";
@@ -22,6 +23,10 @@ import { SortableItem, SortableList } from "./Sortable";
 import { ImportButton, Welcome } from "./Welcome";
 import { Preview } from "./Preview";
 import { Palette } from "./Palette";
+import { ThemeMenu } from "./ThemeMenu";
+import { startThemes } from "./themes";
+
+startThemes();
 
 async function saveNow() {
   const { project, profileId, setSaveState } = useEditor.getState();
@@ -119,11 +124,11 @@ function Editor() {
     return () => window.removeEventListener("foja:palette", openPalette);
   }, [openPalette]);
   return (
-    <div className="grid h-full grid-rows-[auto_1fr] bg-white text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100">
+    <div className="grid h-full grid-rows-[auto_1fr] bg-bg text-ink">
       <TopBar onExport={() => setExporting(true)} />
       <div className="grid min-h-0 grid-cols-1 lg:grid-cols-[13rem_minmax(22rem,1fr)_minmax(24rem,1.1fr)]">
         <Navigation />
-        <main className="min-h-0 overflow-auto border-r border-neutral-200 p-4 dark:border-neutral-700">
+        <main className="min-h-0 overflow-auto border-r border-line bg-surface p-5">
           <SelectionPanel />
         </main>
         <Preview />
@@ -166,15 +171,15 @@ function TopBar({ onExport }: { onExport: () => void }) {
   }
 
   return (
-    <header className="flex flex-wrap items-center gap-2 border-b border-neutral-200 px-3 py-2 dark:border-neutral-700">
-      <a href={import.meta.env.BASE_URL} className="mr-2 font-semibold tracking-wide">
+    <header className="flex flex-wrap items-center gap-2 border-b border-line bg-surface px-3 py-2">
+      <a href={import.meta.env.BASE_URL} className="mr-2 font-heading text-xl font-semibold tracking-wide text-accent">
         {t.appName}
       </a>
       <label className="flex items-center gap-1 text-sm">
         {t.profile}
         <select
           aria-label={t.profile}
-          className="rounded border border-neutral-300 bg-white px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+          className="rounded border border-line bg-surface px-2 py-1 text-sm"
           value={profileId}
           onChange={(e) => setProfile(e.target.value)}
         >
@@ -208,7 +213,7 @@ function TopBar({ onExport }: { onExport: () => void }) {
         ))}
 
       <div className="ml-auto flex items-center gap-2">
-        <span data-testid="save-state" className="text-xs text-neutral-500">
+        <span data-testid="save-state" className="text-xs text-muted">
           {saveState === "saved" ? t.saved : saveState === "saving" ? t.saving : `● ${t.unsaved}`}
         </span>
         <Button variant="ghost" label={t.undo} title={`${t.undo} (Ctrl+Z)`} onClick={undo}>
@@ -220,7 +225,7 @@ function TopBar({ onExport }: { onExport: () => void }) {
         <div className="relative">
           <Button onClick={() => setProjectMenu(!projectMenu)}>{t.project} ▾</Button>
           {projectMenu && (
-            <div className="absolute right-0 z-10 mt-1 flex w-56 flex-col gap-1 rounded border border-neutral-200 bg-white p-2 shadow-lg dark:border-neutral-700 dark:bg-neutral-800">
+            <div className="absolute right-0 z-10 mt-1 flex w-56 flex-col gap-1 rounded border border-line bg-surface p-2 shadow-lg">
               <Button variant="ghost" onClick={() => (load(emptyProject()), setProjectMenu(false))}>
                 {t.newProject}
               </Button>
@@ -228,7 +233,7 @@ function TopBar({ onExport }: { onExport: () => void }) {
                 {t.startExample}
               </Button>
               <ImportButton
-                className="cursor-pointer rounded px-2 py-1 text-sm hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                className="cursor-pointer rounded px-2 py-1 text-sm hover:bg-surface-2"
                 onError={(m) => {
                   setImportError(m);
                   if (!m) setProjectMenu(false);
@@ -238,6 +243,7 @@ function TopBar({ onExport }: { onExport: () => void }) {
             </div>
           )}
         </div>
+        <ThemeMenu />
         <Button variant="ghost" title="Ctrl+K" onClick={openEvent("foja:palette")}>
           ⌘ {t.palette.title}
         </Button>
@@ -265,7 +271,7 @@ function NavButton({ selection, children }: { selection: Selection; children: Re
       <button
         aria-current={active || undefined}
         onClick={() => select(selection)}
-        className={`w-full truncate rounded px-2 py-1 text-left text-sm ${active ? "bg-sky-100 font-medium text-sky-900 dark:bg-sky-900 dark:text-sky-100" : "hover:bg-neutral-100 dark:hover:bg-neutral-800"}`}
+        className={`w-full truncate rounded px-2 py-1 text-left text-sm ${active ? "bg-accent-soft font-medium text-accent-ink" : "hover:bg-surface-2"}`}
       >
         {children}
       </button>
@@ -278,22 +284,28 @@ function Navigation() {
   const { update, select } = useEditor.getState();
   const twoColumns = (profile?.layout?.columns ?? 2) === 2;
   const marks = usePreview((s) => s.marks);
+  const templates = useEditor((s) => s.project!.templates);
   const overflow = useMemo(() => overflowingSections(marks), [marks]);
   return (
-    <nav aria-label={t.sections} className="min-h-0 overflow-auto border-r border-neutral-200 p-2 dark:border-neutral-700">
-      <h3 className="px-2 pt-1 pb-1 text-xs font-semibold tracking-wide text-neutral-500 uppercase">{t.data}</h3>
+    <nav aria-label={t.sections} className="min-h-0 overflow-auto border-r border-line p-2">
+      <h3 className="px-2 pt-1 pb-1 text-xs font-semibold tracking-wide text-muted uppercase">{t.data}</h3>
       <ul className="flex flex-col gap-0.5">
         <NavItem selection={{ kind: "person" }}>{t.personal}</NavItem>
         <NavItem selection={{ kind: "contacts" }}>{t.contacts}</NavItem>
         <NavItem selection={{ kind: "skills" }}>{t.skills}</NavItem>
         <NavItem selection={{ kind: "entries" }}>{t.entries}</NavItem>
       </ul>
-      <h3 className="px-2 pt-4 pb-1 text-xs font-semibold tracking-wide text-neutral-500 uppercase">{t.profile}</h3>
+      <h3 className="px-2 pt-4 pb-1 text-xs font-semibold tracking-wide text-muted uppercase">{t.profile}</h3>
       <ul className="flex flex-col gap-0.5">
         <NavItem selection={{ kind: "profile" }}>{t.profileText}</NavItem>
         <NavItem selection={{ kind: "layout" }}>{t.layout}</NavItem>
+        {Object.entries(templates ?? {}).map(([id, style]) => (
+          <NavItem key={id} selection={{ kind: "style", id }}>
+            <span className="text-muted">{"{ }"}</span> {style.name}
+          </NavItem>
+        ))}
       </ul>
-      <h3 className="px-2 pt-4 pb-1 text-xs font-semibold tracking-wide text-neutral-500 uppercase">{t.sections}</h3>
+      <h3 className="px-2 pt-4 pb-1 text-xs font-semibold tracking-wide text-muted uppercase">{t.sections}</h3>
       <SortableList
         ids={profile?.sections.map((s) => s.id) ?? []}
         onMove={(from, to) => {
@@ -309,7 +321,7 @@ function Navigation() {
                   {handle}
                   <NavButton selection={{ kind: "section", index: i }}>
                     {s.title || "—"}
-                    {twoColumns && s.column === "side" && <span className="ml-1 text-xs text-neutral-500">({t.side.toLowerCase()})</span>}
+                    {twoColumns && s.column === "side" && <span className="ml-1 text-xs text-muted">({t.side.toLowerCase()})</span>}
                     {overflow.has(i) && (
                       <span className="ml-1 text-amber-700" title={t.overflows}>
                         ⚠
@@ -344,6 +356,8 @@ function SelectionPanel() {
       return <EntryForm key={selection.id} id={selection.id} />;
     case "layout":
       return <LayoutForm />;
+    case "style":
+      return <StyleEditor key={selection.id} id={selection.id} />;
     case "section":
       return <SectionForm key={selection.index} index={selection.index} />;
     default:

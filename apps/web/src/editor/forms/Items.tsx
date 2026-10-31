@@ -27,7 +27,7 @@ export function ItemsEditor({ items, onChange, base }: { items: Item[]; onChange
 export function ItemRow({ item, path, edit, children }: { item: { heading?: string; text: string }; path: string; edit: (fn: (it: { heading?: string; text: string }) => void) => void; children?: React.ReactNode }) {
   const problem = useProblem(`${path}/text`);
   return (
-    <div className="flex gap-2 rounded border border-neutral-200 p-2 dark:border-neutral-700">
+    <div className="flex gap-2 rounded border border-line p-2">
       <div className="flex flex-1 flex-col gap-1">
         <TextInput
           value={item.heading ?? ""}

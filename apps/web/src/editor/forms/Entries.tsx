@@ -37,12 +37,12 @@ export function EntriesList() {
         </Button>
       }
     >
-      <ul className="flex flex-col divide-y divide-neutral-200 dark:divide-neutral-700">
+      <ul className="flex flex-col divide-y divide-line">
         {Object.entries(project.entries).map(([id, e]) => (
           <li key={id}>
-            <button className="flex w-full flex-col items-start px-1 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800" onClick={() => select({ kind: "entry", id })}>
+            <button className="flex w-full flex-col items-start px-1 py-2 text-left hover:bg-surface-2" onClick={() => select({ kind: "entry", id })}>
               <span className="text-sm font-medium">{e.title}</span>
-              <span className="text-xs text-neutral-500">
+              <span className="text-xs text-muted">
                 {[e.place, profilesUsing(project, id).join(", ") || "—"].filter(Boolean).join(" · ")}
               </span>
             </button>

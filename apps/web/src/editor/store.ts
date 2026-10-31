@@ -13,6 +13,7 @@ export type Selection =
   | { kind: "entry"; id: string }
   | { kind: "profile" }
   | { kind: "layout" }
+  | { kind: "style"; id: string }
   | { kind: "section"; index: number };
 
 export interface EditorState {
@@ -85,6 +86,7 @@ useEditor.subscribe((state, prev) => {
   const patch: Partial<EditorState> = { problems: validate(state.project) };
   if (!state.project.profiles[state.profileId]) patch.profileId = Object.keys(state.project.profiles)[0] ?? "";
   if (state.selection.kind === "entry" && !state.project.entries[state.selection.id]) patch.selection = { kind: "entries" };
+  if (state.selection.kind === "style" && !state.project.templates?.[state.selection.id]) patch.selection = { kind: "layout" };
   const sections = state.project.profiles[patch.profileId ?? state.profileId]?.sections.length ?? 0;
   if (state.selection.kind === "section" && state.selection.index >= sections) patch.selection = { kind: "profile" };
   if (state.project !== prev.project && prev.project) patch.saveState = "unsaved";

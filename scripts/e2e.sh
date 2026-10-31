@@ -5,7 +5,7 @@
 #   scripts/e2e.sh [playwright args]
 set -euo pipefail
 cd "$(dirname "$0")/.."
-chrome=${CHROME:-$(command -v google-chrome-stable || command -v google-chrome || command -v google-chrome-unstable || command -v chromium)}
+chrome=${CHROME:-$(command -v google-chrome-stable || command -v google-chrome || command -v google-chrome-beta || command -v google-chrome-unstable || command -v chromium)}
 port=${CDP_PORT:-9223}
 profile=$(mktemp -d)
 "$chrome" --headless=new --remote-debugging-address=127.0.0.1 --remote-debugging-port="$port" \

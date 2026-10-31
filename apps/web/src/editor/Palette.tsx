@@ -43,6 +43,7 @@ function useCommands(onExport: () => void): Command[] {
       go(t.entries, { kind: "entries" }),
       go(t.profileText, { kind: "profile" }),
       go(t.layout, { kind: "layout" }),
+      ...Object.entries(project.templates ?? {}).map(([id, s]) => go(`${t.styles.editor}: ${s.name}`, { kind: "style", id })),
       ...(profile?.sections.map((s, i) => go(`${t.sections}: ${s.title}`, { kind: "section", index: i })) ?? []),
       ...Object.entries(project.entries).map(([id, e]) => go(`${t.palette.entry}: ${e.title}`, { kind: "entry", id })),
       ...Object.entries(project.profiles)
@@ -76,7 +77,7 @@ export function Palette({ onClose, onExport }: { onClose: () => void; onExport: 
       ref={dialog}
       onClose={onClose}
       aria-label={t.palette.title}
-      className="mx-auto mt-24 w-[min(36rem,calc(100vw-2rem))] rounded-lg p-0 shadow-xl backdrop:bg-black/30 dark:bg-neutral-900 dark:text-neutral-100"
+      className="mx-auto mt-24 w-[min(36rem,calc(100vw-2rem))] rounded-lg bg-surface p-0 text-ink shadow-xl backdrop:bg-black/30"
     >
       <input
         autoFocus
@@ -85,7 +86,7 @@ export function Palette({ onClose, onExport }: { onClose: () => void; onExport: 
         aria-controls="palette-list"
         aria-activedescendant={matches[index] ? `palette-${index}` : undefined}
         placeholder={t.palette.placeholder}
-        className="w-full border-b border-neutral-200 px-4 py-3 outline-none dark:border-neutral-700 dark:bg-neutral-900"
+        className="w-full border-b border-line px-4 py-3 outline-none"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => {
@@ -105,13 +106,13 @@ export function Palette({ onClose, onExport }: { onClose: () => void; onExport: 
             // change what Enter runs.
             onMouseMove={() => i !== index && setIndex(i)}
             onClick={() => run(c)}
-            className={`flex cursor-pointer justify-between px-4 py-1.5 text-sm ${i === index ? "bg-sky-100 dark:bg-sky-900" : ""}`}
+            className={`flex cursor-pointer justify-between px-4 py-1.5 text-sm ${i === index ? "bg-accent-soft" : ""}`}
           >
             <span>{c.label}</span>
-            <span className="text-xs text-neutral-500">{c.group}</span>
+            <span className="text-xs text-muted">{c.group}</span>
           </li>
         ))}
-        {matches.length === 0 && <li className="px-4 py-2 text-sm text-neutral-500">{t.palette.nothing}</li>}
+        {matches.length === 0 && <li className="px-4 py-2 text-sm text-muted">{t.palette.nothing}</li>}
       </ul>
     </dialog>
   );

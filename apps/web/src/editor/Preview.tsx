@@ -60,8 +60,8 @@ export function Preview() {
   }
 
   return (
-    <section aria-label={t.preview} className="flex min-h-0 flex-col bg-neutral-200 dark:bg-neutral-950">
-      <header className="flex flex-wrap items-center gap-3 border-b border-neutral-300 bg-neutral-100 px-3 py-2 text-sm dark:border-neutral-700 dark:bg-neutral-900">
+    <section aria-label={t.preview} className="flex min-h-0 flex-col bg-desk">
+      <header className="flex flex-wrap items-center gap-3 border-b border-line bg-surface-2 px-3 py-2 text-sm">
         <h2 className="font-semibold">{t.preview}</h2>
         {pages > 0 && (
           <span
@@ -77,13 +77,13 @@ export function Preview() {
           </button>
         )}
         {compileMs !== undefined && (
-          <span className="ml-auto text-xs text-neutral-500" title="Typst · SVG">
+          <span className="ml-auto text-xs text-muted" title="Typst · SVG">
             {compileMs.toFixed(0)} ms · {renderMs?.toFixed(0)} ms
           </span>
         )}
       </header>
       {showProblems && (
-        <ul className="max-h-40 overflow-auto border-b border-neutral-300 bg-red-50 px-3 py-2 font-mono text-xs text-red-900 dark:border-neutral-700 dark:bg-red-950 dark:text-red-100">
+        <ul className="max-h-40 overflow-auto border-b border-line bg-red-50 px-3 py-2 font-mono text-xs text-red-900 dark:bg-red-950 dark:text-red-100">
           {problems.map((p, i) => (
             <li key={i}>
               {p.path}: {p.message}
@@ -109,11 +109,11 @@ export function Preview() {
               ))}
             {scale > 0 &&
               highlights.map((b, i) => (
-                <div key={`h${i}`} data-testid="highlight-box" className="pointer-events-none absolute rounded-sm bg-sky-400/15 ring-2 ring-sky-500" style={place(b)} />
+                <div key={`h${i}`} data-testid="highlight-box" className="pointer-events-none absolute rounded-sm bg-accent/15 ring-2 ring-accent" style={place(b)} />
               ))}
           </div>
         ) : (
-          <p className="text-sm text-neutral-600">{ready ? "" : t.loadingCompiler}</p>
+          <p className="text-sm text-muted">{ready ? "" : t.loadingCompiler}</p>
         )}
       </div>
     </section>

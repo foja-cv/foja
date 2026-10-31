@@ -59,7 +59,7 @@ export function ProfileTextForm() {
       )}
 
       <fieldset className="flex flex-col gap-1">
-        <legend className="mb-1 text-xs font-medium text-neutral-600 dark:text-neutral-300">{t.profileContacts}</legend>
+        <legend className="mb-1 text-xs font-medium text-muted">{t.profileContacts}</legend>
         {CONTACT_KINDS.filter((k) => project.contacts[k]).map((kind) => (
           <Check
             key={kind}
@@ -79,15 +79,15 @@ export function ProfileTextForm() {
       </fieldset>
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1 text-xs font-medium text-neutral-600 dark:text-neutral-300">{t.profileSkills}</legend>
+        <legend className="mb-1 text-xs font-medium text-muted">{t.profileSkills}</legend>
         {profile.skills.map((row, i) => (
-          <div key={i} className="flex flex-wrap items-center gap-2 rounded border border-neutral-200 p-2 dark:border-neutral-700">
+          <div key={i} className="flex flex-wrap items-center gap-2 rounded border border-line p-2">
             {row.map((g, j) => (
-              <span key={g} className="flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-sm dark:bg-neutral-800">
+              <span key={g} className="flex items-center gap-1 rounded-full bg-surface-2 px-2 py-0.5 text-sm">
                 {project.skills[g]?.title ?? g}
                 <button
                   aria-label={`${t.remove} ${project.skills[g]?.title ?? g}`}
-                  className="text-neutral-500 hover:text-red-700"
+                  className="text-muted hover:text-red-700"
                   onClick={() =>
                     edit((p) => {
                       p.skills[i].splice(j, 1);
@@ -100,7 +100,7 @@ export function ProfileTextForm() {
               </span>
             ))}
             <select
-              className="rounded border border-neutral-300 bg-white px-1 py-0.5 text-sm dark:border-neutral-600 dark:bg-neutral-900"
+              className="rounded border border-line bg-surface px-1 py-0.5 text-sm"
               value=""
               aria-label={t.addToRow}
               onChange={(e) => e.target.value && edit((p) => p.skills[i].push(e.target.value))}
@@ -119,7 +119,7 @@ export function ProfileTextForm() {
         ))}
         <div>
           <select
-            className="rounded border border-neutral-300 bg-white px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-900"
+            className="rounded border border-line bg-surface px-2 py-1 text-sm"
             value=""
             aria-label={t.addRow}
             onChange={(e) => e.target.value && edit((p) => p.skills.push([e.target.value]))}

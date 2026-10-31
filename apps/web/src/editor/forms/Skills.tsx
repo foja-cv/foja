@@ -36,7 +36,7 @@ function SkillGroupEditor({ id, group }: { id: string; group: SkillGroup }) {
     });
   }
   return (
-    <div className="flex flex-col gap-2 rounded border border-neutral-200 p-3 dark:border-neutral-700">
+    <div className="flex flex-col gap-2 rounded border border-line p-3">
       <div className="flex items-end gap-2">
         <div className="flex-1">
           <Field label={t.groupTitle} problem={problem}>

@@ -1,7 +1,81 @@
 @import "tailwindcss";
 
-@theme {
-  --color-accent: #0080ff;
+/* `dark:` follows the mode the editor applies (data-mode), which can differ from the system's. */
+@custom-variant dark (&:where([data-mode="dark"], [data-mode="dark"] *));
+
+/* XCharter, the serif of the CVs, for headings in the paper theme. */
+@font-face {
+  font-family: XCharter;
+  font-weight: 400;
+  src: url("../../../../packages/template/fonts/XCharter-Roman.otf") format("opentype");
+  font-display: swap;
+}
+@font-face {
+  font-family: XCharter;
+  font-weight: 700;
+  src: url("../../../../packages/template/fonts/XCharter-Bold.otf") format("opentype");
+  font-display: swap;
+}
+
+/* The theme's values (see src/editor/themes.ts). These are "Papel y tinta", so pages without the
+   editor (the landing) and the first paint already look like Foja. */
+:root {
+  --foja-bg: #f6f1e7;
+  --foja-surface: #fffdf8;
+  --foja-surface-2: #efe8da;
+  --foja-ink: #1f2a2e;
+  --foja-muted: #5f6b6e;
+  --foja-line: #ddd3c0;
+  --foja-accent: #1f5f5b;
+  --foja-accent-soft: #dcebe8;
+  --foja-accent-ink: #123c39;
+  --foja-on-accent: #ffffff;
+  --foja-danger: #a3322a;
+  --foja-desk: #e4dccb;
+  --foja-radius: 4px;
+  --foja-font-ui: system-ui, "Segoe UI", "Noto Sans", Roboto, Helvetica, Arial, sans-serif;
+  --foja-font-heading: XCharter, Charter, "Bitstream Charter", Georgia, serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode]) {
+    --foja-bg: #171c1d;
+    --foja-surface: #1f2627;
+    --foja-surface-2: #283133;
+    --foja-ink: #ece6da;
+    --foja-muted: #a3aba9;
+    --foja-line: #3a4446;
+    --foja-accent: #5fb3aa;
+    --foja-accent-soft: #1f3b39;
+    --foja-accent-ink: #bfe5e0;
+    --foja-on-accent: #0d1a19;
+    --foja-danger: #e0786f;
+    --foja-desk: #0f1314;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--foja-bg);
+  --color-surface: var(--foja-surface);
+  --color-surface-2: var(--foja-surface-2);
+  --color-ink: var(--foja-ink);
+  --color-muted: var(--foja-muted);
+  --color-line: var(--foja-line);
+  --color-accent: var(--foja-accent);
+  --color-accent-soft: var(--foja-accent-soft);
+  --color-accent-ink: var(--foja-accent-ink);
+  --color-on-accent: var(--foja-on-accent);
+  --color-danger: var(--foja-danger);
+  --color-desk: var(--foja-desk);
+  --font-ui: var(--foja-font-ui);
+  --font-heading: var(--foja-font-heading);
+  --radius-xs: calc(var(--foja-radius) * 0.5);
+  --radius-sm: calc(var(--foja-radius) * 0.75);
+  --radius: var(--foja-radius);
+  --radius-md: var(--foja-radius);
+  --radius-lg: calc(var(--foja-radius) * 1.5);
+  --radius-xl: calc(var(--foja-radius) * 2);
 }
 
 html,
@@ -9,10 +83,22 @@ body {
   height: 100%;
 }
 
-/* The preview page: sized by its viewBox, a sheet on a grey desk. */
+body {
+  font-family: var(--foja-font-ui);
+  background: var(--foja-bg);
+  color: var(--foja-ink);
+}
+
+h1,
+h2,
+.font-heading {
+  font-family: var(--foja-font-heading);
+}
+
+/* The preview page: sized by its viewBox, a sheet on the desk. */
 .foja-page svg {
   width: 100%;
   height: auto;
   background: white;
-  box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.12), 0 6px 24px rgb(0 0 0 / 0.12);
 }

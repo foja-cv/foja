@@ -6,11 +6,11 @@ export function Field({ label, problem, hint, children }: { label: string; probl
   const id = useId();
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
+      <label htmlFor={id} className="text-xs font-medium text-muted">
         {label}
       </label>
       {children(id)}
-      {hint && <p className="text-xs text-neutral-500">{hint}</p>}
+      {hint && <p className="text-xs text-muted">{hint}</p>}
       {problem && (
         <p role="alert" className="text-xs text-red-700 dark:text-red-400">
           {problem}
@@ -21,7 +21,7 @@ export function Field({ label, problem, hint, children }: { label: string; probl
 }
 
 const control =
-  "w-full rounded border border-neutral-300 bg-white px-2 py-1 text-sm outline-none focus:border-sky-600 focus:ring-1 focus:ring-sky-600 dark:border-neutral-600 dark:bg-neutral-900";
+  "w-full rounded border border-line bg-surface px-2 py-1 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent";
 
 export function TextInput({ id, value, onChange, placeholder, type = "text", invalid }: { id?: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; invalid?: boolean }) {
   return (
@@ -70,10 +70,10 @@ export function Check({ label, checked, onChange }: { label: string; checked: bo
 /** `label` names a button whose content is a symbol (↑, ✕); `title` is only a tooltip. */
 export function Button({ children, onClick, variant = "plain", title, label, disabled, type = "button" }: { children: ReactNode; onClick?: () => void; variant?: "plain" | "primary" | "danger" | "ghost"; title?: string; label?: string; disabled?: boolean; type?: "button" | "submit" }) {
   const styles = {
-    plain: "border border-neutral-300 bg-white hover:bg-neutral-100 dark:border-neutral-600 dark:bg-neutral-800 dark:hover:bg-neutral-700",
-    primary: "bg-sky-700 text-white hover:bg-sky-800",
-    danger: "bg-red-700 text-white hover:bg-red-800",
-    ghost: "hover:bg-neutral-200 dark:hover:bg-neutral-700",
+    plain: "border border-line bg-surface hover:bg-surface-2",
+    primary: "bg-accent text-on-accent hover:opacity-90",
+    danger: "bg-danger text-on-accent hover:opacity-90",
+    ghost: "hover:bg-surface-2",
   }[variant];
   return (
     <button type={type} title={title ?? label} aria-label={label} disabled={disabled} onClick={onClick} className={`rounded px-2 py-1 text-sm disabled:opacity-40 ${styles}`}>

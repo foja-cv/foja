@@ -11,11 +11,14 @@ the results of each phase are in [`docs/plan.md`](docs/plan.md).
 
 ```
 packages/core      project format (JSON Schema + types), validation, shared helpers
-packages/template  the Typst template, its labels and fonts (with their licences)
+packages/template  the Typst styles (Legajo, Banda, Minimal), their library, labels and fonts
 packages/cli       `foja` on Node: build PDF/SVG/Typst bundles from a project
 apps/web           the Astro site and editor
 examples/          a project with three profiles (fake phone, placeholder photo)
 ```
+
+Write your own CV style in Typst: [`docs/templates.md`](docs/templates.md). Make an interface
+theme: [`docs/themes.md`](docs/themes.md).
 
 ## Development
 

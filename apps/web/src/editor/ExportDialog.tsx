@@ -76,7 +76,7 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <dialog ref={dialog} onClose={onClose} className="m-auto w-[min(32rem,calc(100vw-2rem))] rounded-lg p-0 shadow-xl backdrop:bg-black/40 dark:bg-neutral-900 dark:text-neutral-100">
+    <dialog ref={dialog} onClose={onClose} className="m-auto w-[min(32rem,calc(100vw-2rem))] rounded-lg bg-surface p-0 text-ink shadow-xl backdrop:bg-black/40">
       <form
         method="dialog"
         className="flex flex-col gap-4 p-5"
@@ -97,7 +97,7 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
         {(choice.format === "jpg" || choice.format === "all") && (
           <label className="flex items-center gap-2 text-sm">
             {t.dpi}
-            <select className="rounded border border-neutral-300 px-2 py-1 dark:bg-neutral-800" value={choice.dpi} onChange={(e) => setChoice({ ...choice, dpi: Number(e.target.value) })}>
+            <select className="rounded border border-line px-2 py-1" value={choice.dpi} onChange={(e) => setChoice({ ...choice, dpi: Number(e.target.value) })}>
               {[72, 150, 300].map((d) => (
                 <option key={d} value={d}>
                   {d} dpi
@@ -112,10 +112,10 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
           </p>
         )}
         <div className="flex justify-end gap-2">
-          <button type="button" className="rounded border border-neutral-300 px-3 py-1 text-sm" onClick={onClose}>
+          <button type="button" className="rounded border border-line px-3 py-1 text-sm" onClick={onClose}>
             {t.close}
           </button>
-          <button type="submit" disabled={busy} className="rounded bg-sky-700 px-3 py-1 text-sm text-white disabled:opacity-50">
+          <button type="submit" disabled={busy} className="rounded bg-accent px-3 py-1 text-sm text-on-accent disabled:opacity-50">
             {busy ? t.exporting : t.downloadButton}
           </button>
         </div>

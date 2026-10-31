@@ -50,12 +50,12 @@ export function PhotoCrop({ src, onDone, onCancel }: { src: string; onDone: (jpe
   }
 
   return (
-    <dialog ref={dialog} onClose={onCancel} aria-label={t.crop.title} className="m-auto rounded-lg p-0 shadow-xl backdrop:bg-black/40 dark:bg-neutral-900 dark:text-neutral-100">
+    <dialog ref={dialog} onClose={onCancel} aria-label={t.crop.title} className="m-auto rounded-lg bg-surface p-0 text-ink shadow-xl backdrop:bg-black/40">
       <div className="flex flex-col gap-3 p-5">
         <h2 className="text-lg font-semibold">{t.crop.title}</h2>
         <div
           data-testid="crop-frame"
-          className="relative cursor-move touch-none overflow-hidden rounded bg-neutral-200"
+          className="relative cursor-move touch-none overflow-hidden rounded bg-desk"
           style={{ width: view, height: view / aspect }}
           onPointerDown={(e) => {
             (e.target as HTMLElement).setPointerCapture(e.pointerId);
@@ -85,7 +85,7 @@ export function PhotoCrop({ src, onDone, onCancel }: { src: string; onDone: (jpe
         </label>
         <label className="flex items-center gap-2 text-sm">
           {t.crop.aspect}
-          <select className="rounded border border-neutral-300 px-2 py-1 dark:bg-neutral-800" value={aspect} onChange={(e) => setAspect(Number(e.target.value))}>
+          <select className="rounded border border-line px-2 py-1" value={aspect} onChange={(e) => setAspect(Number(e.target.value))}>
             {ASPECTS.map(([label, value]) => (
               <option key={label} value={value}>
                 {label}
@@ -93,12 +93,12 @@ export function PhotoCrop({ src, onDone, onCancel }: { src: string; onDone: (jpe
             ))}
           </select>
         </label>
-        <p className="text-xs text-neutral-500">{t.crop.hint}</p>
+        <p className="text-xs text-muted">{t.crop.hint}</p>
         <div className="flex justify-end gap-2">
-          <button className="rounded border border-neutral-300 px-3 py-1 text-sm" onClick={onCancel}>
+          <button className="rounded border border-line px-3 py-1 text-sm" onClick={onCancel}>
             {t.cancel}
           </button>
-          <button className="rounded bg-sky-700 px-3 py-1 text-sm text-white" onClick={done} disabled={!img}>
+          <button className="rounded bg-accent px-3 py-1 text-sm text-on-accent" onClick={done} disabled={!img}>
             {t.crop.use}
           </button>
         </div>
