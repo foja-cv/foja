@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toBase64 } from "@foja/core";
-import { readFile } from "../download";
+import { PhotoCrop } from "../PhotoCrop";
 import { t } from "../i18n";
 import { pointer, useEditor, useProblem } from "../store";
 import { Button, Field, Panel, Select, TextInput } from "../ui";
@@ -17,18 +17,23 @@ export function PersonForm() {
   const namesProblem = useProblem(pointer("person", "givenNames"));
   const languageProblem = useProblem(pointer("language"));
 
-  async function upload(file: File | undefined) {
+  const [cropping, setCropping] = useState<string>();
+
+  function upload(file: File | undefined) {
     setError(undefined);
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) return setError(t.photoTooBig);
-    const type = file.type === "image/png" ? "image/png" : file.type === "image/jpeg" ? "image/jpeg" : undefined;
-    if (!type) return setError(t.uploadPhoto);
-    const data = toBase64(await readFile(file));
-    const name = type === "image/png" ? "photo.png" : "photo.jpg";
+    if (file.type !== "image/png" && file.type !== "image/jpeg") return setError(t.uploadPhoto);
+    setCropping(URL.createObjectURL(file));
+  }
+
+  function store(jpeg: Uint8Array) {
+    if (cropping) URL.revokeObjectURL(cropping);
+    setCropping(undefined);
     update((p) => {
       if (p.person.photo && p.assets) delete p.assets[p.person.photo];
-      p.assets = { ...p.assets, [name]: { type, data } };
-      p.person.photo = name;
+      p.assets = { ...p.assets, "photo.jpg": { type: "image/jpeg", data: toBase64(jpeg) } };
+      p.person.photo = "photo.jpg";
     });
   }
 
@@ -58,7 +63,16 @@ export function PersonForm() {
         {(id) => (
           <div className="flex items-center gap-3">
             {photo && <img alt="" className="h-20 w-20 rounded object-cover" src={`data:${photo.type};base64,${photo.data}`} />}
-            <input id={id} type="file" accept="image/jpeg,image/png" className="text-sm" onChange={(e) => upload(e.target.files?.[0])} />
+            <input
+              id={id}
+              type="file"
+              accept="image/jpeg,image/png"
+              className="text-sm"
+              onChange={(e) => {
+                upload(e.target.files?.[0]);
+                e.target.value = "";
+              }}
+            />
             {person.photo && (
               <Button
                 onClick={() =>
@@ -74,6 +88,16 @@ export function PersonForm() {
           </div>
         )}
       </Field>
+      {cropping && (
+        <PhotoCrop
+          src={cropping}
+          onDone={store}
+          onCancel={() => {
+            URL.revokeObjectURL(cropping);
+            setCropping(undefined);
+          }}
+        />
+      )}
     </Panel>
   );
 }

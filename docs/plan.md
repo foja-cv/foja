@@ -1,7 +1,8 @@
 # Foja: a CV editor on Typst — research and plan
 
-Status: **phase 3 done** (2026-10-31): the web editor works end to end (profiles, forms, live
-preview, export dialog, IndexedDB); see [Phase 3 results](#phase-3-results-2026-10-31). Earlier:
+Status: **phase 4 done** (2026-10-31): drag-and-drop, click-to-edit, page-fit highlighting,
+command palette, photo crop; see [Phase 4 results](#phase-4-results-2026-10-31). Earlier:
+[phase 3](#phase-3-results-2026-10-31),
 [phase 2](#phase-2-results-2026-10-31), [phase 1](#phase-1-results-2026-10-31),
 [phase 0](#phase-0-results-2026-10-30). Moved here from `bafif/curriculum`
 (`docs/gui-plan.md`), where the history of the earlier drafts stays.
@@ -244,7 +245,7 @@ TanStack Query only where there is async work, dnd-kit, typst.ts, `docx`, Tauri 
 3. **Web app core**: editor, profiles, live preview, export dialog, IndexedDB; dev in Docker
    Compose with nginx and hot reload (**done 2026-10-31**).
 4. **Polish**: drag-and-drop, undo/redo, click-to-edit, page-fit highlighting, palette,
-   photo crop, Playwright tests.
+   photo crop, Playwright tests (**done 2026-10-31**).
 5. **PWA + public web**: manifest, service worker, offline; GitHub Pages at `foja-cv.github.io/foja/`;
    landing page and promotion (after Bautista's OK).
 6. **Microsoft Store**: the PWA packaged as MSIX with PWABuilder, free individual account
@@ -418,6 +419,26 @@ dev lock after restarting the container (`astro dev --force`).
 
 **Build**: `astro build` gives a static `dist/` of 30 MB (the compiler WASM is 28 MB, 7 MB with
 brotli). The fonts are emitted twice (once for the worker, once for the Typst export), 0.6 MB.
+
+## Phase 4 results (2026-10-31)
+
+| Piece | Where |
+| :--- | :--- |
+| **Page geometry** in `packages/core`, with the template's rules: column boxes, a box per marked part (start to end, the width of its column, split across pages), the innermost part under a point, overflow in lines of body text | `packages/core/src/geometry.ts` |
+| **Click-to-edit**: a click on the preview finds the part under it (sidebar and main column apart) and selects it: an entry opens the entry form, a section its panel, the name the personal data, skills the skill groups | `Preview.tsx`, `selection.ts` |
+| **Selection highlight**: what is selected is outlined on the preview (an entry everywhere it appears) | `Preview.tsx` |
+| **Page fit**: badge "N páginas ⚠ se pasa ~L líneas"; blocks that start past page 1 tinted red; ⚠ next to the sections that overflow in the navigation | `Preview.tsx`, `App.tsx` |
+| **Drag-and-drop** (dnd-kit) for the sections (navigation) and the blocks of a section; the handle works from the keyboard (Space, arrows, Space; Escape cancels), and ↑ ↓ remain | `Sortable.tsx` |
+| **Undo/redo** (phase 3): Ctrl+Z, Ctrl+Shift+Z / Ctrl+Y, buttons | `store.ts` |
+| **Command palette** (Ctrl+K): panels, sections, entries, other profiles, export, undo/redo, one/two columns; accent-insensitive filter, arrows and Enter | `Palette.tsx` |
+| **Photo crop**: on upload, a crop frame (drag to frame, zoom, 4:5, 1:1 or the 403:371 of the original layout); stored as a JPEG of at most 800 px | `PhotoCrop.tsx` |
+| **Tests**: 41 unit tests (3 new on geometry), 17 end-to-end (5 new: click-to-edit and highlight in both columns, overflow badge and boxes, keyboard reordering, palette, photo crop) | `packages/cli/test/`, `tests/e2e/polish.spec.ts` |
+
+**Fixed along the way**: a palette item could be chosen by a list appearing under a resting
+pointer (`mouseenter`), so Enter ran another command (found as a flaky test; it now follows
+real mouse moves only); contact addresses were hyphenated, and in Spanish the hyphen of
+`lucia-romero-ejemplo` was repeated on the next line (addresses are now unhyphenated and set in
+English).
 
 ## 6. New dependencies (approved 2026-10-30)
 

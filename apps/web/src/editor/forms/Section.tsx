@@ -1,6 +1,7 @@
 import type { Block, Section } from "@foja/core";
 import { t } from "../i18n";
 import { pointer, useEditor, useProblem } from "../store";
+import { SortableItem, SortableList } from "../Sortable";
 import { Button, Check, Field, ListControls, Panel, Select, TextArea, TextInput, move } from "../ui";
 import { createEntry } from "./Entries";
 import { ItemRow } from "./Items";
@@ -18,6 +19,40 @@ export function SectionForm({ index }: { index: number }) {
   const included = new Set(section.blocks.flatMap((b) => (b.type === "entry" ? [b.entry] : [])));
   const available = Object.entries(project.entries).filter(([id]) => !included.has(id));
   const twoColumns = (project.profiles[profileId].layout?.columns ?? 2) === 2;
+
+  const renderBlock = (block: Block, i: number) => {
+    const controls = (
+      <ListControls index={i} length={section.blocks.length} move={(a, b) => edit((s) => move(s.blocks, a, b))} remove={() => edit((s) => s.blocks.splice(i, 1))} labels={t} />
+    );
+    const editBlock = (fn: (b: Block) => void) => edit((s) => fn(s.blocks[i]));
+    if (block.type === "entry") {
+      const entry = project.entries[block.entry];
+      return (
+        <div key={i} className="flex items-center gap-2 rounded border border-neutral-200 p-2 dark:border-neutral-700">
+          <span className="text-xs text-neutral-500">{t.sectionKinds.entry}</span>
+          <button className="flex-1 text-left text-sm font-medium text-sky-800 hover:underline dark:text-sky-300" onClick={() => select({ kind: "entry", id: block.entry })}>
+            {entry?.title ?? block.entry}
+          </button>
+          {controls}
+        </div>
+      );
+    }
+    if (block.type === "item") {
+      return (
+        <ItemRow key={i} item={block} path={`${base}/blocks/${i}`} edit={(fn) => editBlock((b) => fn(b as { heading?: string; text: string }))}>
+          {controls}
+        </ItemRow>
+      );
+    }
+    return (
+      <div key={i} className="flex gap-2 rounded border border-neutral-200 p-2 dark:border-neutral-700">
+        <div className="flex-1">
+          <TextArea rows={3} value={block.text} onChange={(v) => editBlock((b) => ((b as { text: string }).text = v))} />
+        </div>
+        {controls}
+      </div>
+    );
+  };
 
   return (
     <Panel
@@ -70,41 +105,20 @@ export function SectionForm({ index }: { index: number }) {
         />
       </div>
       <h3 className="text-sm font-semibold">{t.blocks}</h3>
+      <SortableList ids={section.blocks.map((_, i) => `block-${i}`)} onMove={(from, to) => edit((s) => move(s.blocks, from, to))}>
       <div className="flex flex-col gap-2">
-        {section.blocks.map((block, i) => {
-          const controls = (
-            <ListControls index={i} length={section.blocks.length} move={(a, b) => edit((s) => move(s.blocks, a, b))} remove={() => edit((s) => s.blocks.splice(i, 1))} labels={t} />
-          );
-          const editBlock = (fn: (b: Block) => void) => edit((s) => fn(s.blocks[i]));
-          if (block.type === "entry") {
-            const entry = project.entries[block.entry];
-            return (
-              <div key={i} className="flex items-center gap-2 rounded border border-neutral-200 p-2 dark:border-neutral-700">
-                <span className="text-xs text-neutral-500">{t.sectionKinds.entry}</span>
-                <button className="flex-1 text-left text-sm font-medium text-sky-800 hover:underline dark:text-sky-300" onClick={() => select({ kind: "entry", id: block.entry })}>
-                  {entry?.title ?? block.entry}
-                </button>
-                {controls}
-              </div>
-            );
-          }
-          if (block.type === "item") {
-            return (
-              <ItemRow key={i} item={block} path={`${base}/blocks/${i}`} edit={(fn) => editBlock((b) => fn(b as { heading?: string; text: string }))}>
-                {controls}
-              </ItemRow>
-            );
-          }
-          return (
-            <div key={i} className="flex gap-2 rounded border border-neutral-200 p-2 dark:border-neutral-700">
-              <div className="flex-1">
-                <TextArea rows={3} value={block.text} onChange={(v) => editBlock((b) => ((b as { text: string }).text = v))} />
-              </div>
-              {controls}
-            </div>
-          );
-        })}
+        {section.blocks.map((block, i) => (
+          <SortableItem key={`block-${i}`} id={`block-${i}`} className="flex items-start gap-1">
+            {(handle) => (
+              <>
+                <div className="pt-2">{handle}</div>
+                <div className="flex-1">{renderBlock(block, i)}</div>
+              </>
+            )}
+          </SortableItem>
+        ))}
       </div>
+      </SortableList>
       <div className="flex flex-wrap gap-2">
         <select
           className="rounded border border-neutral-300 bg-white px-2 py-1 text-sm dark:border-neutral-600 dark:bg-neutral-900"

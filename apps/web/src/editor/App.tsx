@@ -1,7 +1,7 @@
 // The editor island: header (profiles, history, saving, export), navigation, the panel of the
 // selection and the live preview.
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { profileName } from "@foja/core";
 import { ExportDialog } from "./ExportDialog";
 import { ContactsForm } from "./forms/Contacts";
@@ -12,13 +12,16 @@ import { addSection, ProfileTextForm } from "./forms/ProfileText";
 import { SectionForm } from "./forms/Section";
 import { SkillsForm } from "./forms/Skills";
 import { t } from "./i18n";
-import { connectPreview } from "./preview";
+import { connectPreview, usePreview } from "./preview";
+import { overflowingSections } from "./selection";
 import { emptyProject, exampleProject, newProfile } from "./projects";
 import { loadSaved, save } from "./storage";
 import { redo, undo, useEditor, type Selection } from "./store";
-import { Button } from "./ui";
+import { Button, move } from "./ui";
+import { SortableItem, SortableList } from "./Sortable";
 import { ImportButton, Welcome } from "./Welcome";
 import { Preview } from "./Preview";
+import { Palette } from "./Palette";
 
 async function saveNow() {
   const { project, profileId, setSaveState } = useEditor.getState();
@@ -52,7 +55,7 @@ function useAutosave() {
   }, []);
 }
 
-function useShortcuts(openExport: () => void) {
+function useShortcuts(openExport: () => void, openPalette: () => void) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!(e.ctrlKey || e.metaKey)) return;
@@ -69,11 +72,14 @@ function useShortcuts(openExport: () => void) {
       } else if (key === "e") {
         e.preventDefault();
         openExport();
+      } else if (key === "k") {
+        e.preventDefault();
+        openPalette();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [openExport]);
+  }, [openExport, openPalette]);
 }
 
 export default function App() {
@@ -100,9 +106,18 @@ export default function App() {
   return <Editor />;
 }
 
+const openEvent = (name: string) => () => window.dispatchEvent(new Event(name));
+
 function Editor() {
   const [exporting, setExporting] = useState(false);
-  useShortcuts(() => setExporting(true));
+  const [palette, setPalette] = useState(false);
+  const openExport = useCallback(() => setExporting(true), []);
+  const openPalette = useCallback(() => setPalette(true), []);
+  useShortcuts(openExport, openPalette);
+  useEffect(() => {
+    window.addEventListener("foja:palette", openPalette);
+    return () => window.removeEventListener("foja:palette", openPalette);
+  }, [openPalette]);
   return (
     <div className="grid h-full grid-rows-[auto_1fr] bg-white text-neutral-900 dark:bg-neutral-900 dark:text-neutral-100">
       <TopBar onExport={() => setExporting(true)} />
@@ -114,6 +129,7 @@ function Editor() {
         <Preview />
       </div>
       {exporting && <ExportDialog onClose={() => setExporting(false)} />}
+      {palette && <Palette onClose={() => setPalette(false)} onExport={openExport} />}
     </div>
   );
 }
@@ -222,6 +238,9 @@ function TopBar({ onExport }: { onExport: () => void }) {
             </div>
           )}
         </div>
+        <Button variant="ghost" title="Ctrl+K" onClick={openEvent("foja:palette")}>
+          ⌘ {t.palette.title}
+        </Button>
         <Button variant="primary" title="Ctrl+E" onClick={onExport}>
           {t.export}
         </Button>
@@ -231,11 +250,18 @@ function TopBar({ onExport }: { onExport: () => void }) {
 }
 
 function NavItem({ selection, children }: { selection: Selection; children: React.ReactNode }) {
+  return (
+    <li>
+      <NavButton selection={selection}>{children}</NavButton>
+    </li>
+  );
+}
+
+function NavButton({ selection, children }: { selection: Selection; children: React.ReactNode }) {
   const current = useEditor((s) => s.selection);
   const select = useEditor((s) => s.select);
   const active = JSON.stringify(current) === JSON.stringify(selection) || (selection.kind === "entries" && current.kind === "entry");
   return (
-    <li>
       <button
         aria-current={active || undefined}
         onClick={() => select(selection)}
@@ -243,7 +269,6 @@ function NavItem({ selection, children }: { selection: Selection; children: Reac
       >
         {children}
       </button>
-    </li>
   );
 }
 
@@ -252,6 +277,8 @@ function Navigation() {
   const profileId = useEditor((s) => s.profileId);
   const { update, select } = useEditor.getState();
   const twoColumns = (profile?.layout?.columns ?? 2) === 2;
+  const marks = usePreview((s) => s.marks);
+  const overflow = useMemo(() => overflowingSections(marks), [marks]);
   return (
     <nav aria-label={t.sections} className="min-h-0 overflow-auto border-r border-neutral-200 p-2 dark:border-neutral-700">
       <h3 className="px-2 pt-1 pb-1 text-xs font-semibold tracking-wide text-neutral-500 uppercase">{t.data}</h3>
@@ -267,14 +294,34 @@ function Navigation() {
         <NavItem selection={{ kind: "layout" }}>{t.layout}</NavItem>
       </ul>
       <h3 className="px-2 pt-4 pb-1 text-xs font-semibold tracking-wide text-neutral-500 uppercase">{t.sections}</h3>
-      <ul className="flex flex-col gap-0.5">
-        {profile?.sections.map((s, i) => (
-          <NavItem key={`${s.id}-${i}`} selection={{ kind: "section", index: i }}>
-            {s.title || "—"}
-            {twoColumns && s.column === "side" && <span className="ml-1 text-xs text-neutral-500">({t.side.toLowerCase()})</span>}
-          </NavItem>
-        ))}
-      </ul>
+      <SortableList
+        ids={profile?.sections.map((s) => s.id) ?? []}
+        onMove={(from, to) => {
+          update((p) => move(p.profiles[profileId].sections, from, to));
+          select({ kind: "section", index: to });
+        }}
+      >
+        <ul className="flex flex-col gap-0.5">
+          {profile?.sections.map((s, i) => (
+            <SortableItem key={s.id} id={s.id} as="li" className="flex items-center">
+              {(handle) => (
+                <>
+                  {handle}
+                  <NavButton selection={{ kind: "section", index: i }}>
+                    {s.title || "—"}
+                    {twoColumns && s.column === "side" && <span className="ml-1 text-xs text-neutral-500">({t.side.toLowerCase()})</span>}
+                    {overflow.has(i) && (
+                      <span className="ml-1 text-amber-700" title={t.overflows}>
+                        ⚠
+                      </span>
+                    )}
+                  </NavButton>
+                </>
+              )}
+            </SortableItem>
+          ))}
+        </ul>
+      </SortableList>
       <div className="px-2 pt-2">
         <Button onClick={() => select({ kind: "section", index: addSection(update, profileId) })}>+ {t.addSection}</Button>
       </div>

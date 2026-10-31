@@ -7,5 +7,5 @@ export default defineConfig({
   expect: { timeout: 30_000 },
   workers: 1,
   reporter: [["list"]],
-  use: { baseURL: process.env.BASE_URL ?? "http://127.0.0.1:8090" },
+  use: { baseURL: process.env.BASE_URL ?? "http://127.0.0.1:8090", screenshot: "only-on-failure" },
 });

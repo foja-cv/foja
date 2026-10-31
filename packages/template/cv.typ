@@ -117,8 +117,9 @@
 #let mono-contacts = ("email", "website", "github", "linkedin")
 #let contact-value(kind) = {
   let value = project.contacts.at(kind)
-  // Addresses never get a hyphen; they may break after a slash.
-  if kind in mono-contacts { text(font: "Latin Modern Mono 9", hyphenate: false, value.replace("/", "/" + sym.zws)) } else { value }
+  // Addresses are never hyphenated, and set in English so that a hyphen of their own is not
+  // repeated at the start of the next line, as Spanish typesetting does.
+  if kind in mono-contacts { text(font: "Latin Modern Mono 9", lang: "en", hyphenate: false, value) } else { value }
 }
 
 #let photo(width) = {

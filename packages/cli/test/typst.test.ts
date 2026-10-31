@@ -90,3 +90,37 @@ describe("curriculum converter", () => {
     ]);
   });
 });
+
+describe("geometry of the marks", async () => {
+  const { markBoxes, partAt, overflowLines, pageGeometry } = await import("@foja/core");
+  const typst = new Typst(example);
+  const profile = example.profiles.programador;
+  const boxes = markBoxes(typst.marks(typst.compile("programador")), profile);
+
+  test("the columns match the template", () => {
+    const g = pageGeometry(profile.layout);
+    expect(g.side!.width).toBeCloseTo(144.5, 0);
+    expect(g.main.width).toBeCloseTo(374, 0);
+  });
+
+  test("a point in a column finds the innermost part there", () => {
+    const summary = boxes.find((b) => b.path === "summary")!;
+    expect(partAt(boxes, 1, summary.x + 50, summary.y + summary.height / 2)).toBe("summary");
+    const entry = boxes.find((b) => b.path === "sections.0.blocks.1")!;
+    expect(partAt(boxes, 1, entry.x + 10, entry.y + entry.height / 2)).toBe("sections.0.blocks.1");
+    const contacts = boxes.find((b) => b.path === "contacts")!;
+    expect(contacts.x).toBeLessThan(summary.x);
+    expect(partAt(boxes, 1, contacts.x + 100, contacts.y + 2)).toBe("contacts");
+  });
+
+  test("overflow is counted in lines", () => {
+    expect(overflowLines(typst.marks(typst.compile("programador")), profile.layout)).toBe(0);
+    const long = structuredClone(example);
+    const p = long.profiles.programador;
+    p.sections[0].blocks.push(...p.sections[0].blocks, ...p.sections[0].blocks);
+    const t2 = new Typst(long);
+    const marks = t2.marks(t2.compile("programador"));
+    expect(Math.max(...marks.map((m) => m.page))).toBeGreaterThan(1);
+    expect(overflowLines(marks, p.layout)).toBeGreaterThan(5);
+  });
+});
