@@ -3,7 +3,8 @@ import { describe, expect, test } from "vitest";
 import { NodeCompiler } from "@myriaddreamin/typst-ts-node-compiler";
 import { typstBundle, validate, type Layout, type Project } from "@foja/core";
 import { Typst, templateFiles } from "../src/typst.ts";
-import { parseMarkdown, slug } from "../src/convert.ts";
+import { slug } from "@foja/core";
+import { parseMarkdown } from "../src/convert.ts";
 
 const example: Project = JSON.parse(readFileSync(new URL("../../../examples/curriculum.project.json", import.meta.url), "utf8"));
 const profiles = Object.keys(example.profiles);

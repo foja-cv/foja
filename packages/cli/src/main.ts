@@ -4,11 +4,12 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
-import { typstBundle, validate, zip, type Project } from "@foja/core";
+import { validate, type Project } from "@foja/core";
 
 const USAGE = `usage:
   foja build <project.json> [--profile <id>]... [--format <format>]... [--out <dir>]
-      formats: pdf (default), svg, typ; every profile unless --profile is given
+      formats: pdf (default), svg, typ, tex, md, json, docx, all (every one in a .zip);
+      every profile unless --profile is given
   foja validate <project.json>
   foja convert-curriculum <curriculum/data> <out.json> [--public]`;
 
@@ -30,7 +31,7 @@ function loadProject(path: string): Project {
   return value as Project;
 }
 
-const FORMATS = ["pdf", "svg", "typ"] as const;
+const FORMATS = ["pdf", "svg", "typ", "tex", "md", "json", "docx", "all"] as const;
 type Format = (typeof FORMATS)[number];
 
 async function build(args: string[]) {
@@ -51,18 +52,28 @@ async function build(args: string[]) {
   for (const id of profiles) if (!(id in project.profiles)) fail(`no profile "${id}"`);
 
   const { Typst, templateFiles } = await import("./typst.ts");
+  const { bundleExports, exportFiles, exportStem } = await import("@foja/core/export");
   const typst = new Typst(project);
+  const template = templateFiles();
   mkdirSync(values.out, { recursive: true });
+  const write = (name: string, data: Uint8Array | string, note = "") => {
+    const file = join(values.out, name);
+    writeFileSync(file, data);
+    console.log(file + note);
+  };
   for (const id of profiles) {
-    const needsDoc = formats.some((f) => f === "pdf" || f === "svg");
-    const doc = needsDoc ? typst.compile(id) : undefined;
+    const doc = formats.some((f) => f === "pdf" || f === "svg" || f === "all") ? typst.compile(id) : undefined;
+    const pages = doc ? ` (${doc.numOfPages} page${doc.numOfPages === 1 ? "" : "s"})` : "";
+    const stem = exportStem(project, id);
     for (const format of formats) {
-      let file: string;
-      if (format === "pdf") writeFileSync((file = join(values.out, `${id}.pdf`)), typst.pdf(doc!));
-      else if (format === "svg") writeFileSync((file = join(values.out, `${id}.svg`)), typst.svg(doc!));
-      else writeFileSync((file = join(values.out, `${id}-typst.zip`)), zip(typstBundle(project, id, templateFiles())));
-      const pages = doc ? ` (${doc.numOfPages} page${doc.numOfPages === 1 ? "" : "s"})` : "";
-      console.log(`${file}${format === "typ" ? "" : pages}`);
+      if (format === "pdf") write(`${stem}.pdf`, typst.pdf(doc!), pages);
+      else if (format === "svg") write(`${stem}.svg`, typst.svg(doc!), pages);
+      else if (format === "all") {
+        const files = [{ name: `${stem}.pdf`, mime: "application/pdf", data: new Uint8Array(typst.pdf(doc!)) }];
+        for (const f of ["typ", "tex", "md", "json", "docx"] as const) files.push(...(await exportFiles(project, id, f, template)));
+        const bundle = bundleExports(project, id, files);
+        write(bundle.name, bundle.data, ` (${files.map((f) => f.name.slice(stem.length) || f.name).join(", ")})`);
+      } else for (const f of await exportFiles(project, id, format, template)) write(f.name, f.data);
     }
   }
 }

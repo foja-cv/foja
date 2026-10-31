@@ -61,6 +61,16 @@ export function inlineRuns(text: string): { text: string; bold: boolean }[] {
     .filter((run) => run.text !== "");
 }
 
+/** `Programación básica` → `programacion-basica`: ids and file names. */
+export function slug(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 export function profileName(id: string, profile: Profile): string {
   return profile.name ?? id;
 }

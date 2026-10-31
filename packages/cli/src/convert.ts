@@ -5,7 +5,7 @@
 
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, extname, join } from "node:path";
-import { FORMAT, toBase64, type Asset, type Block, type ContactKind, type Item, type Profile, type Project } from "@foja/core";
+import { FORMAT, slug, toBase64, type Asset, type Block, type ContactKind, type Item, type Profile, type Project } from "@foja/core";
 
 const FAKE_PHONE = "+54 9 341 000-0000";
 // A grey 403×371 box, the proportions of the real photo, so the fixture keeps the layout.
@@ -19,15 +19,6 @@ const CONTACT_KINDS: Record<string, ContactKind> = {
   github: "github",
   linkedin: "linkedin",
 };
-
-export function slug(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/\p{M}/gu, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}
 
 const readJson = (path: string) => JSON.parse(readFileSync(path, "utf8"));
 const readText = (dir: string, path: string) => readFileSync(join(dir, path), "utf8").trim();

@@ -1,8 +1,8 @@
 # Foja: a CV editor on Typst — research and plan
 
-Status: **phase 1 done** (2026-10-31): project format v2 with its schema, the template on it,
-the `foja` CLI and tests; see [Phase 1 results](#phase-1-results-2026-10-31). Phase 0:
-[results](#phase-0-results-2026-10-30). Moved here from `bafif/curriculum`
+Status: **phase 2 done** (2026-10-31): exporters to LaTeX, Markdown, JSON, Word and JPG, and
+the all-formats `.zip`; see [Phase 2 results](#phase-2-results-2026-10-31). Earlier:
+[phase 1](#phase-1-results-2026-10-31), [phase 0](#phase-0-results-2026-10-30). Moved here from `bafif/curriculum`
 (`docs/gui-plan.md`), where the history of the earlier drafts stays.
 
 ## Goal
@@ -239,7 +239,7 @@ TanStack Query only where there is async work, dnd-kit, typst.ts, `docx`, Tauri 
 1. **Typst template + schema + project format v2** (and the `data/` converter); Node CLI
    `foja --formato pdf|typ`; tests on every profile (**done 2026-10-31**).
 2. **Exporters** in `packages/core`: LaTeX (port of `latex.py`), Markdown, JSON, Word, JPG;
-   `.zip` bundles; tests.
+   `.zip` bundles; tests (**done 2026-10-31**).
 3. **Web app core**: editor, profiles, live preview, export dialog, IndexedDB; dev in Docker
    Compose with nginx and hot reload.
 4. **Polish**: drag-and-drop, undo/redo, click-to-edit, page-fit highlighting, palette,
@@ -353,6 +353,39 @@ marks do not move anything.
 **JPG**: `typst-ts-node-compiler` 0.7.0 has no PNG output, so JPG is an export of the web app
 (SVG → canvas → JPEG); the CLI does PDF, SVG and the Typst bundle (and the exporters of phase 2).
 
+## Phase 2 results (2026-10-31)
+
+All exporters start from one **resolved profile** (`packages/core/src/resolve.ts`: entries looked
+up, dates formatted, labels and layout defaults applied, contacts with links, photo bytes and
+pixel size read from the JPEG/PNG header). They live under `@foja/core/export`, outside the main
+entry, so the preview worker does not load `docx`.
+
+| Format | What it is | Where |
+| :--- | :--- | :--- |
+| LaTeX | `.zip` with one self-contained `cv.tex` (memoir + flowfram + XCharter; sidebar and dotted rule on page 1, the main column continues) and the photo. The preamble is **written for Foja**: the Wenneker `structure.tex` (CC BY-NC-SA) is not copied. It follows the same layout options and geometry (in `bp`) as the Typst template; round and rounded photos are clipped with TikZ | `export/latex.ts` |
+| Markdown | One column: name, subtitle, contacts as links, summary, skills, the main sections, then the sidebar ones; `**bold**` kept, the rest escaped | `export/markdown.ts` |
+| JSON | The project file (`<name>.foja.json`, what the editor imports) and the profile resolved into plain data (`foja/2-resolved`) | `export/json.ts` |
+| Word | `docx` 9.12: two columns as a fixed borderless table whose sidebar cell carries the dotted rule in the accent colour (left or right), skill groups side by side in a nested table, bullets in the accent colour, right tab for the dates, links clickable; one column with the photo beside the name. Text in **Georgia** (Word has no XCharter) | `export/docx.ts` |
+| JPG | Browser only: the SVG drawn on a canvas at the chosen dpi, one JPEG per page; the text-selection `<foreignObject>` layer is stripped first (it would taint the canvas) | `apps/web/src/lib/jpg.ts` |
+| All | Every format of a profile in one `.zip` | `bundleExports` in `export/index.ts` |
+
+File names: `<name-slug>-<profile>.<ext>`, e.g. `bautista-damian-fiori-programador.pdf`. CLI:
+`foja build … --format tex|md|json|docx|all`.
+
+**Checked**: 38 tests (11 new: resolution, LaTeX escaping and preamble, Markdown, file names, the
+all-formats bundle, the Word package). The LaTeX of three layouts (default; sidebar right, round
+photo, accent; one column, rounded photo, English, month names) **compiles with tectonic** and
+looks like the Typst output: the sidebar is 2–4 pt lower and the main column 6–9 pt higher (the
+latter matches the original cvgen PDF, so the Typst template sits slightly lower than LaTeX;
+justified paragraphs break differently, so a sidebar that is almost full in Typst can run a
+line longer in LaTeX). The Word files are valid packages (every XML part parses; text, photo,
+tables, bullets and dotted rule present) but **have not been opened in Word or LibreOffice**:
+neither is installed here.
+
+**Not done**: the "Open in Overleaf" button. Overleaf takes files as data URLs in a POST to
+`overleaf.com/docs`, which sends the CV to a third party; it needs testing against the live
+service, so it is left for after the public release, as an explicit user action.
+
 ## 6. New dependencies (approved 2026-10-30)
 
 - Docker images, **pulled**: `node:24-alpine`, `nginx:alpine`.
@@ -362,6 +395,7 @@ marks do not move anything.
   `@myriaddreamin/typst-ts-web-compiler` and `@myriaddreamin/typst-ts-renderer` 0.7.0.
 - Installed in phase 1: `@myriaddreamin/typst-ts-node-compiler` 0.7.0, `vitest` 4.1.12 (dev).
   No ZIP or JSON Schema library: both are small enough to keep in `packages/core`.
+- Installed in phase 2: `docx` 9.12.0.
 - Still to install, each in the phase that needs it (npm needs the workspace; Rust and
   `webkit2gtk-4.1` are system packages installed with pkexec, with Bautista at the PC):
 - npm (inside the container only): `astro`, `@astrojs/react`, `@vite-pwa/astro`, `react`,

@@ -4,3 +4,4 @@ export * from "./project.ts";
 export * from "./typst.ts";
 export * from "./zip.ts";
 export * from "./bundle.ts";
+export * from "./resolve.ts";
