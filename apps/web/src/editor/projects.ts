@@ -1,8 +1,11 @@
 import { CONTACT_KINDS, validate, type Profile, type Project } from "@foja/core";
-import example from "../../../../examples/example.project.json";
+import exampleEs from "../../../../examples/example.project.json";
+import exampleEn from "../../../../examples/example.en.project.json";
+import { useLanguage } from "./i18n";
 import { newId } from "./forms/Skills";
 
-export const exampleProject = (): Project => structuredClone(example) as Project;
+/** The fictional example, in the interface's language. */
+export const exampleProject = (): Project => structuredClone(useLanguage.getState().lang === "es" ? exampleEs : exampleEn) as Project;
 
 export function emptyProject(): Project {
   return {

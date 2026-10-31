@@ -80,4 +80,8 @@ test("the interface speaks English too, and remembers it", async ({ page }) => {
   await page.reload();
   await expect(page.getByRole("button", { name: "Profile text" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.lang)).toBe("en");
+  // The example follows the interface language.
+  await page.getByRole("button", { name: /Project/ }).click();
+  await page.getByRole("button", { name: "Start with the example" }).click();
+  await expect(page.getByLabel("Subtitle")).toHaveValue("Full-stack software engineer");
 });

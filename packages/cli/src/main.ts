@@ -72,7 +72,7 @@ async function build(args: string[]) {
         const files = [{ name: `${stem}.pdf`, mime: "application/pdf", data: new Uint8Array(typst.pdf(doc!)) }];
         for (const f of ["typ", "tex", "md", "json", "docx"] as const) files.push(...(await exportFiles(project, id, f, template)));
         const bundle = bundleExports(project, id, files);
-        write(bundle.name, bundle.data, ` (${files.map((f) => f.name.slice(stem.length) || f.name).join(", ")})`);
+        write(bundle.name, bundle.data, ` (${files.map((f) => (f.name.startsWith(stem) ? f.name.slice(stem.length) : f.name)).join(", ")})`);
       } else for (const f of await exportFiles(project, id, format, template)) write(f.name, f.data);
     }
   }

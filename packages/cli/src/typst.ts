@@ -1,6 +1,6 @@
 // Typst on Node through typst.ts's native addon: the same styles the browser compiles.
 
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { NodeCompiler } from "@myriaddreamin/typst-ts-node-compiler";
@@ -21,7 +21,10 @@ import {
   type TemplateFiles,
 } from "@foja/core";
 
-export const TEMPLATE_DIR = dirname(fileURLToPath(import.meta.resolve("@foja/template/lib.typ")));
+// The published CLI carries the template next to itself (dist/template); in the repository it
+// comes from the @foja/template workspace package.
+const bundled = ["./template/", "../template/"].map((p) => fileURLToPath(new URL(p, import.meta.url))).find((dir) => existsSync(join(dir, "lib.typ")));
+export const TEMPLATE_DIR = bundled ?? dirname(fileURLToPath(import.meta.resolve("@foja/template/lib.typ")));
 const FONTS_DIR = join(TEMPLATE_DIR, "fonts");
 
 export function templateFiles(): TemplateFiles {

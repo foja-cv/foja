@@ -1,0 +1,92 @@
+{
+  "format": "foja/2",
+  "language": "en",
+  "person": { "givenNames": ["Maya"], "familyNames": ["Lindqvist"], "photo": null },
+  "contacts": {
+    "phone": "+1 555 0100",
+    "email": "maya.lindqvist@example.com",
+    "github": "github.com/maya-lindqvist-example",
+    "location": "Edinburgh, UK"
+  },
+  "skills": {
+    "languages": { "title": "Languages", "items": ["TypeScript", "Python", "SQL", "Rust"] },
+    "tools": { "title": "Tools", "items": ["React", "PostgreSQL", "Docker", "Git"] },
+    "spoken": { "title": "Spoken", "items": ["English (native)", "Swedish (C1)", "Spanish (B1)"] }
+  },
+  "entries": {
+    "northwind": {
+      "title": "Software engineer",
+      "place": "Northwind Labs (fictional)",
+      "start": "2022-09",
+      "end": null,
+      "items": [
+        { "heading": "Payments", "text": "Rebuilt the invoicing service in TypeScript and PostgreSQL; response times halved." },
+        { "heading": "Quality", "text": "Brought in integration tests and code review for a team of six." },
+        { "text": "Mentored two junior engineers through their first year." }
+      ]
+    },
+    "open-data": {
+      "title": "Software intern",
+      "place": "City Open Data Office (fictional)",
+      "start": "2021-06",
+      "end": "2021-12",
+      "items": [
+        { "text": "Cleaned and published datasets with **Python** and pandas." },
+        { "text": "Built an indicators dashboard in React for the public site." }
+      ]
+    },
+    "tutor": {
+      "title": "Teaching assistant, Algorithms",
+      "place": "University of Edinburgh",
+      "start": "2020-09",
+      "end": "2022-06",
+      "items": [{ "text": "Ran tutorials on data structures for groups of 30 students." }, { "text": "Marked coursework and wrote problem sheets." }]
+    },
+    "degree": {
+      "title": "BSc Computer Science",
+      "place": "University of Edinburgh",
+      "start": "2018-09",
+      "end": "2022-06",
+      "note": "First-class honours"
+    },
+    "course": { "title": "Accessible interface design", "place": "Online course, 40 hours", "start": "2023-05" },
+    "library": { "title": "Community library catalogue", "place": "Volunteer project · TypeScript · SQLite" }
+  },
+  "profiles": {
+    "engineer": {
+      "name": "Engineer",
+      "subtitle": "Full-stack software engineer",
+      "contacts": ["phone", "email", "github", "location"],
+      "skills": [["languages", "tools"], ["spoken"]],
+      "summary": "Software engineer with four years of experience building web applications. I care about systems that last: clear code, tests, and documentation someone else can follow.",
+      "sections": [
+        { "id": "experience", "title": "Experience", "blocks": [{ "type": "entry", "entry": "northwind" }, { "type": "entry", "entry": "open-data" }] },
+        { "id": "education", "title": "Education", "compact": true, "blocks": [{ "type": "entry", "entry": "degree" }, { "type": "entry", "entry": "course" }] },
+        {
+          "id": "strengths",
+          "title": "Strengths",
+          "column": "side",
+          "blocks": [
+            { "type": "item", "heading": "Order", "text": "I break large problems into steps that can be reviewed." },
+            { "type": "item", "heading": "Communication", "text": "I explain technical decisions to people who do not program." }
+          ]
+        },
+        { "id": "projects", "title": "Projects", "column": "side", "blocks": [{ "type": "entry", "entry": "library" }] }
+      ]
+    },
+    "teacher": {
+      "name": "Teacher",
+      "subtitle": "Programming teacher",
+      "highlight": { "title": "Applying for", "text": "Introduction to programming" },
+      "contacts": ["email", "location"],
+      "skills": [["languages"], ["spoken"]],
+      "summary": "Two years as a teaching assistant and an engineer in practice: I teach with examples from real work.",
+      "sections": [
+        { "id": "teaching", "title": "Teaching", "blocks": [{ "type": "entry", "entry": "tutor" }] },
+        { "id": "experience", "title": "Professional experience", "compact": true, "blocks": [{ "type": "entry", "entry": "northwind" }, { "type": "entry", "entry": "open-data" }] },
+        { "id": "education", "title": "Education", "compact": true, "blocks": [{ "type": "entry", "entry": "degree" }, { "type": "entry", "entry": "course" }] }
+      ],
+      "layout": { "template": "banda", "photo": "none" }
+    }
+  }
+}

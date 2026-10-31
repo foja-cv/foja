@@ -497,7 +497,15 @@ themes that plugins can extend through an easy API.
 | **English interface**: every string in English as well; the language follows the browser (Spanish for `es`, English otherwise), can be changed in the Appearance menu and is remembered; `<html lang>` follows it | `i18n.ts`, `ThemeMenu.tsx` |
 | **Tests**: 104 unit (62 new on theme contrast and validation), 22 end-to-end (2 new: English interface; phone layout) | |
 
-Not done: an English example project (the example is in Spanish whatever the interface language).
+**English example**: a second fictional project (`examples/example.en.project.json`); the welcome
+screen and the project menu load the one in the interface language.
+
+**CLI ready for npm** (not published: that needs Bautista's OK): `packages/cli/build.mjs` bundles
+the CLI with Vite into one `dist/foja.mjs` (`@foja/core` and `docx` inside; the typst.ts native
+addon stays a dependency) and copies the Typst library, styles and fonts to `dist/template/`;
+it runs on `npm pack`. The tarball (1 MB, 23 files) was installed in an empty directory and
+built PDF, Word, Typst and the all-formats bundle. CI checks the same on every push. The name
+`foja` is free on npm (31/10/2026).
 
 ## What is left (2026-10-31)
 
@@ -512,9 +520,11 @@ Needs Bautista:
 5. **Phase 7, Tauri + Flathub**: Rust and `webkit2gtk-4.1` need pkexec with him at the PC; the
    Flathub submission is a PR from his account.
 
+6. **CLI on npm**: an npm account (his), then `npm publish -w packages/cli` (the package builds
+   itself on pack).
+
 Can be done without him, later: open the Word export in Word/LibreOffice (none installed here);
-the "Open in Overleaf" button (needs testing against the live service); an English interface;
-the CLI on npm (needs publishing, so his OK).
+the "Open in Overleaf" button (needs testing against the live service).
 
 ## 6. New dependencies (approved 2026-10-30)
 

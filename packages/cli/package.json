@@ -1,14 +1,43 @@
 {
   "name": "foja",
   "version": "0.1.0",
-  "description": "Foja command line: build CVs from a Foja project with Typst",
+  "description": "Build CVs with Typst from a Foja project: PDF, SVG, Typst, LaTeX, Markdown, JSON and Word",
   "license": "GPL-3.0-only",
   "type": "module",
-  "bin": { "foja": "src/main.ts" },
-  "engines": { "node": ">=24" },
+  "bin": {
+    "foja": "dist/foja.mjs"
+  },
+  "engines": {
+    "node": ">=24"
+  },
   "dependencies": {
-    "@foja/core": "*",
-    "@foja/template": "*",
     "@myriaddreamin/typst-ts-node-compiler": "0.7.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/foja-cv/foja.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/foja-cv/foja",
+  "keywords": [
+    "cv",
+    "resume",
+    "typst",
+    "pdf",
+    "latex",
+    "docx"
+  ],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node build.mjs",
+    "prepack": "node build.mjs"
+  },
+  "devDependencies": {
+    "@foja/core": "*",
+    "@foja/template": "*"
   }
 }
