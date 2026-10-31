@@ -1,15 +1,15 @@
-// Measure the live preview in a real browser: opens `/?bench=N` in headless Chrome through the
+// Measure the live preview in a real browser: opens `/spike?bench=N` in headless Chrome through the
 // DevTools protocol (no dependencies), waits for the page to finish and prints its timings.
 //
 //   node scripts/bench.mjs [url] [runs] [screenshot.png]
-//   CHROME=google-chrome-stable node scripts/bench.mjs http://127.0.0.1:8090/ 50
+//   CHROME=google-chrome-stable node scripts/bench.mjs http://127.0.0.1:8090/spike 50
 
 import { spawn } from "node:child_process";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const [url = "http://127.0.0.1:8090/", runs = "50", screenshot] = process.argv.slice(2);
+const [url = "http://127.0.0.1:8090/spike", runs = "50", screenshot] = process.argv.slice(2);
 const chrome = process.env.CHROME ?? "google-chrome-unstable";
 const port = 9300 + Math.floor(Math.random() * 500);
 const profile = mkdtempSync(join(tmpdir(), "foja-bench-"));

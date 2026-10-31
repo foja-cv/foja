@@ -1,0 +1,10 @@
+{
+  "name": "@foja/core",
+  "private": true,
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./schema/project.schema.json"
+  }
+}

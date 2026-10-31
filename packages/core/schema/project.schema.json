@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://foja-cv.github.io/foja/schema/project.schema.json",
+  "title": "Foja project",
+  "description": "One CV project: personal data, a bank of entries shared by every profile, and the profiles that pick from it.",
+  "type": "object",
+  "required": ["format", "language", "person", "contacts", "skills", "entries", "profiles"],
+  "additionalProperties": false,
+  "properties": {
+    "format": { "const": "foja/2" },
+    "language": { "type": "string", "pattern": "^[a-z]{2,3}(-[A-Za-z0-9]+)*$", "description": "BCP 47 tag of the CV text." },
+    "person": {
+      "type": "object",
+      "required": ["givenNames", "familyNames"],
+      "additionalProperties": false,
+      "properties": {
+        "givenNames": { "type": "array", "items": { "$ref": "#/$defs/text" }, "minItems": 1 },
+        "familyNames": { "type": "array", "items": { "$ref": "#/$defs/text" } },
+        "photo": { "type": ["string", "null"], "description": "Name of an asset." }
+      }
+    },
+    "contacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "phone": { "$ref": "#/$defs/text" },
+        "email": { "$ref": "#/$defs/text" },
+        "website": { "$ref": "#/$defs/text" },
+        "github": { "$ref": "#/$defs/text" },
+        "linkedin": { "$ref": "#/$defs/text" },
+        "location": { "$ref": "#/$defs/text" }
+      }
+    },
+    "skills": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/id" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["title", "items"],
+        "additionalProperties": false,
+        "properties": {
+          "title": { "$ref": "#/$defs/text" },
+          "items": { "type": "array", "items": { "$ref": "#/$defs/text" } }
+        }
+      }
+    },
+    "entries": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/id" },
+      "additionalProperties": { "$ref": "#/$defs/entry" }
+    },
+    "profiles": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/id" },
+      "minProperties": 1,
+      "additionalProperties": { "$ref": "#/$defs/profile" }
+    },
+    "assets": {
+      "type": "object",
+      "propertyNames": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["type", "data"],
+        "additionalProperties": false,
+        "properties": {
+          "type": { "enum": ["image/jpeg", "image/png", "image/svg+xml"] },
+          "data": { "type": "string", "pattern": "^[A-Za-z0-9+/]*={0,2}$", "description": "Base64." }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "text": { "type": "string", "minLength": 1 },
+    "month": { "type": "string", "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$" },
+    "item": {
+      "type": "object",
+      "required": ["text"],
+      "additionalProperties": false,
+      "properties": {
+        "heading": { "$ref": "#/$defs/text" },
+        "text": { "$ref": "#/$defs/text", "description": "`**bold**` spans are allowed." }
+      }
+    },
+    "entry": {
+      "type": "object",
+      "required": ["title"],
+      "additionalProperties": false,
+      "properties": {
+        "title": { "$ref": "#/$defs/text" },
+        "place": { "$ref": "#/$defs/text" },
+        "start": { "$ref": "#/$defs/month" },
+        "end": {
+          "oneOf": [{ "$ref": "#/$defs/month" }, { "type": "null" }],
+          "description": "null: ongoing. Absent: start is a single date."
+        },
+        "note": { "$ref": "#/$defs/text" },
+        "items": { "type": "array", "items": { "$ref": "#/$defs/item" } }
+      }
+    },
+    "block": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "entry"],
+          "additionalProperties": false,
+          "properties": { "type": { "const": "entry" }, "entry": { "$ref": "#/$defs/id" } }
+        },
+        {
+          "type": "object",
+          "required": ["type", "text"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "const": "item" },
+            "heading": { "$ref": "#/$defs/text" },
+            "text": { "$ref": "#/$defs/text" }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "text"],
+          "additionalProperties": false,
+          "properties": { "type": { "const": "paragraph" }, "text": { "$ref": "#/$defs/text" } }
+        }
+      ]
+    },
+    "section": {
+      "type": "object",
+      "required": ["id", "title", "blocks"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "title": { "$ref": "#/$defs/text" },
+        "column": { "enum": ["main", "side"], "default": "main" },
+        "compact": { "type": "boolean", "default": false },
+        "blocks": { "type": "array", "items": { "$ref": "#/$defs/block" } }
+      }
+    },
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "columns": { "enum": [1, 2], "default": 2 },
+        "sidebar": { "enum": ["left", "right"], "default": "left" },
+        "sidebarWidth": { "type": "number", "minimum": 15, "maximum": 45, "default": 26.93, "description": "Percent of the text width." },
+        "photo": { "enum": ["square", "rounded", "circle", "none"], "default": "square" },
+        "font": { "enum": ["XCharter"], "default": "XCharter" },
+        "fontSize": { "type": "number", "minimum": 8, "maximum": 12, "default": 10 },
+        "accent": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "margins": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Millimetres.",
+          "properties": {
+            "top": { "type": "number", "minimum": 5, "maximum": 40, "default": 12 },
+            "bottom": { "type": "number", "minimum": 5, "maximum": 40, "default": 12 },
+            "left": { "type": "number", "minimum": 5, "maximum": 40, "default": 12 },
+            "right": { "type": "number", "minimum": 5, "maximum": 40, "default": 8.7 }
+          }
+        },
+        "density": { "enum": ["compact", "normal", "relaxed"], "default": "normal" },
+        "paper": { "enum": ["a4", "us-letter"], "default": "a4" },
+        "dateFormat": { "enum": ["MM/YYYY", "MMM YYYY", "YYYY"], "default": "MM/YYYY" },
+        "labels": { "enum": ["es", "en"] }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "required": ["subtitle", "contacts", "skills", "summary", "sections"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "$ref": "#/$defs/text" },
+        "subtitle": { "$ref": "#/$defs/text" },
+        "highlight": {
+          "type": "object",
+          "required": ["title", "text"],
+          "additionalProperties": false,
+          "properties": { "title": { "$ref": "#/$defs/text" }, "text": { "$ref": "#/$defs/text" } }
+        },
+        "contacts": {
+          "type": "array",
+          "items": { "enum": ["phone", "email", "website", "github", "linkedin", "location"] }
+        },
+        "skills": {
+          "type": "array",
+          "items": { "type": "array", "items": { "$ref": "#/$defs/id" }, "minItems": 1 }
+        },
+        "summary": { "type": "string" },
+        "sections": { "type": "array", "items": { "$ref": "#/$defs/section" } },
+        "layout": { "$ref": "#/$defs/layout" }
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "es": {
+    "profile": "Perfil",
+    "contact": "Contacto",
+    "skills": "Habilidades",
+    "present": "actualidad",
+    "months": ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"],
+    "contacts": {
+      "phone": "Teléfono",
+      "email": "Correo",
+      "website": "Web",
+      "github": "GitHub",
+      "linkedin": "LinkedIn",
+      "location": "Ubicación"
+    }
+  },
+  "en": {
+    "profile": "Profile",
+    "contact": "Contact",
+    "skills": "Skills",
+    "present": "present",
+    "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    "contacts": {
+      "phone": "Phone",
+      "email": "Email",
+      "website": "Website",
+      "github": "GitHub",
+      "linkedin": "LinkedIn",
+      "location": "Location"
+    }
+  }
+}

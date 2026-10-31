@@ -1,376 +1,485 @@
 {
-  "formato": "foja/2-draft",
-  "nombres": [
-    "Bautista",
-    "Damián"
-  ],
-  "apellidos": [
-    "Fiori"
-  ],
-  "foto": null,
-  "contactos": {
-    "telefono": "+54 9 341 000-0000",
-    "correo": "email@example.com",
+  "format": "foja/2",
+  "language": "es",
+  "person": {
+    "givenNames": [
+      "Bautista",
+      "Damián"
+    ],
+    "familyNames": [
+      "Fiori"
+    ],
+    "photo": "photo.svg"
+  },
+  "contacts": {
+    "phone": "+54 9 341 000-0000",
+    "email": "email@example.com",
     "linkedin": "linkedin.com/in/b-d-fiori"
   },
-  "habilidades": {
-    "Idiomas": [
-      "Español (nativo)",
-      "Inglés general (C2)",
-      "Inglés técnico (C1)"
-    ],
-    "Programación": [
-      "C",
-      "C++",
-      "Python",
-      "Racket"
-    ],
-    "Web": [
-      "HTML",
-      "JavaScript",
-      "TypeScript"
-    ],
-    "Microcontroladores": [
-      "Arduino (C++)",
-      "AVR Assembly"
-    ]
+  "skills": {
+    "idiomas": {
+      "title": "Idiomas",
+      "items": [
+        "Español (nativo)",
+        "Inglés general (C2)",
+        "Inglés técnico (C1)"
+      ]
+    },
+    "programacion": {
+      "title": "Programación",
+      "items": [
+        "C",
+        "C++",
+        "Python",
+        "Racket"
+      ]
+    },
+    "web": {
+      "title": "Web",
+      "items": [
+        "HTML",
+        "JavaScript",
+        "TypeScript"
+      ]
+    },
+    "microcontroladores": {
+      "title": "Microcontroladores",
+      "items": [
+        "Arduino (C++)",
+        "AVR Assembly"
+      ]
+    }
   },
-  "entradas": {
+  "entries": {
     "obrok": {
-      "titulo": "Desarrollador de software",
-      "lugar": "Obrok",
-      "desde": "2026-05",
-      "hasta": null,
-      "nota": "Pasante de 05/2026 a 08/2026; desarrollador desde 08/2026",
-      "tareas": [
+      "title": "Desarrollador de software",
+      "place": "Obrok",
+      "start": "2026-05",
+      "end": null,
+      "note": "Pasante de 05/2026 a 08/2026; desarrollador desde 08/2026",
+      "items": [
         {
-          "texto": "Desarrollo full stack e ingeniería de software."
+          "text": "Desarrollo full stack e ingeniería de software."
         },
         {
-          "texto": "Programación con agentes de inteligencia artificial avanzados: ingeniería de prompts, de contexto y de loops, y desarrollo guiado por especificaciones (SDD)."
+          "text": "Programación con agentes de inteligencia artificial avanzados: ingeniería de prompts, de contexto y de loops, y desarrollo guiado por especificaciones (SDD)."
         }
       ]
     },
     "tecso": {
-      "titulo": "Pasante de desarrollo",
-      "lugar": "tecso",
-      "desde": "2024-09",
-      "hasta": "2024-10",
-      "tareas": [
+      "title": "Pasante de desarrollo",
+      "place": "tecso",
+      "start": "2024-09",
+      "end": "2024-10",
+      "items": [
         {
-          "encabezado": "Datalogger ATtiny85",
-          "texto": "Diseño de un datalogger en C++ basado en el controlador ATtiny85."
+          "heading": "Datalogger ATtiny85",
+          "text": "Diseño de un datalogger en C++ basado en el controlador ATtiny85."
         },
         {
-          "encabezado": "Actualización de la estación de carga",
-          "texto": "Actualización de una versión primitiva funcional de estación de carga para drones en C++ hacia una versión más pulida basado en el controlador ESP32."
+          "heading": "Actualización de la estación de carga",
+          "text": "Actualización de una versión primitiva funcional de estación de carga para drones en C++ hacia una versión más pulida basado en el controlador ESP32."
         },
         {
-          "encabezado": "Sistema de cámaras",
-          "texto": "Programación de un sistema automático de cámaras escrito en Python para una Raspberry Pi, más su comunicación con un bot de Telegram capaz de darle comandos."
+          "heading": "Sistema de cámaras",
+          "text": "Programación de un sistema automático de cámaras escrito en Python para una Raspberry Pi, más su comunicación con un bot de Telegram capaz de darle comandos."
         }
       ]
     },
     "reparacion": {
-      "titulo": "Reparación de equipos informáticos",
-      "lugar": "Kernel Computación",
-      "nota": "Independiente desde 12/2018; en Kernel Computación desde 02/2026",
-      "desde": "2018-12",
-      "hasta": null,
-      "tareas": [
+      "title": "Reparación de equipos informáticos",
+      "place": "Kernel Computación",
+      "start": "2018-12",
+      "end": null,
+      "note": "Independiente desde 12/2018; en Kernel Computación desde 02/2026",
+      "items": [
         {
-          "encabezado": "Atención al cliente",
-          "texto": "Comunicación con clientes, diagnóstico y presupuesto."
+          "heading": "Atención al cliente",
+          "text": "Comunicación con clientes, diagnóstico y presupuesto."
         },
         {
-          "encabezado": "Servicios a usuarios de Windows",
-          "texto": "Servicio remoto de auxilio via TeamViewer. Licenciación de Windows mediante scripts de Powershell, limpieza de malware y optimización del equipo en función de las necesidades del usuario."
+          "heading": "Servicios a usuarios de Windows",
+          "text": "Servicio remoto de auxilio via TeamViewer. Licenciación de Windows mediante scripts de Powershell, limpieza de malware y optimización del equipo en función de las necesidades del usuario."
         },
         {
-          "encabezado": "Personalización del entorno",
-          "texto": "Preparación de programas ejecutables en Bash, Batch y Python que automaticen tareas recurrentes en Windows/Linux."
+          "heading": "Personalización del entorno",
+          "text": "Preparación de programas ejecutables en Bash, Batch y Python que automaticen tareas recurrentes en Windows/Linux."
         },
         {
-          "encabezado": "Medidas preventivas",
-          "texto": "Automatización de respaldos de seguridad (backups) o sincronización de carpetas y servidores."
+          "heading": "Medidas preventivas",
+          "text": "Automatización de respaldos de seguridad (backups) o sincronización de carpetas y servidores."
         },
         {
-          "encabezado": "Servicios a usuarios de Linux",
-          "texto": "Instalación, acondicionamiento y personalización de entornos Linux."
+          "heading": "Servicios a usuarios de Linux",
+          "text": "Instalación, acondicionamiento y personalización de entornos Linux."
         }
       ]
     },
     "docencia": {
-      "titulo": "Docente particular",
-      "lugar": "Independiente",
-      "desde": "2018-07",
-      "hasta": null,
-      "tareas": [
+      "title": "Docente particular",
+      "place": "Independiente",
+      "start": "2018-07",
+      "end": null,
+      "items": [
         {
-          "encabezado": "Modalidades",
-          "texto": "Clases presenciales y virtuales."
+          "heading": "Modalidades",
+          "text": "Clases presenciales y virtuales."
         },
         {
-          "encabezado": "Rango",
-          "texto": "Alumnos secundarios o universitarios."
+          "heading": "Rango",
+          "text": "Alumnos secundarios o universitarios."
         },
         {
-          "encabezado": "Materias destacadas",
-          "texto": "Álgebra, cálculo, física, programación (C, C++, Python, Pseudocódigo, Racket), química, electrónica y epistemología."
+          "heading": "Materias destacadas",
+          "text": "Álgebra, cálculo, física, programación (C, C++, Python, Pseudocódigo, Racket), química, electrónica y epistemología."
         },
         {
-          "encabezado": "IA para aprender",
-          "texto": "Enseño a estudiar con IA sin que resuelva todo: a separar la IA para trabajar («resolvé») de la IA para aprender («enseñame»)."
+          "heading": "IA para aprender",
+          "text": "Enseño a estudiar con IA sin que resuelva todo: a separar la IA para trabajar («resolvé») de la IA para aprender («enseñame»)."
         }
       ]
     },
     "simulacro": {
-      "titulo": "Simulacro de sesión del Concejo Municipal",
-      "lugar": "Rosario",
-      "desde": "2026-10",
-      "tareas": [
+      "title": "Simulacro de sesión del Concejo Municipal",
+      "place": "Rosario",
+      "start": "2026-10",
+      "items": [
         {
-          "encabezado": "Conducción de un bloque",
-          "texto": "Coordiné a un equipo de cuatro integrantes: reparto de temas, preparación de argumentos y estrategia de intervención."
+          "heading": "Conducción de un bloque",
+          "text": "Coordiné a un equipo de cuatro integrantes: reparto de temas, preparación de argumentos y estrategia de intervención."
         },
         {
-          "encabezado": "Debate reglado",
-          "texto": "Redacción de proyectos y defensa oral ante el cuerpo, respetando turnos, tiempos y el reglamento de sesiones."
+          "heading": "Debate reglado",
+          "text": "Redacción de proyectos y defensa oral ante el cuerpo, respetando turnos, tiempos y el reglamento de sesiones."
         }
       ]
     },
     "tuia": {
-      "titulo": "Tecnicatura Universitaria en Inteligencia Artificial",
-      "lugar": "Universidad Nacional de Rosario",
-      "nota": "En curso · 30,77 % de la carrera aprobada · promedio 8,50"
+      "title": "Tecnicatura Universitaria en Inteligencia Artificial",
+      "place": "Universidad Nacional de Rosario",
+      "note": "En curso · 30,77 % de la carrera aprobada · promedio 8,50"
     },
     "lcc": {
-      "titulo": "Licenciatura en Ciencias de la Computación",
-      "lugar": "Universidad Nacional de Rosario",
-      "nota": "En curso"
+      "title": "Licenciatura en Ciencias de la Computación",
+      "place": "Universidad Nacional de Rosario",
+      "note": "En curso"
     },
     "tecnico": {
-      "titulo": "Técnico en Electrónica",
-      "lugar": "Instituto Politécnico Superior",
-      "tareas": [
+      "title": "Técnico en Electrónica",
+      "place": "Instituto Politécnico Superior",
+      "items": [
         {
-          "texto": "Microprocesadores, automatización, sistemas de control, protocolos de red y electrónica de potencia."
+          "text": "Microprocesadores, automatización, sistemas de control, protocolos de red y electrónica de potencia."
         }
       ]
     },
     "mapa-enciclopedico": {
-      "titulo": "Mapa interactivo enciclopédico",
-      "lugar": "GDScript + Python · OpenAI · interfaz de usuario"
+      "title": "Mapa interactivo enciclopédico",
+      "place": "GDScript + Python · OpenAI · interfaz de usuario"
     },
     "wiki-estudio": {
-      "titulo": "Wiki de estudio",
-      "lugar": "Nginx + Arch Linux · MySQL/MariaDB · MediaWiki"
+      "title": "Wiki de estudio",
+      "place": "Nginx + Arch Linux · MySQL/MariaDB · MediaWiki"
     },
     "mapa-oop": {
-      "titulo": "Mapa de referencias para POO",
-      "lugar": "TypeScript · Mermaid + UML · Node.js"
+      "title": "Mapa de referencias para POO",
+      "place": "TypeScript · Mermaid + UML · Node.js"
     },
     "acordes": {
-      "titulo": "Gestor de acordes para guitarra",
-      "lugar": "Racket"
+      "title": "Gestor de acordes para guitarra",
+      "place": "Racket"
     }
   },
-  "perfiles": {
+  "profiles": {
     "docente-cine-debate": {
-      "subtitulo": "Docente de cine debate",
-      "postulacion": "Cine debate",
-      "contactos": [
-        "telefono",
-        "correo",
+      "subtitle": "Docente de cine debate",
+      "contacts": [
+        "phone",
+        "email",
         "linkedin"
       ],
-      "habilidades": [
+      "skills": [
         [
-          "Idiomas"
+          "idiomas"
         ]
       ],
-      "perfil": "Doy clases particulares desde 2018 a alumnos secundarios y universitarios, y soy estudiante avanzado de la Tecnicatura Universitaria en Inteligencia Artificial en la UNR. Me interesa el cine como punto de partida para pensar: disfruto guiar una conversación, ordenar las ideas que aparecen en el grupo y abrir preguntas para que cada uno fundamente lo que piensa. Busco coordinar espacios de cine debate donde la proyección sea el disparador de un intercambio respetuoso y con argumentos.",
-      "secciones": [
+      "summary": "Doy clases particulares desde 2018 a alumnos secundarios y universitarios, y soy estudiante avanzado de la Tecnicatura Universitaria en Inteligencia Artificial en la UNR. Me interesa el cine como punto de partida para pensar: disfruto guiar una conversación, ordenar las ideas que aparecen en el grupo y abrir preguntas para que cada uno fundamente lo que piensa. Busco coordinar espacios de cine debate donde la proyección sea el disparador de un intercambio respetuoso y con argumentos.",
+      "sections": [
         {
-          "titulo": "Experiencia docente y de debate",
-          "entradas": [
-            "docencia",
-            "simulacro"
-          ]
-        },
-        {
-          "titulo": "Fortalezas",
-          "items": [
+          "id": "experiencia-docente-y-de-debate",
+          "title": "Experiencia docente y de debate",
+          "blocks": [
             {
-              "encabezado": "Comunicación clara",
-              "texto": "Explico con precisión y sin ambigüedades, adaptando el registro a quien tengo enfrente. Años de clases particulares me enseñaron a reformular una idea hasta que se entiende."
+              "type": "entry",
+              "entry": "docencia"
             },
             {
-              "encabezado": "Escucha y moderación",
-              "texto": "Sé dar la palabra, ordenar un intercambio y sostener la conversación en el tema sin que nadie quede afuera."
-            },
-            {
-              "encabezado": "Buen ánimo",
-              "texto": "Trabajo a un ritmo animado, sin frustrarme ante la dificultad. Hablo frente a un grupo sin timidez y mantengo la calma cuando el debate se acalora."
+              "type": "entry",
+              "entry": "simulacro"
             }
           ]
         },
         {
-          "titulo": "Educación",
-          "entradas": [
-            "tuia",
-            "lcc",
-            "tecnico"
-          ],
-          "compacto": true
+          "id": "fortalezas",
+          "title": "Fortalezas",
+          "blocks": [
+            {
+              "type": "item",
+              "heading": "Comunicación clara",
+              "text": "Explico con precisión y sin ambigüedades, adaptando el registro a quien tengo enfrente. Años de clases particulares me enseñaron a reformular una idea hasta que se entiende."
+            },
+            {
+              "type": "item",
+              "heading": "Escucha y moderación",
+              "text": "Sé dar la palabra, ordenar un intercambio y sostener la conversación en el tema sin que nadie quede afuera."
+            },
+            {
+              "type": "item",
+              "heading": "Buen ánimo",
+              "text": "Trabajo a un ritmo animado, sin frustrarme ante la dificultad. Hablo frente a un grupo sin timidez y mantengo la calma cuando el debate se acalora."
+            }
+          ]
         },
         {
-          "titulo": "Otra experiencia laboral",
-          "entradas": [
-            "obrok",
-            "tecso",
-            "reparacion"
-          ],
-          "compacto": true
+          "id": "educacion",
+          "title": "Educación",
+          "compact": true,
+          "blocks": [
+            {
+              "type": "entry",
+              "entry": "tuia"
+            },
+            {
+              "type": "entry",
+              "entry": "lcc"
+            },
+            {
+              "type": "entry",
+              "entry": "tecnico"
+            }
+          ]
+        },
+        {
+          "id": "otra-experiencia-laboral",
+          "title": "Otra experiencia laboral",
+          "compact": true,
+          "blocks": [
+            {
+              "type": "entry",
+              "entry": "obrok"
+            },
+            {
+              "type": "entry",
+              "entry": "tecso"
+            },
+            {
+              "type": "entry",
+              "entry": "reparacion"
+            }
+          ]
         }
-      ]
+      ],
+      "highlight": {
+        "title": "Curso",
+        "text": "Cine debate"
+      }
     },
     "docente-ia": {
-      "subtitulo": "Docente de Inteligencia Artificial",
-      "contactos": [
-        "telefono",
-        "correo",
+      "subtitle": "Docente de Inteligencia Artificial",
+      "contacts": [
+        "phone",
+        "email",
         "linkedin"
       ],
-      "habilidades": [
+      "skills": [
         [
-          "Programación"
+          "programacion"
         ],
         [
-          "Idiomas"
+          "idiomas"
         ]
       ],
-      "perfil": "Doy clases particulares desde 2018 a alumnos secundarios y universitarios y trabajo como desarrollador de software en Obrok. Soy estudiante avanzado de la Tecnicatura Universitaria en Inteligencia Artificial en la UNR. Me interesa enseñar a usar la inteligencia artificial en tareas concretas de trabajo: qué hace cada herramienta, cuándo conviene usarla y cómo revisar lo que produce.",
-      "secciones": [
+      "summary": "Doy clases particulares desde 2018 a alumnos secundarios y universitarios y trabajo como desarrollador de software en Obrok. Soy estudiante avanzado de la Tecnicatura Universitaria en Inteligencia Artificial en la UNR. Me interesa enseñar a usar la inteligencia artificial en tareas concretas de trabajo: qué hace cada herramienta, cuándo conviene usarla y cómo revisar lo que produce.",
+      "sections": [
         {
-          "titulo": "Experiencia docente",
-          "entradas": [
-            "docencia"
-          ]
-        },
-        {
-          "titulo": "Experiencia laboral",
-          "entradas": [
-            "obrok",
-            "reparacion"
-          ]
-        },
-        {
-          "titulo": "Fortalezas",
-          "lateral": true,
-          "items": [
+          "id": "experiencia-docente",
+          "title": "Experiencia docente",
+          "blocks": [
             {
-              "encabezado": "Comunicación clara",
-              "texto": "Explico conceptos técnicos con precisión y sin jerga innecesaria. Años de clases particulares me enseñaron a reformular una idea hasta que se entiende."
-            },
-            {
-              "encabezado": "Enfoque práctico",
-              "texto": "Enseño con ejemplos y ejercicios concretos, para que lo aprendido se aplique enseguida en el trabajo."
-            },
-            {
-              "encabezado": "Paciencia",
-              "texto": "Resuelvo dudas sin apurar a nadie ni perder el ritmo de la clase."
+              "type": "entry",
+              "entry": "docencia"
             }
           ]
         },
         {
-          "titulo": "Educación",
-          "entradas": [
-            "tuia",
-            "tecnico"
-          ],
-          "compacto": true
+          "id": "experiencia-laboral",
+          "title": "Experiencia laboral",
+          "blocks": [
+            {
+              "type": "entry",
+              "entry": "obrok"
+            },
+            {
+              "type": "entry",
+              "entry": "reparacion"
+            }
+          ]
         },
         {
-          "titulo": "Proyecto personal",
-          "entradas": [
-            "mapa-enciclopedico"
-          ],
-          "compacto": true,
-          "items": [
+          "id": "fortalezas",
+          "title": "Fortalezas",
+          "column": "side",
+          "blocks": [
             {
-              "texto": "Más proyectos en **bafif.github.io**."
+              "type": "item",
+              "heading": "Comunicación clara",
+              "text": "Explico conceptos técnicos con precisión y sin jerga innecesaria. Años de clases particulares me enseñaron a reformular una idea hasta que se entiende."
+            },
+            {
+              "type": "item",
+              "heading": "Enfoque práctico",
+              "text": "Enseño con ejemplos y ejercicios concretos, para que lo aprendido se aplique enseguida en el trabajo."
+            },
+            {
+              "type": "item",
+              "heading": "Paciencia",
+              "text": "Resuelvo dudas sin apurar a nadie ni perder el ritmo de la clase."
+            }
+          ]
+        },
+        {
+          "id": "educacion",
+          "title": "Educación",
+          "compact": true,
+          "blocks": [
+            {
+              "type": "entry",
+              "entry": "tuia"
+            },
+            {
+              "type": "entry",
+              "entry": "tecnico"
+            }
+          ]
+        },
+        {
+          "id": "proyecto-personal",
+          "title": "Proyecto personal",
+          "compact": true,
+          "blocks": [
+            {
+              "type": "entry",
+              "entry": "mapa-enciclopedico"
+            },
+            {
+              "type": "item",
+              "text": "Más proyectos en **bafif.github.io**."
             }
           ]
         }
       ]
     },
     "programador": {
-      "subtitulo": "Programador",
-      "contactos": [
-        "telefono",
-        "correo",
+      "subtitle": "Programador",
+      "contacts": [
+        "phone",
+        "email",
         "linkedin"
       ],
-      "habilidades": [
+      "skills": [
         [
-          "Web",
-          "Programación"
+          "web",
+          "programacion"
         ],
         [
-          "Microcontroladores"
+          "microcontroladores"
         ],
         [
-          "Idiomas"
+          "idiomas"
         ]
       ],
-      "perfil": "Soy técnico electrónico y actualmente estudiante de Ciencias de la Computación y de Inteligencia Artificial. Me muevo cómodamente en trabajos que involucren independencia y resolución. Busco una oportunidad de aprender nuevas herramientas laborales (técnicas o humanas) y de aplicar activamente lo que ya conozco.",
-      "secciones": [
+      "summary": "Soy técnico electrónico y actualmente estudiante de Ciencias de la Computación y de Inteligencia Artificial. Me muevo cómodamente en trabajos que involucren independencia y resolución. Busco una oportunidad de aprender nuevas herramientas laborales (técnicas o humanas) y de aplicar activamente lo que ya conozco.",
+      "sections": [
         {
-          "titulo": "Experiencia",
-          "entradas": [
-            "obrok",
-            "tecso",
-            "reparacion",
-            "docencia"
-          ]
-        },
-        {
-          "titulo": "Educación",
-          "entradas": [
-            "tuia",
-            "lcc",
-            "tecnico"
-          ]
-        },
-        {
-          "titulo": "Fortalezas",
-          "lateral": true,
-          "items": [
+          "id": "experiencia",
+          "title": "Experiencia",
+          "blocks": [
             {
-              "encabezado": "Resolución",
-              "texto": "Puedo encontrar por mí mismo la solución a los problemas y trabajo enfocado en moverme hacia el resultado. Tengo un umbral de estrés alto y puedo apurarme sin perder la tranquilidad. Generalmente, no me quedo \"en blanco\"."
+              "type": "entry",
+              "entry": "obrok"
             },
             {
-              "encabezado": "Animosidad",
-              "texto": "Suelo trabajar a un ritmo animado, sin frustrarme ante la dificultad y sin perder el hilo de lo que tengo que hacer. Me comunico sin timidez en elevar un problema o en pedir una ayuda. No tengo problemas de humor y no soy alguien sensible ni ofensivo."
+              "type": "entry",
+              "entry": "tecso"
             },
             {
-              "encabezado": "Comunicación técnica",
-              "texto": "Hablo de manera literal y específica. Puedo explicar o informar una situación sin ambigüedades. Entiendo las instrucciones tal cual como están expresadas. Me es familiar y cotidiano leer documentación técnica."
+              "type": "entry",
+              "entry": "reparacion"
+            },
+            {
+              "type": "entry",
+              "entry": "docencia"
             }
           ]
         },
         {
-          "titulo": "Proyectos personales",
-          "lateral": true,
-          "items": [
+          "id": "educacion",
+          "title": "Educación",
+          "blocks": [
             {
-              "texto": "En **bafif.github.io**"
+              "type": "entry",
+              "entry": "tuia"
+            },
+            {
+              "type": "entry",
+              "entry": "lcc"
+            },
+            {
+              "type": "entry",
+              "entry": "tecnico"
+            }
+          ]
+        },
+        {
+          "id": "fortalezas",
+          "title": "Fortalezas",
+          "column": "side",
+          "blocks": [
+            {
+              "type": "item",
+              "heading": "Resolución",
+              "text": "Puedo encontrar por mí mismo la solución a los problemas y trabajo enfocado en moverme hacia el resultado. Tengo un umbral de estrés alto y puedo apurarme sin perder la tranquilidad. Generalmente, no me quedo \"en blanco\"."
+            },
+            {
+              "type": "item",
+              "heading": "Animosidad",
+              "text": "Suelo trabajar a un ritmo animado, sin frustrarme ante la dificultad y sin perder el hilo de lo que tengo que hacer. Me comunico sin timidez en elevar un problema o en pedir una ayuda. No tengo problemas de humor y no soy alguien sensible ni ofensivo."
+            },
+            {
+              "type": "item",
+              "heading": "Comunicación técnica",
+              "text": "Hablo de manera literal y específica. Puedo explicar o informar una situación sin ambigüedades. Entiendo las instrucciones tal cual como están expresadas. Me es familiar y cotidiano leer documentación técnica."
+            }
+          ]
+        },
+        {
+          "id": "proyectos-personales",
+          "title": "Proyectos personales",
+          "column": "side",
+          "blocks": [
+            {
+              "type": "item",
+              "text": "En **bafif.github.io**"
             }
           ]
         }
       ]
+    }
+  },
+  "assets": {
+    "photo.svg": {
+      "type": "image/svg+xml",
+      "data": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0MDMgMzcxIj48cmVjdCB3aWR0aD0iNDAzIiBoZWlnaHQ9IjM3MSIgZmlsbD0iI2UxZTFlMSIvPjwvc3ZnPg=="
     }
   }
 }

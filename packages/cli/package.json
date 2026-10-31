@@ -1,0 +1,14 @@
+{
+  "name": "foja",
+  "version": "0.1.0",
+  "description": "Foja command line: build CVs from a Foja project with Typst",
+  "license": "GPL-3.0-only",
+  "type": "module",
+  "bin": { "foja": "src/main.ts" },
+  "engines": { "node": ">=24" },
+  "dependencies": {
+    "@foja/core": "*",
+    "@foja/template": "*",
+    "@myriaddreamin/typst-ts-node-compiler": "0.7.0"
+  }
+}

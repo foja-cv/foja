@@ -1,7 +1,8 @@
 # Foja: a CV editor on Typst — research and plan
 
-Status: **phase 0 done** (2026-10-30): the spike works and is measured, see
-[Phase 0 results](#phase-0-results-2026-10-30). Moved here from `bafif/curriculum`
+Status: **phase 1 done** (2026-10-31): project format v2 with its schema, the template on it,
+the `foja` CLI and tests; see [Phase 1 results](#phase-1-results-2026-10-31). Phase 0:
+[results](#phase-0-results-2026-10-30). Moved here from `bafif/curriculum`
 (`docs/gui-plan.md`), where the history of the earlier drafts stays.
 
 ## Goal
@@ -236,7 +237,7 @@ TanStack Query only where there is async work, dnd-kit, typst.ts, `docx`, Tauri 
    profile; typst.ts in a worker rendering it in a bare Astro page; measure compile time per
    keystroke.
 1. **Typst template + schema + project format v2** (and the `data/` converter); Node CLI
-   `foja --formato pdf|typ`; tests on every profile.
+   `foja --formato pdf|typ`; tests on every profile (**done 2026-10-31**).
 2. **Exporters** in `packages/core`: LaTeX (port of `latex.py`), Markdown, JSON, Word, JPG;
    `.zip` bundles; tests.
 3. **Web app core**: editor, profiles, live preview, export dialog, IndexedDB; dev in Docker
@@ -316,14 +317,41 @@ Same text, same line breaks in most paragraphs, same layout. Things learnt:
 
 ### Open points before phase 1
 
-- **Font licences.** XCharter (Bitstream Charter licence, via CTAN) and LM Mono (GUST Font
-  Licence) are not committed yet: `scripts/fonts.sh` copies them from a local TeX tree into
-  `apps/web/public/fonts/` (git-ignored). Check both licences, then commit them.
+- ~~**Font licences.**~~ Resolved in phase 1: XCharter (Bitstream Charter free font licence) and
+  LM Mono 9 (GUST Font License, LPPL 1.3c) both allow redistribution; they are committed in
+  `packages/template/fonts/` with their licence texts.
 - **Template look.** The Typst code is written from scratch, but the look is that of the
   Wenneker LaTeX template (CC BY-NC-SA 3.0). Decide whether to credit it or make the default
   template visibly our own before the public web release.
-- **Project format.** `foja/2-draft` keeps the current Spanish keys; phase 1 fixes it with the
-  JSON Schema (photo as an embedded asset, blocks by type).
+- ~~**Project format.**~~ Resolved in phase 1: `foja/2`, see below.
+
+## Phase 1 results (2026-10-31)
+
+| Piece | Where |
+| :--- | :--- |
+| **Project format `foja/2`**: English keys; `person`, `contacts` (fixed kinds), `skills` (groups by id), `entries` (the shared bank), `profiles` (by id) and `assets` (base64, the photo). A profile has `subtitle`, optional `highlight` (a first sidebar block, e.g. the course applied for), `contacts`, `skills` (rows of group ids), `summary`, `sections` and `layout`. Sections hold **typed blocks**: `entry` (a reference into the bank), `item` (heading + text) and `paragraph`; `column: "side"` puts a section in the sidebar | `packages/core/schema/project.schema.json`, `packages/core/src/types.ts` |
+| **Validation**: the JSON Schema, checked by a small validator for the subset the schema uses (no new dependency), plus the references the schema cannot express (missing entries, skill groups, contacts or photo; end before start). Problems carry a JSON Pointer for the editor | `packages/core/src/validate.ts` |
+| **Layout options** (`layout`, all optional, the defaults reproduce the LaTeX CV): one or two columns, sidebar left/right and its width, photo square/rounded/circle/none, font, size, accent colour, margins, density, A4/Letter, date format (`MM/YYYY`, `MMM YYYY`, `YYYY`), label language (`es`, `en`; labels in `packages/template/labels.json`, shared with the exporters) | `packages/template/cv.typ` |
+| **Template on `foja/2`**: inputs `project` and `profile`; assets as files under `/assets/`. It emits invisible marks (`<foja>`: path, start/end, page, y) around every editable part, for click-to-edit and the page-fit badge in phase 4 | `packages/template/cv.typ` |
+| **CLI** `foja build <project> [--profile id] [--format pdf\|svg\|typ] [--out dir]`, `foja validate`, `foja convert-curriculum <data> <out> [--public]`; Typst through `typst-ts-node-compiler` (the native addon of typst.ts). `typ` writes a `.zip` (template, labels, project, assets, fonts and licences, README) that compiles with a plain `typst compile --font-path fonts --input profile=<id> cv.typ` | `packages/cli/` |
+| **Core helpers** shared by the CLI, the web worker and the exporters: layout defaults, dates and periods (same rules as the template), `**bold**` runs, what Typst sees (`/project.json` without the asset data, assets as files), a stored-only ZIP writer, the Typst bundle | `packages/core/src/` |
+| **Tests** (vitest, 27): the example validates, structural and reference errors point at the value, dates, ZIP, every profile compiles to one page, marks come in pairs, ten layout variants compile, the Typst bundle compiles on its own, the converter | `packages/*/test/`, `npm test` (in the container) |
+| **Web worker on `foja/2`**: compile, vector, marks and PDF from one snapshot (`runWithWorld`; `query` on a fresh world fails with "document is not compiled"); assets mapped again only when they change; errors caught and reported. The spike page moved to `/spike` | `apps/web/src/lib/typst.worker.ts`, `apps/web/src/pages/spike.astro` |
+
+**Fidelity**: the three profiles laid out by the phase 1 template and by the phase 0 template give
+the same word positions (pdftotext `-bbox`, 0 words moved by more than 0.3 pt; the only change is
+that the photo placeholder is now a grey SVG asset instead of a box with the word "foto"). The
+marks do not move anything.
+
+**Speed** (headless Chrome, 30 edits, same machine as phase 0): compile + marks p50 51.7 ms, p90
+62.2 ms; SVG 4.0 ms; round trip p50 86.6 ms. Same as phase 0: the query adds nothing measurable.
+
+**Converter note**: `convert-curriculum` reads the photo of `data/` into the project unless
+`--public` is given; the public fixture gets a grey 403×371 SVG instead. The address
+(`privado.json`, `domicilio`) is never read.
+
+**JPG**: `typst-ts-node-compiler` 0.7.0 has no PNG output, so JPG is an export of the web app
+(SVG → canvas → JPEG); the CLI does PDF, SVG and the Typst bundle (and the exporters of phase 2).
 
 ## 6. New dependencies (approved 2026-10-30)
 
@@ -332,6 +360,8 @@ Same text, same line breaks in most paragraphs, same layout. Things learnt:
   when the exporters moved to TypeScript).
 - Installed in phase 0 (inside the container): `astro` 7.4.0, `@myriaddreamin/typst.ts`,
   `@myriaddreamin/typst-ts-web-compiler` and `@myriaddreamin/typst-ts-renderer` 0.7.0.
+- Installed in phase 1: `@myriaddreamin/typst-ts-node-compiler` 0.7.0, `vitest` 4.1.12 (dev).
+  No ZIP or JSON Schema library: both are small enough to keep in `packages/core`.
 - Still to install, each in the phase that needs it (npm needs the workspace; Rust and
   `webkit2gtk-4.1` are system packages installed with pkexec, with Bautista at the PC):
 - npm (inside the container only): `astro`, `@astrojs/react`, `@vite-pwa/astro`, `react`,

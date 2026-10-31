@@ -1,5 +1,4 @@
 node_modules/
 dist/
 .astro/
-# Fonts are copied in by scripts/fonts.sh until their licence is checked (see docs/plan.md)
-apps/web/public/fonts/*.otf
+.out/

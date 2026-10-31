@@ -2,9 +2,16 @@
   "name": "foja-workspace",
   "private": true,
   "license": "GPL-3.0-only",
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "dev": "npm run dev -w apps/web",
-    "convert": "node scripts/convert-curriculum.mjs"
+    "test": "vitest run",
+    "foja": "node packages/cli/src/main.ts"
+  },
+  "devDependencies": {
+    "vitest": "4.1.12"
   }
 }
