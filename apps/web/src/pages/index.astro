@@ -1,19 +1,85 @@
 ---
 import Base from "../layouts/Base.astro";
 const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+const formats = [
+  ["PDF", "el CV listo para mandar"],
+  ["JPG", "una imagen por página, para formularios que piden imagen"],
+  ["Word", "en una o dos columnas, editable"],
+  ["Typst", "el código fuente, que abre en typst.app"],
+  ["LaTeX", "para Overleaf o tu instalación de TeX"],
+  ["Markdown", "para un README o un perfil de GitHub"],
+  ["JSON", "tu proyecto, para guardarlo o pasarlo a otra computadora"],
+];
 ---
 
 <Base title="Foja — tu CV en Typst, sin escribir código">
-  <main class="mx-auto flex min-h-full max-w-2xl flex-col justify-center gap-6 p-6">
-    <h1 class="text-4xl font-semibold">Foja</h1>
-    <p class="text-lg">
-      Un editor de CV sobre <a class="underline" href="https://typst.app">Typst</a>: formularios en lugar de código, una vista previa
-      que es la salida real de Typst y exportación a PDF, JPG, Word, LaTeX, Markdown, JSON y Typst.
-    </p>
-    <p>Todo corre en tu navegador: tus datos no salen de tu computadora.</p>
-    <p><a class="inline-block rounded bg-sky-700 px-4 py-2 text-white hover:bg-sky-800" href={`${base}editor`}>Abrir el editor</a></p>
-    <p class="text-sm text-neutral-600 dark:text-neutral-400">
-      Software libre (GPL-3.0): <a class="underline" href="https://github.com/foja-cv/foja">github.com/foja-cv/foja</a>
-    </p>
-  </main>
+  <div class="min-h-full bg-gradient-to-b from-sky-50 to-white dark:from-neutral-900 dark:to-neutral-950">
+    <main class="mx-auto flex max-w-5xl flex-col gap-16 px-6 py-16">
+      <section class="grid items-center gap-10 lg:grid-cols-[1fr_1.1fr]">
+        <div class="flex flex-col gap-6">
+          <p class="text-sm font-semibold tracking-widest text-sky-700 uppercase dark:text-sky-400">Foja</p>
+          <h1 class="text-4xl leading-tight font-semibold">Tu CV en Typst, sin escribir código</h1>
+          <p class="text-lg text-neutral-700 dark:text-neutral-300">
+            Completás formularios y ves al lado el resultado real de <a class="underline" href="https://typst.app">Typst</a>, al instante.
+            Un mismo banco de experiencias alimenta varios perfiles: el CV para un puesto de programación y el de docencia salen de los
+            mismos datos.
+          </p>
+          <div class="flex flex-wrap gap-3">
+            <a class="rounded bg-sky-700 px-5 py-2.5 font-medium text-white hover:bg-sky-800" href={`${base}editor/`}>Abrir el editor</a>
+            <a class="rounded border border-neutral-300 px-5 py-2.5 hover:bg-neutral-100 dark:border-neutral-600 dark:hover:bg-neutral-800" href="https://github.com/foja-cv/foja">Código fuente</a>
+          </div>
+          <p class="text-sm text-neutral-600 dark:text-neutral-400">Gratis, sin cuentas, y funciona sin conexión una vez abierto.</p>
+        </div>
+        <img
+          src={`${base}screenshot.jpg`}
+          width="1200"
+          height="760"
+          alt="El editor de Foja: a la izquierda, los formularios de una entrada; a la derecha, la vista previa del CV."
+          class="rounded-lg border border-neutral-200 shadow-xl dark:border-neutral-700"
+        />
+      </section>
+
+      <section class="grid gap-8 sm:grid-cols-3">
+        <div>
+          <h2 class="mb-2 font-semibold">Tus datos no salen de tu computadora</h2>
+          <p class="text-sm text-neutral-700 dark:text-neutral-300">
+            Foja corre entero en el navegador: el compilador de Typst incluido. No hay servidor que guarde tu CV; queda en este navegador y en
+            los archivos que exportes.
+          </p>
+        </div>
+        <div>
+          <h2 class="mb-2 font-semibold">Una página, sin adivinar</h2>
+          <p class="text-sm text-neutral-700 dark:text-neutral-300">
+            Un indicador te dice si el CV entra en una página y, si no, cuántas líneas sobran y qué partes quedan afuera. Hacés clic en la
+            vista previa y vas directo a editar esa parte.
+          </p>
+        </div>
+        <div>
+          <h2 class="mb-2 font-semibold">Diseño a tu medida</h2>
+          <p class="text-sm text-neutral-700 dark:text-neutral-300">
+            Una o dos columnas, barra a la izquierda o a la derecha, foto cuadrada o redonda, color, tamaño de letra, márgenes, papel A4 o
+            carta, formato de fecha.
+          </p>
+        </div>
+      </section>
+
+      <section class="flex flex-col gap-4">
+        <h2 class="text-2xl font-semibold">Exportá a lo que te pidan</h2>
+        <ul class="grid gap-2 sm:grid-cols-2">
+          {
+            formats.map(([name, what]) => (
+              <li class="rounded border border-neutral-200 px-4 py-2 dark:border-neutral-700">
+                <span class="font-medium">{name}</span>: <span class="text-neutral-700 dark:text-neutral-300">{what}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <footer class="border-t border-neutral-200 pt-6 text-sm text-neutral-600 dark:border-neutral-700 dark:text-neutral-400">
+        Foja es software libre (GPL-3.0): <a class="underline" href="https://github.com/foja-cv/foja">github.com/foja-cv/foja</a>. Fuentes:
+        XCharter (licencia libre de Bitstream Charter) y Latin Modern Mono (GUST Font License).
+      </footer>
+    </main>
+  </div>
 </Base>

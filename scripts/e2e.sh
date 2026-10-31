@@ -25,5 +25,5 @@ for _ in $(seq 50); do curl -sf "http://127.0.0.1:$port/json/version" >/dev/null
 mkdir -p .out/playwright-tmp
 docker run --rm --network host -u "$(id -u):$(id -g)" -v "$PWD":"$PWD" -w "$PWD" \
     -e TMPDIR="$PWD/.out/playwright-tmp" -e npm_config_cache=/tmp/npm \
-    -e CDP_URL="http://127.0.0.1:$port" -e BASE_URL="${BASE_URL:-http://127.0.0.1:8090}" \
+    -e CDP_URL="http://127.0.0.1:$port" -e BASE_URL="${BASE_URL:-http://127.0.0.1:8090}" -e PWA_URL="${PWA_URL:-}" \
     node:24-alpine npx playwright test "$@"

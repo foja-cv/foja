@@ -1,7 +1,9 @@
 # Foja: a CV editor on Typst — research and plan
 
-Status: **phase 4 done** (2026-10-31): drag-and-drop, click-to-edit, page-fit highlighting,
-command palette, photo crop; see [Phase 4 results](#phase-4-results-2026-10-31). Earlier:
+Status: **phase 5 ready to publish** (2026-10-31): PWA, offline, landing page and the GitHub
+Pages workflow are done and tested locally; **nothing is published** (needs Bautista's OK, see
+[What is left](#what-is-left-2026-10-31)). Results: [phase 5](#phase-5-results-2026-10-31),
+[phase 4](#phase-4-results-2026-10-31),
 [phase 3](#phase-3-results-2026-10-31),
 [phase 2](#phase-2-results-2026-10-31), [phase 1](#phase-1-results-2026-10-31),
 [phase 0](#phase-0-results-2026-10-30). Moved here from `bafif/curriculum`
@@ -247,7 +249,8 @@ TanStack Query only where there is async work, dnd-kit, typst.ts, `docx`, Tauri 
 4. **Polish**: drag-and-drop, undo/redo, click-to-edit, page-fit highlighting, palette,
    photo crop, Playwright tests (**done 2026-10-31**).
 5. **PWA + public web**: manifest, service worker, offline; GitHub Pages at `foja-cv.github.io/foja/`;
-   landing page and promotion (after Bautista's OK).
+   landing page and promotion (after Bautista's OK). (**Local part done 2026-10-31**; publishing
+   and promotion wait for the OK.)
 6. **Microsoft Store**: the PWA packaged as MSIX with PWABuilder, free individual account
    (Bautista registers it: Microsoft account, ID and selfie).
 7. **Tauri shell + Flathub**: native file access and desktop integration, Flatpak built from
@@ -440,6 +443,44 @@ real mouse moves only); contact addresses were hyphenated, and in Spanish the hy
 `lucia-romero-ejemplo` was repeated on the next line (addresses are now unhyphenated and set in
 English).
 
+## Phase 5 results (2026-10-31)
+
+| Piece | Where |
+| :--- | :--- |
+| **Service worker without a framework**: `@vite-pwa/astro` 1.2.0 only supports Astro up to 5, so an Astro integration writes `sw.js` after the build: it precaches every file of the site (29, the compiler WASM included; the `/spike` page left out) under a cache named after a hash of the contents, answers assets from the cache and pages from the network with the cache as fallback. Registered only in production builds. No dependency added | `apps/web/integrations/` |
+| **Manifest** with relative URLs (works under any base path), icons 192/512 and maskable 512 made from the favicon | `apps/web/public/` |
+| **Landing page** (static, no JS): what Foja is, privacy, one-page fit, layout options, export formats, licence and fonts; a screenshot of the editor with the fictional example | `apps/web/src/pages/index.astro` |
+| **Base path**: `FOJA_BASE=/foja` builds for `foja-cv.github.io/foja/`; every link, the worker, the WASM, the fonts, the manifest and the service worker follow it | `astro.config.mjs` |
+| **Workflows**: `ci.yml` (unit tests and the build on every push and pull request) and `pages.yml` (build and deploy to Pages) with every action pinned to a commit SHA; **`pages.yml` only runs by hand** (`workflow_dispatch`) until publishing is approved | `.github/workflows/` |
+| **Tests**: `scripts/e2e-pwa.sh` builds with the `/foja` base, serves it with `astro preview` and checks that the landing links to the editor, the manifest and its icons load, and that **after the first visit the editor works offline** (compile included) | `tests/e2e/pwa.spec.ts` |
+
+**Found and fixed**: `astro preview` answers with `Vary: Origin` and module scripts are requested
+with an Origin header, so the precached scripts did not match offline (`ignoreVary` in the
+service worker); a stale Astro lock after a container is killed (`--force` for dev and preview).
+
+**Not checked**: the workflows have not run on GitHub (they run after a push). The lockfile
+carries the glibc variants of the native packages the runner needs.
+
+## What is left (2026-10-31)
+
+Needs Bautista:
+
+1. **Push** (`git -C ~/foja push origin main`). After it, CI runs on GitHub.
+2. **Template look before publishing**: the default layout reproduces the Wenneker LaTeX template
+   (CC BY-NC-SA 3.0). The Typst and LaTeX code is Foja's own, but the look is theirs: credit it in
+   the landing and README, or change the default enough to be our own (another accent, header,
+   rule) and keep the Wenneker look as a credited option.
+3. **Publish** (phase 5): Settings → Pages → Source "GitHub Actions", then run "Deploy to GitHub
+   Pages" by hand (or add `push: branches: [main]` to `pages.yml`). Promotion after that.
+4. **Phase 6, Microsoft Store**: the Partner Center account is his (Microsoft account, ID, selfie);
+   then PWABuilder packages the published PWA as MSIX.
+5. **Phase 7, Tauri + Flathub**: Rust and `webkit2gtk-4.1` need pkexec with him at the PC; the
+   Flathub submission is a PR from his account.
+
+Can be done without him, later: open the Word export in Word/LibreOffice (none installed here);
+the "Open in Overleaf" button (needs testing against the live service); an English interface;
+the CLI on npm (needs publishing, so his OK).
+
 ## 6. New dependencies (approved 2026-10-30)
 
 - Docker images, **pulled**: `node:24-alpine`, `nginx:alpine`.
@@ -454,6 +495,9 @@ English).
   and `@tailwindcss/vite` 4.3.3, `zustand` 5.0.15, `zundo` 2.3.0, `@dnd-kit/core` 6.3.1,
   `@dnd-kit/sortable` 10.0.0, `@dnd-kit/utilities` 3.2.2, `@playwright/test` 1.64.1 (dev; no
   browsers downloaded, the tests use the Chrome on the host).
+- Phase 5: none. `@vite-pwa/astro` was tried and left out: version 1.2.0 requires Astro ≤ 5.
+  GitHub Actions used by the workflows (pinned by SHA): `actions/checkout` 7.0.1,
+  `actions/setup-node` 7.1.0, `actions/upload-pages-artifact` 5.0.0, `actions/deploy-pages` 5.0.1.
 - Still to install, each in the phase that needs it (npm needs the workspace; Rust and
   `webkit2gtk-4.1` are system packages installed with pkexec, with Bautista at the PC):
 - npm (inside the container only): `astro`, `@astrojs/react`, `@vite-pwa/astro`, `react`,
