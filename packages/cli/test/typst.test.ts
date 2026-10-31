@@ -109,6 +109,15 @@ describe("styles of one's own", () => {
     expect(validate(p).map((x) => x.path)).toEqual(["/profiles/desarrolladora/layout/template"]);
   });
 
+  test("a style cannot read files outside the project", () => {
+    for (const path of ["/etc/hostname", "../../../../etc/hostname", "/proc/self/environ"]) {
+      const p = structuredClone(example);
+      p.templates = { espia: { name: "Espía", source: `#import "/lib.typ": *\n#read(${JSON.stringify(path)})` } };
+      p.profiles.desarrolladora.layout = { template: "espia" };
+      expect(() => new Typst(p).compile("desarrolladora"), path).toThrow(/Typst failed/);
+    }
+  });
+
   test("a style with a Typst error reports it", () => {
     const p = structuredClone(example);
     p.templates = { roto: { name: "Roto", source: '#import "/lib.typ": *\n#cv.nope' } };

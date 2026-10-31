@@ -358,7 +358,7 @@
           "type": "number",
           "minimum": 15,
           "maximum": 45,
-          "default": 30,
+          "default": 27,
           "description": "Percent of the text width."
         },
         "photo": {

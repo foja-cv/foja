@@ -105,7 +105,7 @@ function sectionTitle(ctx: Ctx, title: string): Paragraph {
 }
 
 function mainSection(ctx: Ctx, s: ResolvedSection, widthTwip: number): (Paragraph | Table)[] {
-  const dateWidth = Math.round(2.25 * 10 * TWIP_PER_MM * (ctx.cv.layout.fontSize / 10));
+  const dateWidth = Math.round(2 * 10 * TWIP_PER_MM * (ctx.cv.layout.fontSize / 10));
   const rows: TableRow[] = [];
   const out: (Paragraph | Table)[] = [sectionTitle(ctx, s.title)];
   const flushRows = () => {
@@ -220,7 +220,7 @@ function sidebar(ctx: Ctx, widthPt: number): (Paragraph | Table)[] {
 
 function twoColumns(ctx: Ctx, textWidth: number): (Paragraph | Table)[] {
   const { layout } = ctx.cv;
-  const gutter = Math.round(7 * TWIP_PER_MM);
+  const gutter = Math.round(6 * TWIP_PER_MM);
   const side = Math.round((textWidth * layout.sidebarWidth) / 100);
   const main = textWidth - side - gutter;
   const pad = 200;

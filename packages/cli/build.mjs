@@ -14,6 +14,7 @@ rmSync(dist, { recursive: true, force: true });
 await build({
   configFile: false,
   logLevel: "warn",
+  cacheDir: join(here, "node_modules/.vite-cli"),
   build: {
     ssr: join(here, "src/main.ts"),
     outDir: dist,

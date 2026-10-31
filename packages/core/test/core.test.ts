@@ -60,7 +60,7 @@ test("inline bold runs", () => {
 test("layout defaults", () => {
   const l = resolveLayout({ margins: { top: 20 } });
   expect(l.columns).toBe(2);
-  expect(l.margins).toEqual({ top: 20, bottom: 14, left: 15, right: 15 });
+  expect(l.margins).toEqual({ top: 20, bottom: 12, left: 12, right: 12 });
 });
 
 describe("zip", () => {

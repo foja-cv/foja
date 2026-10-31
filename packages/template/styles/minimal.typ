@@ -6,7 +6,7 @@
 #let ink = rgb("#141414")
 #let muted = rgb("#6b6b6b")
 #let accent-color = accent(ink)
-#let m = margins((top: 18, bottom: 18, left: 20, right: 20))
+#let m = margins((top: 15, bottom: 15, left: 17, right: 17))
 #let text-width = paper.width - m.left - m.right
 #let small = base-size * 0.88
 
@@ -19,7 +19,7 @@
 
 #geometry(main: (x: m.left, width: text-width))
 
-#let section-title(title) = block(above: 1.7em * density, below: 0.7em * density, sticky: true, text(
+#let section-title(title) = block(above: 1.5em * density, below: 0.6em * density, sticky: true, text(
   size: small * 0.95,
   weight: "bold",
   tracking: 0.14em,

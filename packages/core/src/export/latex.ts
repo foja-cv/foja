@@ -79,7 +79,7 @@ function geometry(cv: ResolvedCv) {
   const paper = PAPER[l.paper];
   const textWidth = (paper.width - l.margins.left - l.margins.right) * MM;
   const textHeight = (paper.height - l.margins.top - l.margins.bottom) * MM;
-  const gutter = 7 * MM;
+  const gutter = 6 * MM;
   const side = l.columns === 2 ? (textWidth * l.sidebarWidth) / 100 : 0;
   return { paper, textWidth, textHeight, gutter, side, main: l.columns === 2 ? textWidth - side - gutter : textWidth };
 }
@@ -111,20 +111,22 @@ function preamble(cv: ResolvedCv): string[] {
     "\\colorlet{tint}{accent!8}",
     "\\pagestyle{empty}",
     "\\setlength{\\parindent}{0pt}",
-    `\\setlength{\\parskip}{${+(0.3 * density).toFixed(2)}em}`,
+    `\\setlength{\\parskip}{${+(0.15 * density).toFixed(2)}em}`,
     "\\color{ink}",
     "\\setlist[itemize]{leftmargin=1em,label=\\textcolor{accent}{--},itemsep=0.2em,topsep=0.2em,parsep=0pt}",
-    `\\newcommand{\\Sep}{\\vspace{${+(1.1 * density).toFixed(2)}em}}`,
-    `\\newcommand{\\SmallSep}{\\vspace{${+(0.6 * density).toFixed(2)}em}}`,
-    "\\newcommand{\\Caps}[1]{{\\scshape\\MakeLowercase{#1}}}",
+    `\\newcommand{\\Sep}{\\vspace{${+(0.9 * density).toFixed(2)}em}}`,
+    `\\newcommand{\\SmallSep}{\\vspace{${+(0.45 * density).toFixed(2)}em}}`,
+    // Spaced capitals in a small size: XCharter's small caps lack accented letters in LaTeX.
+    "\\newcommand{\\Caps}[1]{{\\footnotesize\\MakeUppercase{#1}}}",
     // A section title in small caps, then a hairline to the end of the line.
-    "\\newcommand{\\CVSection}[1]{\\par\\Sep\\needspace{3\\baselineskip}{\\color{accent}\\bfseries\\Caps{#1}}\\hspace{0.6em}{\\color{accent!50}\\leaders\\hrule height 0.36em depth -0.32em\\hfill}\\par\\SmallSep}",
+    // \\nopagebreak keeps a title with what follows; needspace would misjudge flowfram's frames.
+    "\\newcommand{\\CVSection}[1]{\\par\\Sep{\\color{accent}\\bfseries\\Caps{#1}}\\hspace{0.6em}{\\color{accent!50}\\leaders\\hrule height 0.36em depth -0.32em\\hfill}\\par\\nopagebreak[4]\\SmallSep\\nopagebreak[4]}",
     "\\newcommand{\\SideHeading}[1]{{\\footnotesize\\color{accent}\\bfseries\\Caps{#1}}\\par}",
-    `\\newlength{\\DateWidth}\\setlength{\\DateWidth}{${bp(2.25 * 28.35 * (l.fontSize / 10))}}`,
+    `\\newlength{\\DateWidth}\\setlength{\\DateWidth}{${bp(2 * 28.35 * (l.fontSize / 10))}}`,
     // An entry: the period in its own column, the rest beside it.
     "\\newcommand{\\CVEntry}[2]{\\par\\noindent\\parbox[t]{\\DateWidth}{\\raggedright\\small\\color{muted}#1}\\hspace{0.8em}\\parbox[t]{\\dimexpr\\linewidth-\\DateWidth-0.8em\\relax}{#2}\\par\\SmallSep}",
   ];
-  const header = 30 * MM * (l.fontSize / 10);
+  const header = 22 * MM * (l.fontSize / 10);
   if (l.columns === 2) {
     const left = l.sidebar === "left";
     const sideX = left ? 0 : main + gutter;
@@ -143,7 +145,6 @@ function preamble(cv: ResolvedCv): string[] {
       `\\newcommand{\\FitSide}[1]{\\sbox{\\SideBox}{#1}\\ifdim\\dimexpr\\ht\\SideBox+\\dp\\SideBox\\relax>${bp(below - 4)}\\resizebox*{!}{${bp(below - 4)}}{\\usebox{\\SideBox}}\\else\\usebox{\\SideBox}\\fi}`,
     );
   }
-  lines.push("\\usepackage{needspace}");
   return lines;
 }
 
@@ -268,7 +269,7 @@ export function latexBundle(project: Project, profileId: string): ZipInput {
       "CV made with Foja (https://github.com/foja-cv/foja).",
       "",
       "Compile cv.tex with pdflatex (or lualatex, or tectonic); it needs the memoir, XCharter (or",
-      "noto), flowfram, tikz, enumitem, needspace and hyperref packages, which come with TeX Live",
+      "noto), flowfram, tikz, enumitem and hyperref packages, which come with TeX Live",
       "and MiKTeX. It is in Foja's Legajo look, whichever style the profile uses in Foja.",
       ...(cv.photo?.type === "image/svg+xml" ? ["", "The photo is an SVG, which pdflatex cannot include, so it was left out."] : []),
       "",

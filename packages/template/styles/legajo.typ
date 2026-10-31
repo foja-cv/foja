@@ -8,17 +8,17 @@
 #let muted = ink.lighten(38%)
 #let accent-color = accent(rgb("#1f5f5b"))
 #let tint = accent-color.lighten(92%)
-#let m = margins((top: 14, bottom: 14, left: 15, right: 15))
+#let m = margins((top: 12, bottom: 12, left: 12, right: 12))
 #let two = opt("columns", 2) == 2
 #let side-left = opt("sidebar", "left") == "left"
 #let text-width = paper.width - m.left - m.right
-#let gutter = 7mm
-#let side-width = if two { text-width * opt("sidebarWidth", 30) / 100 } else { 0pt }
+#let gutter = 6mm
+#let side-width = if two { text-width * opt("sidebarWidth", 27) / 100 } else { 0pt }
 #let main-width = if two { text-width - side-width - gutter } else { text-width }
 #let main-x = if two and side-left { m.left + side-width + gutter } else { m.left }
 #let side-x = if side-left { m.left } else { m.left + main-width + gutter }
 #let small = base-size * 0.88
-#let date-width = 2.25cm * (base-size / 10pt)
+#let date-width = 2cm * (base-size / 10pt)
 
 #set document(..document-info)
 #set page(width: paper.width, height: paper.height, margin: m)
@@ -33,13 +33,13 @@
 
 // ---------------------------------------------------------------- pieces
 
-#let section-title(title) = block(above: 1.3em * density, below: 0.65em * density, sticky: true, {
+#let section-title(title) = block(above: 1.15em * density, below: 0.6em * density, sticky: true, {
   text(fill: accent-color, weight: "bold", caps(lower(title), tracking: 0.08em))
   h(0.6em)
   box(width: 1fr, baseline: -0.32em, line(length: 100%, stroke: 0.5pt + accent-color.lighten(50%)))
 })
 
-#let entry(b, compact) = anchored(b.path, block(above: 0.85em * density, below: 0pt, grid(
+#let entry(b, compact) = anchored(b.path, block(above: 0.75em * density, below: 0pt, grid(
   columns: (date-width, 1fr),
   column-gutter: 0.8em,
   par(justify: false, text(size: small, fill: muted, b.period)),
@@ -103,7 +103,7 @@
 })
 
 #let heading-lines = {
-  anchored("name", text(size: base-size * 2.3, caps(cv.name, tracking: 0.04em)))
+  anchored("name", text(size: base-size * 2.1, caps(cv.name, tracking: 0.04em)))
   v(-0.35em)
   line(length: 100%, stroke: 1.6pt + accent-color)
   v(0.1em)
