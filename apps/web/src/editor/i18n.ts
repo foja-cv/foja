@@ -1,4 +1,7 @@
-// Interface strings. Spanish first; another language is another object with the same keys.
+// Interface strings. Spanish and English; another language is another object with the same keys.
+// `t` is the live set: setLanguage swaps its contents and the editor renders again.
+
+import { create } from "zustand";
 
 export const es = {
   appName: "Foja",
@@ -16,6 +19,7 @@ export const es = {
   undo: "Deshacer",
   redo: "Rehacer",
   project: "Proyecto",
+  more: "Más acciones",
   data: "Datos",
   personal: "Personales",
   contacts: "Contactos",
@@ -140,7 +144,7 @@ export const es = {
     styleDefault: "del estilo",
     fontSize: "Tamaño de letra (pt)",
     accent: "Color",
-    defaultAccent: "Azul original",
+    defaultAccent: "El color del estilo",
     margins: "Márgenes (mm)",
     top: "Arriba",
     bottom: "Abajo",
@@ -172,6 +176,8 @@ export const es = {
     use: "Usar esta foto",
   },
   themes: {
+    menu: "Apariencia",
+    uiLanguage: "Idioma de la interfaz",
     title: "Tema",
     mode: "Modo",
     auto: "Automático",
@@ -182,6 +188,7 @@ export const es = {
     exportCurrent: "Descargar este tema como base",
     docs: "Cómo hacer un tema",
   },
+  panes: { label: "Paneles", nav: "Secciones", edit: "Editar", preview: "Vista previa" },
   exportTitle: "Exportar",
   formats: {
     pdf: "PDF",
@@ -189,7 +196,7 @@ export const es = {
     typ: "Typst (.zip, abre en typst.app)",
     tex: "LaTeX (.zip)",
     md: "Markdown",
-    json: "JSON (proyecto y perfil resuelto)",
+    json: "JSON (el proyecto, para volver a importarlo)",
     docx: "Word (.docx)",
     all: "Todos los formatos (.zip)",
   },
@@ -201,4 +208,225 @@ export const es = {
   sectionKinds: { entry: "Entrada", item: "Ítem", paragraph: "Párrafo" },
 };
 
-export const t = es;
+export type Strings = typeof es;
+
+export const en: Strings = {
+  appName: "Foja",
+  profile: "Profile",
+  newProfile: "New profile",
+  duplicate: "Duplicate",
+  deleteProfile: "Delete profile",
+  confirmDelete: "Sure? This cannot be undone with Ctrl+Z after a reload.",
+  yesDelete: "Yes, delete",
+  cancel: "Cancel",
+  export: "Export",
+  saved: "Saved",
+  saving: "Saving…",
+  unsaved: "Unsaved",
+  undo: "Undo",
+  redo: "Redo",
+  project: "Project",
+  more: "More actions",
+  data: "Data",
+  personal: "Personal",
+  contacts: "Contacts",
+  skills: "Skills",
+  entries: "Entry bank",
+  profileText: "Profile text",
+  layout: "Style and layout",
+  styles: {
+    title: "Style",
+    builtin: "Foja styles",
+    own: "Your styles",
+    editInTypst: "Edit in Typst",
+    editInTypstHint: "Makes a copy of this style that you can change by writing Typst.",
+    newFromScratch: "New style from scratch",
+    options: "Options",
+    optionsHint: "This style uses only these options.",
+    editor: "Style editor",
+    name: "Style name",
+    code: "Typst code",
+    codeHint: "The style imports /lib.typ and lays out the page with `cv`. Errors show above the preview, which keeps the last good version.",
+    docs: "How to write a style",
+    useHere: "Use in this profile",
+    inUse: "In use in this profile",
+    usedBy: (names: string[]) => (names.length ? `Used by: ${names.join(", ")}.` : "No profile uses it."),
+    deleteStyle: "Delete style",
+    deleteBlocked: "To delete it, first pick another style in the profiles that use it.",
+    duplicate: "Duplicate",
+  },
+  sections: "Sections",
+  addSection: "Add section",
+  preview: "Preview",
+  pages: (n: number) => (n === 1 ? "1 page" : `${n} pages`),
+  fitsOnePage: "fits on one page",
+  overflows: "runs past one page",
+  overflowsBy: (lines: number) => `~${lines} ${lines === 1 ? "line" : "lines"} too long`,
+  clickToEdit: "Click a part of the CV to edit it",
+  loadingCompiler: "Loading the compiler…",
+  compileError: "Typst could not compile; showing the last good version.",
+  problems: (n: number) => (n === 1 ? "1 problem" : `${n} problems`),
+  welcomeTitle: "Your CV in Typst, without writing code",
+  welcomeText: "Foja keeps everything in this browser: your data never leaves your computer. Start with the example, an empty project, or a Foja file.",
+  startExample: "Start with the example",
+  startEmpty: "Empty project",
+  importJson: "Import JSON",
+  importFailed: "That file is not a valid Foja project.",
+  newProject: "New project",
+  givenNames: "Given names",
+  familyNames: "Family names",
+  language: "CV language",
+  photo: "Photo",
+  uploadPhoto: "Upload a photo (JPEG or PNG)",
+  removePhoto: "Remove photo",
+  photoTooBig: "The photo is larger than 5 MB.",
+  contactKinds: { phone: "Phone", email: "Email", website: "Website", github: "GitHub", linkedin: "LinkedIn", location: "Location" },
+  groupTitle: "Group title",
+  groupItems: "Items (one per line)",
+  addGroup: "Add group",
+  remove: "Remove",
+  dragHandle: "Drag to reorder",
+  dragInstructions: "To move, press space, use the arrow keys and press space again to drop; Escape cancels.",
+  up: "Up",
+  down: "Down",
+  title: "Title",
+  place: "Place",
+  start: "From",
+  end: "To",
+  ongoing: "Ongoing",
+  singleDate: "Single date",
+  note: "Note",
+  items: "Items",
+  heading: "Heading (optional)",
+  text: "Text",
+  addItem: "Add item",
+  addEntry: "New entry",
+  usedIn: (names: string[]) =>
+    names.length === 0 ? "No profile uses it." : `Used by ${names.length === 1 ? "the profile" : "the profiles"}: ${names.join(", ")}. Changes show in all of them.`,
+  deleteEntry: "Delete entry",
+  entryInUse: "It cannot be deleted while a profile uses it. Remove it from their sections first.",
+  profileName: "Profile name (only in the editor)",
+  subtitle: "Subtitle",
+  summary: "Summary",
+  highlight: "Highlighted block (sidebar)",
+  highlightTitle: "Block title",
+  highlightText: "Block text",
+  profileContacts: "Contacts this profile shows",
+  profileSkills: "Skill groups (a row can hold several side by side)",
+  addRow: "Add row",
+  addToRow: "+ group",
+  sectionTitle: "Section title",
+  column: "Column",
+  main: "Main",
+  side: "Sidebar",
+  compact: "Compact (no items, small type)",
+  blocks: "Content",
+  includeEntry: "Include an entry from the bank…",
+  addParagraph: "Add paragraph",
+  editEntry: "Edit entry",
+  deleteSection: "Delete section",
+  layoutOptions: {
+    columns: "Columns",
+    one: "One",
+    two: "Two",
+    sidebar: "Sidebar",
+    left: "Left",
+    right: "Right",
+    sidebarWidth: "Sidebar width (%)",
+    photo: "Photo",
+    square: "Square",
+    rounded: "Rounded corners",
+    circle: "Round",
+    none: "No photo",
+    font: "Typeface",
+    styleFont: "The style's",
+    styleDefault: "style's",
+    fontSize: "Font size (pt)",
+    accent: "Colour",
+    defaultAccent: "The style's colour",
+    margins: "Margins (mm)",
+    top: "Top",
+    bottom: "Bottom",
+    density: "Spacing",
+    compact: "Compact",
+    normal: "Normal",
+    relaxed: "Relaxed",
+    paper: "Paper",
+    dateFormat: "Date format",
+    labels: "Language of the labels",
+    sameAsCv: "The CV's",
+  },
+  palette: {
+    title: "Command palette",
+    placeholder: "Go to… or do… (type to filter)",
+    goTo: "Go to",
+    actions: "Action",
+    switchProfile: "Switch profile",
+    entry: "Entry",
+    oneColumn: "Switch to one column",
+    twoColumns: "Switch to two columns",
+    nothing: "Nothing matches.",
+  },
+  crop: { title: "Crop the photo", zoom: "Zoom", aspect: "Aspect", hint: "Drag the photo to frame it.", use: "Use this photo" },
+  themes: {
+    menu: "Appearance",
+    uiLanguage: "Interface language",
+    title: "Theme",
+    mode: "Mode",
+    auto: "Automatic",
+    light: "Light",
+    dark: "Dark",
+    import: "Import a theme (.json)…",
+    importFailed: "Not a valid theme:",
+    exportCurrent: "Download this theme as a starting point",
+    docs: "How to make a theme",
+  },
+  panes: { label: "Panes", nav: "Sections", edit: "Edit", preview: "Preview" },
+  exportTitle: "Export",
+  formats: {
+    pdf: "PDF",
+    jpg: "JPG (one image per page)",
+    typ: "Typst (.zip, opens in typst.app)",
+    tex: "LaTeX (.zip)",
+    md: "Markdown",
+    json: "JSON (the project, to import again)",
+    docx: "Word (.docx)",
+    all: "All formats (.zip)",
+  },
+  dpi: "Resolution",
+  downloadButton: "Download",
+  exporting: "Exporting…",
+  exportFailed: "Could not export:",
+  close: "Close",
+  sectionKinds: { entry: "Entry", item: "Item", paragraph: "Paragraph" },
+};
+
+export const LANGUAGES = { es: { name: "Español", strings: es }, en: { name: "English", strings: en } };
+export type Language = keyof typeof LANGUAGES;
+
+function initial(): Language {
+  try {
+    const saved = JSON.parse(localStorage.getItem("foja.language") ?? "null");
+    if (saved in LANGUAGES) return saved;
+  } catch {
+    // No storage: follow the browser.
+  }
+  return typeof navigator !== "undefined" && navigator.language?.toLowerCase().startsWith("es") ? "es" : "en";
+}
+
+export const useLanguage = create<{ lang: Language }>()(() => ({ lang: initial() }));
+
+/** The live strings: every component reads `t.…` while rendering. */
+export const t: Strings = { ...LANGUAGES[useLanguage.getState().lang].strings };
+if (typeof document !== "undefined") document.documentElement.lang = useLanguage.getState().lang;
+
+export function setLanguage(lang: Language) {
+  Object.assign(t, LANGUAGES[lang].strings);
+  try {
+    localStorage.setItem("foja.language", JSON.stringify(lang));
+  } catch {
+    // The choice lasts for this visit.
+  }
+  if (typeof document !== "undefined") document.documentElement.lang = lang;
+  useLanguage.setState({ lang });
+}

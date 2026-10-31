@@ -15,6 +15,7 @@ import {
   fromBase64,
   projectForTypst,
   styleOf,
+  stylePath,
   typstInputs,
   type Mark,
   type Project,
@@ -30,7 +31,9 @@ const styleSources = import.meta.glob<string>("../../../../packages/template/sty
 
 export type WorkerRequest =
   | { type: "render"; id: number; project: Project; profile: string }
-  | { type: "pdf"; id: number; project: Project; profile: string };
+  | { type: "pdf"; id: number; project: Project; profile: string }
+  /** The first page in another style, for the style picker. */
+  | { type: "thumb"; id: number; project: Project; profile: string; style: string };
 
 export type WorkerReply =
   | { type: "ready"; initMs: number }
@@ -47,7 +50,8 @@ export type WorkerReply =
       compileMs: number;
       renderMs: number;
     }
-  | { type: "pdf"; id: number; pdf?: Uint8Array; errors?: string[] };
+  | { type: "pdf"; id: number; pdf?: Uint8Array; errors?: string[] }
+  | { type: "thumb"; id: number; svg?: string };
 
 const compiler = createTypstCompiler();
 const renderer = createTypstRenderer();
@@ -106,9 +110,23 @@ const asStrings = (d: unknown) => (d as string[] | undefined)?.length ? (d as st
 
 // One snapshot per request: compile once, then take the vector artifact, the marks or the PDF
 // from the same world.
-function withWorld<T>(project: Project, profile: string, fn: (world: TypstWorld) => Promise<T>): Promise<T> {
+function withWorld<T>(project: Project, profile: string, fn: (world: TypstWorld) => Promise<T>, mainFilePath = styleOf(project, profile).path): Promise<T> {
   load(project);
-  return compiler.runWithWorld({ mainFilePath: styleOf(project, profile).path, inputs: typstInputs(profile) }, fn);
+  return compiler.runWithWorld({ mainFilePath, inputs: typstInputs(profile) }, fn);
+}
+
+async function thumb(req: Extract<WorkerRequest, { type: "thumb" }>): Promise<WorkerReply> {
+  return withWorld(
+    req.project,
+    req.profile,
+    async (world) => {
+      const compiled = await world.compile({ diagnostics: "unix" });
+      if (compiled.hasError) return { type: "thumb", id: req.id };
+      const { result } = await world.vector({ diagnostics: "unix" });
+      return { type: "thumb", id: req.id, svg: result ? await renderer.renderSvg({ artifactContent: result }) : undefined };
+    },
+    stylePath(req.project, req.style),
+  );
 }
 
 async function render(req: Extract<WorkerRequest, { type: "render" }>): Promise<WorkerReply> {
@@ -149,20 +167,33 @@ async function pdf(req: Extract<WorkerRequest, { type: "pdf" }>): Promise<Worker
 // Exports always run, in order.
 let pendingRender: Extract<WorkerRequest, { type: "render" }> | undefined;
 const exports: Extract<WorkerRequest, { type: "pdf" }>[] = [];
+// Thumbnails wait for everything else; a newer request for the same style replaces an older one.
+const thumbs = new Map<string, Extract<WorkerRequest, { type: "thumb" }>>();
 let busy = false;
 
 async function drain() {
   if (busy) return;
   busy = true;
   await ready;
-  while (pendingRender || exports.length) {
+  while (pendingRender || exports.length || thumbs.size) {
     const next = exports.shift();
     if (next) {
       const reply = await pdf(next).catch((e): WorkerReply => ({ type: "pdf", id: next.id, errors: [errorText(e)] }));
       postMessage(reply, reply.type === "pdf" && reply.pdf ? [reply.pdf.buffer] : []);
       continue;
     }
-    const req = pendingRender!;
+    if (!pendingRender) {
+      const [key, t] = thumbs.entries().next().value!;
+      thumbs.delete(key);
+      postMessage(
+        await thumb(t).catch((e): WorkerReply => {
+          console.error("foja: thumbnail failed", e);
+          return { type: "thumb", id: t.id };
+        }),
+      );
+      continue;
+    }
+    const req = pendingRender;
     pendingRender = undefined;
     postMessage(
       await render(req).catch((e): WorkerReply => ({ type: "render", id: req.id, errors: [errorText(e)], compileMs: 0, renderMs: 0 })),
@@ -173,6 +204,7 @@ async function drain() {
 
 onmessage = (event: MessageEvent<WorkerRequest>) => {
   if (event.data.type === "render") pendingRender = event.data;
+  else if (event.data.type === "thumb") thumbs.set(event.data.style, event.data);
   else exports.push(event.data);
   void drain();
 };

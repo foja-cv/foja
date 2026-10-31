@@ -22,6 +22,9 @@ export interface EditorState {
   selection: Selection;
   problems: Problem[];
   saveState: "saved" | "saving" | "unsaved";
+  /** On narrow screens, the one pane shown. */
+  pane: "nav" | "edit" | "preview";
+  setPane(pane: EditorState["pane"]): void;
   /** Replaces the project (new, example, import, restore) and forgets the undo history. */
   load(project: Project, profileId?: string): void;
   /** Changes the project: `fn` edits a copy. */
@@ -49,6 +52,10 @@ export const useEditor = create<EditorState>()(
       selection: { kind: "profile" },
       problems: [],
       saveState: "saved",
+      pane: "edit",
+      setPane(pane) {
+        set({ pane });
+      },
       load(project, profileId) {
         const id = profileId && project.profiles[profileId] ? profileId : Object.keys(project.profiles)[0];
         set({ project, profileId: id, problems: validate(project), selection: { kind: "profile" } });
@@ -65,7 +72,7 @@ export const useEditor = create<EditorState>()(
         set({ profileId, selection: { kind: "profile" } });
       },
       select(selection) {
-        set({ selection });
+        set({ selection, pane: "edit" });
       },
       setSaveState(saveState) {
         set({ saveState });

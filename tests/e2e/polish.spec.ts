@@ -88,3 +88,22 @@ test("a photo is cropped and goes into the CV", async ({ page }) => {
   await expect.poll(() => previewMarkup(page)).not.toBe(before);
   expect(await previewMarkup(page)).toContain("data:image/jpeg");
 });
+
+test.describe("on a phone", () => {
+  test.use({ viewport: { width: 400, height: 800 }, isMobile: true, hasTouch: true });
+
+  test("one pane at a time, nothing wider than the screen", async ({ page }) => {
+    await startExample(page);
+    const panes = page.getByRole("navigation", { name: "Paneles" });
+    await expect(page.getByLabel("Subtítulo")).toBeVisible();
+    await panes.getByRole("button", { name: "Vista previa" }).click();
+    await expect(page.locator(".foja-page svg")).toBeVisible();
+    await expect(page.getByLabel("Subtítulo")).toBeHidden();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await panes.getByRole("button", { name: "Secciones" }).click();
+    await page.getByRole("button", { name: "Banco de entradas" }).click();
+    await expect(page.getByRole("button", { name: "Nueva entrada" })).toBeVisible();
+    await page.getByRole("button", { name: "Más acciones" }).click();
+    await expect(page.getByRole("button", { name: "+ Nuevo perfil" })).toBeVisible();
+  });
+});

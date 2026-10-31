@@ -1,3 +1,7 @@
+import { useEffect, useState } from "react";
+import { pageBoxes } from "../../lib/jpg";
+import { cleanSvg } from "../../lib/svg";
+import { renderThumb } from "../preview";
 import { BUILTIN_STYLES, DEFAULT_ACCENT, DEFAULT_STYLE, resolveLayout, styleOf, styleOptions, type Layout } from "@foja/core";
 import { t } from "../i18n";
 import { useEditor } from "../store";
@@ -5,6 +9,35 @@ import { addStyle } from "../styles";
 import { Button, Field, Panel, Select, TextInput } from "../ui";
 
 const L = t.layoutOptions;
+
+/** The first page of the current profile in a style, small, refreshed after edits settle. */
+function Thumb({ style }: { style: string }) {
+  const project = useEditor((s) => s.project!);
+  const profileId = useEditor((s) => s.profileId);
+  const [svg, setSvg] = useState<string>();
+  useEffect(() => {
+    let live = true;
+    const timer = setTimeout(() => void renderThumb(project, profileId, style).then((s) => live && s && setSvg(firstPage(s))), 400);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+  }, [project, profileId, style]);
+  return (
+    <div data-testid={`thumb-${style}`} className="foja-thumb aspect-[210/297] w-full overflow-hidden rounded-sm bg-white shadow-sm" aria-hidden>
+      {svg && <div dangerouslySetInnerHTML={{ __html: svg }} />}
+    </div>
+  );
+}
+
+/** Only the first page of a typst.ts SVG, cleaned, sized to its container. */
+function firstPage(svg: string): string {
+  const pages = pageBoxes(svg);
+  const clean = cleanSvg(svg).replace(/ height="[\d.]+"/, "");
+  if (pages.length < 2) return clean;
+  // Crop the viewBox to page 1.
+  return clean.replace(/viewBox="0 0 ([\d.]+) [\d.]+"/, `viewBox="0 0 $1 ${pages[0].height}"`);
+}
 
 function StyleCard({ id, name, description, active, onPick }: { id: string; name: string; description?: string; active: boolean; onPick: () => void }) {
   return (
@@ -15,6 +48,7 @@ function StyleCard({ id, name, description, active, onPick }: { id: string; name
       onClick={onPick}
       className={`flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition ${active ? "border-accent bg-accent-soft ring-2 ring-accent" : "border-line hover:border-accent"}`}
     >
+      <Thumb style={id} />
       <span className="font-heading text-sm font-semibold">{name}</span>
       {description && <span className="text-xs text-muted">{description}</span>}
     </button>

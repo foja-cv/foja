@@ -25,7 +25,7 @@ export { expect };
 export async function startExample(page: Page) {
   await page.goto("/editor");
   await page.getByRole("button", { name: "Empezar con el ejemplo" }).click();
-  await expect(page.locator(".foja-page svg")).toBeVisible();
+  await expect(page.locator(".foja-page svg")).toBeAttached();
 }
 
 export const previewMarkup = (page: Page) => page.locator(".foja-page").innerHTML();

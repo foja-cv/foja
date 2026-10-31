@@ -107,7 +107,7 @@ export const BUILTIN_THEMES: Theme[] = [
       ink: "#2b1d16",
       muted: "#7a6155",
       line: "#f2d6c6",
-      accent: "#e8590c",
+      accent: "#c2410c",
       accentSoft: "#ffe3d2",
       accentInk: "#8a2f00",
       onAccent: "#ffffff",

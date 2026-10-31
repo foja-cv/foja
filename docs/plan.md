@@ -487,6 +487,18 @@ themes that plugins can extend through an easy API.
 | **Identity**: favicon, icons, manifest colours and the landing page in Papel y tinta | `apps/web/public/`, `pages/index.astro` |
 | **Tests**: 42 unit (every style × every profile, marks and geometry, layout variants on every style, a custom style, a style with an error, the bundle), 20 end-to-end (3 new: pick a style, edit it in Typst, an error in the code, a style from scratch on another profile; themes, mode, import with validation, the plugin API) | `packages/*/test/`, `tests/e2e/identity.spec.ts` |
 
+## Interface polish (2026-10-31)
+
+| Piece | Where |
+| :--- | :--- |
+| **Contrast**: a test computes the WCAG ratio of every text/background pair the interface uses (ink, muted, accent, text on accent, selected items, danger) in the three themes, light and dark: all reach 4.5:1 (AA). It caught Vivo's orange (3.6:1 on white), now `#c2410c` (5.2:1). Keyboard focus is always visible, in the accent colour | `apps/web/test/themes.test.ts`, `global.css` |
+| **Style thumbnails**: each style card shows the current profile laid out in that style (first page), rendered by the worker at low priority (after renders and exports) and cached per project version | `forms/Layout.tsx`, `lib/typst.worker.ts` (`thumb`) |
+| **Phones**: below 1024 px one pane at a time (Sections, Edit, Preview) with tabs at the bottom; choosing something or clicking the preview goes to Edit; the header fits one line, the secondary actions go to a "more" menu; nothing is wider than the screen | `App.tsx` |
+| **English interface**: every string in English as well; the language follows the browser (Spanish for `es`, English otherwise), can be changed in the Appearance menu and is remembered; `<html lang>` follows it | `i18n.ts`, `ThemeMenu.tsx` |
+| **Tests**: 104 unit (62 new on theme contrast and validation), 22 end-to-end (2 new: English interface; phone layout) | |
+
+Not done: an English example project (the example is in Spanish whatever the interface language).
+
 ## What is left (2026-10-31)
 
 Needs Bautista:

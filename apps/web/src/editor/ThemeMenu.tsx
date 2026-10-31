@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { download } from "./download";
-import { t } from "./i18n";
+import { LANGUAGES, setLanguage, t, useLanguage, type Language } from "./i18n";
 import { allThemes, useThemes, type Mode } from "./themes";
 import { Button } from "./ui";
 
 export function ThemeMenu() {
   const state = useThemes();
+  const lang = useLanguage((s) => s.lang);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string>();
   const themes = allThemes(state);
@@ -24,11 +25,11 @@ export function ThemeMenu() {
 
   return (
     <div className="relative">
-      <Button variant="ghost" onClick={() => setOpen(!open)} title={t.themes.title}>
-        ◐ {t.themes.title}
+      <Button variant="ghost" onClick={() => setOpen(!open)}>
+        {t.themes.menu} ▾
       </Button>
       {open && (
-        <div role="dialog" aria-label={t.themes.title} className="absolute right-0 z-20 mt-1 flex w-72 flex-col gap-3 rounded-lg border border-line bg-surface p-3 shadow-lg">
+        <div role="dialog" aria-label={t.themes.menu} className="absolute right-0 z-20 mt-1 flex w-72 flex-col gap-3 rounded-lg border border-line bg-surface p-3 shadow-lg">
           <fieldset className="flex flex-col gap-1">
             <legend className="mb-1 text-xs font-semibold tracking-wide text-muted uppercase">{t.themes.title}</legend>
             {themes.map((th) => (
@@ -50,6 +51,16 @@ export function ThemeMenu() {
               </div>
             ))}
           </fieldset>
+          <label className="flex items-center justify-between gap-2 text-sm">
+            {t.themes.uiLanguage}
+            <select className="rounded border border-line bg-surface px-2 py-1" value={lang} onChange={(e) => setLanguage(e.target.value as Language)}>
+              {Object.entries(LANGUAGES).map(([id, l]) => (
+                <option key={id} value={id}>
+                  {l.name}
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="flex items-center justify-between gap-2 text-sm">
             {t.themes.mode}
             <select className="rounded border border-line bg-surface px-2 py-1" value={state.mode} onChange={(e) => state.setMode(e.target.value as Mode)}>

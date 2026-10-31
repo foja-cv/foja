@@ -46,10 +46,10 @@ test("themes: built-in, mode, imported and the plugin API", async ({ page }) => 
   const root = () => page.evaluate(() => ({ theme: document.documentElement.dataset.theme, mode: document.documentElement.dataset.mode }));
   expect((await root()).theme).toBe("papel");
 
-  await page.getByRole("button", { name: /Tema/ }).click();
+  await page.getByRole("button", { name: /Apariencia/ }).click();
   await page.getByRole("radio", { name: "Vivo" }).check();
   await expect.poll(async () => (await root()).theme).toBe("viva");
-  await page.getByRole("dialog", { name: "Tema" }).getByRole("combobox").selectOption("dark");
+  await page.getByRole("dialog", { name: "Apariencia" }).getByLabel("Modo").selectOption("dark");
   await expect.poll(async () => (await root()).mode).toBe("dark");
 
   // An imported theme is validated: no url(), only colours.
@@ -69,4 +69,15 @@ test("themes: built-in, mode, imported and the plugin API", async ({ page }) => 
   await page.reload();
   await expect.poll(async () => (await root()).theme).toBe("noche");
   expect(await page.evaluate(() => (window as any).foja.themes.list().map((t: { id: string }) => t.id))).toEqual(["papel", "neutra", "viva", "bosque", "noche"]);
+});
+
+test("the interface speaks English too, and remembers it", async ({ page }) => {
+  await startExample(page);
+  await page.getByRole("button", { name: /Apariencia/ }).click();
+  await page.getByLabel("Idioma de la interfaz").selectOption("en");
+  await expect(page.getByRole("button", { name: "Export", exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Style and layout" })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Profile text" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.lang)).toBe("en");
 });

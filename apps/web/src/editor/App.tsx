@@ -12,7 +12,7 @@ import { addSection, ProfileTextForm } from "./forms/ProfileText";
 import { SectionForm } from "./forms/Section";
 import { SkillsForm } from "./forms/Skills";
 import { StyleEditor } from "./forms/StyleEditor";
-import { t } from "./i18n";
+import { t, useLanguage } from "./i18n";
 import { connectPreview, usePreview } from "./preview";
 import { overflowingSections } from "./selection";
 import { emptyProject, exampleProject, newProfile } from "./projects";
@@ -106,14 +106,37 @@ export default function App() {
   useEffect(() => (project ? connectPreview() : undefined), [project === null]);
   useAutosave();
 
+  // A change of interface language renders everything again with the new strings.
+  const lang = useLanguage((s) => s.lang);
   if (!booted) return null;
-  if (!project) return <Welcome />;
-  return <Editor />;
+  if (!project) return <Welcome key={lang} />;
+  return <Editor key={lang} />;
 }
 
 const openEvent = (name: string) => () => window.dispatchEvent(new Event(name));
 
+/** Narrow screens show one pane at a time; these tabs switch between them. */
+function PaneTabs() {
+  const pane = useEditor((s) => s.pane);
+  const setPane = useEditor((s) => s.setPane);
+  const tabs: [typeof pane, string][] = [
+    ["nav", t.panes.nav],
+    ["edit", t.panes.edit],
+    ["preview", t.panes.preview],
+  ];
+  return (
+    <nav aria-label={t.panes.label} className="grid grid-cols-3 border-t border-line bg-surface lg:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+      {tabs.map(([id, label]) => (
+        <button key={id} aria-current={pane === id || undefined} onClick={() => setPane(id)} className={`py-3 text-sm ${pane === id ? "font-semibold text-accent" : "text-muted"}`}>
+          {label}
+        </button>
+      ))}
+    </nav>
+  );
+}
+
 function Editor() {
+  const pane = useEditor((s) => s.pane);
   const [exporting, setExporting] = useState(false);
   const [palette, setPalette] = useState(false);
   const openExport = useCallback(() => setExporting(true), []);
@@ -126,12 +149,17 @@ function Editor() {
   return (
     <div className="grid h-full grid-rows-[auto_1fr] bg-bg text-ink">
       <TopBar onExport={() => setExporting(true)} />
-      <div className="grid min-h-0 grid-cols-1 lg:grid-cols-[13rem_minmax(22rem,1fr)_minmax(24rem,1.1fr)]">
-        <Navigation />
-        <main className="min-h-0 overflow-auto border-r border-line bg-surface p-5">
+      <div className="grid min-h-0 grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)_auto] lg:grid-cols-[13rem_minmax(22rem,1fr)_minmax(24rem,1.1fr)] lg:grid-rows-1">
+        <div className={`min-h-0 ${pane === "nav" ? "grid" : "hidden"} lg:grid`}>
+          <Navigation />
+        </div>
+        <main className={`min-h-0 overflow-auto border-r border-line bg-surface p-5 ${pane === "edit" ? "" : "hidden"} lg:block`}>
           <SelectionPanel />
         </main>
-        <Preview />
+        <div className={`min-h-0 ${pane === "preview" ? "grid" : "hidden"} lg:grid`}>
+          <Preview />
+        </div>
+        <PaneTabs />
       </div>
       {exporting && <ExportDialog onClose={() => setExporting(false)} />}
       {palette && <Palette onClose={() => setPalette(false)} onExport={openExport} />}
@@ -146,6 +174,7 @@ function TopBar({ onExport }: { onExport: () => void }) {
   const { update, setProfile, load } = useEditor.getState();
   const [confirming, setConfirming] = useState(false);
   const [projectMenu, setProjectMenu] = useState(false);
+  const [more, setMore] = useState(false);
   const [importError, setImportError] = useState<string>();
   const ids = Object.keys(project.profiles);
 
@@ -170,16 +199,37 @@ function TopBar({ onExport }: { onExport: () => void }) {
     setProfile(id);
   }
 
+  const deleteControls =
+    ids.length > 1 &&
+    (confirming ? (
+      <span className="flex items-center gap-1 text-sm">
+        <Button
+          variant="danger"
+          onClick={() => {
+            update((p) => delete p.profiles[profileId]);
+            setConfirming(false);
+          }}
+        >
+          {t.yesDelete}
+        </Button>
+        <Button onClick={() => setConfirming(false)}>{t.cancel}</Button>
+      </span>
+    ) : (
+      <Button variant="ghost" onClick={() => setConfirming(true)}>
+        {t.deleteProfile}
+      </Button>
+    ));
+
   return (
-    <header className="flex flex-wrap items-center gap-2 border-b border-line bg-surface px-3 py-2">
-      <a href={import.meta.env.BASE_URL} className="mr-2 font-heading text-xl font-semibold tracking-wide text-accent">
+    <header className="relative flex items-center gap-2 border-b border-line bg-surface px-3 py-2 lg:flex-wrap">
+      <a href={import.meta.env.BASE_URL} className="mr-1 font-heading text-xl font-semibold tracking-wide text-accent lg:mr-2">
         {t.appName}
       </a>
-      <label className="flex items-center gap-1 text-sm">
-        {t.profile}
+      <label className="flex min-w-0 items-center gap-1 text-sm">
+        <span className="hidden sm:inline">{t.profile}</span>
         <select
           aria-label={t.profile}
-          className="rounded border border-line bg-surface px-2 py-1 text-sm"
+          className="max-w-[9rem] rounded border border-line bg-surface px-2 py-1 text-sm sm:max-w-none"
           value={profileId}
           onChange={(e) => setProfile(e.target.value)}
         >
@@ -190,38 +240,16 @@ function TopBar({ onExport }: { onExport: () => void }) {
           ))}
         </select>
       </label>
-      <Button onClick={addProfile}>+ {t.newProfile}</Button>
-      <Button onClick={duplicate}>{t.duplicate}</Button>
-      {ids.length > 1 &&
-        (confirming ? (
-          <span className="flex items-center gap-1 text-sm">
-            <Button
-              variant="danger"
-              onClick={() => {
-                update((p) => delete p.profiles[profileId]);
-                setConfirming(false);
-              }}
-            >
-              {t.yesDelete}
-            </Button>
-            <Button onClick={() => setConfirming(false)}>{t.cancel}</Button>
-          </span>
-        ) : (
-          <Button variant="ghost" onClick={() => setConfirming(true)}>
-            {t.deleteProfile}
-          </Button>
-        ))}
 
-      <div className="ml-auto flex items-center gap-2">
-        <span data-testid="save-state" className="text-xs text-muted">
-          {saveState === "saved" ? t.saved : saveState === "saving" ? t.saving : `● ${t.unsaved}`}
-        </span>
-        <Button variant="ghost" label={t.undo} title={`${t.undo} (Ctrl+Z)`} onClick={undo}>
-          ↶
-        </Button>
-        <Button variant="ghost" label={t.redo} title={`${t.redo} (Ctrl+Shift+Z)`} onClick={redo}>
-          ↷
-        </Button>
+      {/* Secondary actions: inline on wide screens, a "more" menu on narrow ones. */}
+      <div
+        id="more-actions"
+        className={`${more ? "flex" : "hidden"} absolute top-full right-2 z-30 mt-1 w-64 flex-col items-stretch gap-1 rounded-lg border border-line bg-surface p-2 shadow-lg lg:contents`}
+      >
+        <Button onClick={addProfile}>+ {t.newProfile}</Button>
+        <Button onClick={duplicate}>{t.duplicate}</Button>
+        {deleteControls}
+        <span className="hidden lg:ml-auto lg:block" />
         <div className="relative">
           <Button onClick={() => setProjectMenu(!projectMenu)}>{t.project} ▾</Button>
           {projectMenu && (
@@ -239,14 +267,34 @@ function TopBar({ onExport }: { onExport: () => void }) {
                   if (!m) setProjectMenu(false);
                 }}
               />
-              {importError && <p className="text-xs whitespace-pre-wrap text-red-700">{`${t.importFailed}\n${importError}`}</p>}
+              {importError && <p className="text-xs whitespace-pre-wrap text-danger">{`${t.importFailed}\n${importError}`}</p>}
             </div>
           )}
         </div>
         <ThemeMenu />
-        <Button variant="ghost" title="Ctrl+K" onClick={openEvent("foja:palette")}>
+        <Button variant="ghost" title="Ctrl+K" onClick={() => (setMore(false), openEvent("foja:palette")())}>
           ⌘ {t.palette.title}
         </Button>
+      </div>
+
+      <div className="ml-auto flex items-center gap-1 lg:ml-0 lg:gap-2">
+        <span className="text-xs text-muted" title={saveState === "saved" ? t.saved : t.unsaved}>
+          <span data-testid="save-state" className="hidden sm:inline">{saveState === "saved" ? t.saved : saveState === "saving" ? t.saving : `● ${t.unsaved}`}</span>
+          <span className="sm:hidden" aria-hidden>
+            {saveState === "saved" ? "✓" : "●"}
+          </span>
+        </span>
+        <Button variant="ghost" label={t.undo} title={`${t.undo} (Ctrl+Z)`} onClick={undo}>
+          ↶
+        </Button>
+        <Button variant="ghost" label={t.redo} title={`${t.redo} (Ctrl+Shift+Z)`} onClick={redo}>
+          ↷
+        </Button>
+        <span className="lg:hidden">
+          <Button variant="ghost" label={t.more} onClick={() => setMore(!more)}>
+            ⋯
+          </Button>
+        </span>
         <Button variant="primary" title="Ctrl+E" onClick={onExport}>
           {t.export}
         </Button>

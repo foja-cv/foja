@@ -28,6 +28,12 @@ export function styleOf(project: Project, profileId: string): { id: string; cust
   return { id: DEFAULT_STYLE, custom: false, path: builtinStylePath(DEFAULT_STYLE) };
 }
 
+/** The main file of a style by id (built-in or the user's), whichever profile uses it. */
+export function stylePath(project: Project, id: string): string {
+  if (project.templates?.[id]) return customStylePath(id);
+  return builtinStylePath(isBuiltinStyle(id) ? id : DEFAULT_STYLE);
+}
+
 /** `[path, source]` of the user's styles, for the compiler. */
 export function customStyleSources(project: Project): [string, string][] {
   return Object.entries(project.templates ?? {}).map(([id, t]) => [customStylePath(id), t.source]);

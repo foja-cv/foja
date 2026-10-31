@@ -29,6 +29,7 @@ if (import.meta.env.DEV) (globalThis as { __fojaPreview?: typeof usePreview })._
 let worker: Worker | undefined;
 let nextId = 1;
 const pdfWaiting = new Map<number, (reply: Extract<WorkerReply, { type: "pdf" }>) => void>();
+const thumbWaiting = new Map<number, (svg: string | undefined) => void>();
 
 function start(): Worker {
   if (worker) return worker;
@@ -37,7 +38,10 @@ function start(): Worker {
   worker.onmessage = ({ data }: MessageEvent<WorkerReply>) => {
     if (data.type === "ready") usePreview.setState({ ready: true });
     else if (data.type === "failed") usePreview.setState({ failed: data.error });
-    else if (data.type === "pdf") {
+    else if (data.type === "thumb") {
+      thumbWaiting.get(data.id)?.(data.svg);
+      thumbWaiting.delete(data.id);
+    } else if (data.type === "pdf") {
       pdfWaiting.get(data.id)?.(data);
       pdfWaiting.delete(data.id);
     } else {
@@ -79,4 +83,22 @@ export function compilePdf(project: Project, profile: string): Promise<Uint8Arra
   return new Promise((resolve, reject) =>
     pdfWaiting.set(id, (reply) => (reply.pdf ? resolve(reply.pdf) : reject(new Error((reply.errors ?? ["PDF failed"]).join("\n"))))),
   );
+}
+
+// Thumbnails by project version, profile and style: the picker asks again on every render.
+const thumbCache = new WeakMap<Project, Map<string, Promise<string | undefined>>>();
+
+/** The first page of the profile laid out in `style`, as SVG. */
+export function renderThumb(project: Project, profile: string, style: string): Promise<string | undefined> {
+  let byKey = thumbCache.get(project);
+  if (!byKey) thumbCache.set(project, (byKey = new Map()));
+  const key = `${profile}\u0000${style}`;
+  let promise = byKey.get(key);
+  if (!promise) {
+    const id = nextId++;
+    promise = new Promise((resolve) => thumbWaiting.set(id, resolve));
+    post({ type: "thumb", id, project, profile, style });
+    byKey.set(key, promise);
+  }
+  return promise;
 }
