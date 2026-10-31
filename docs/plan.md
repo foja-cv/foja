@@ -507,6 +507,40 @@ it runs on `npm pack`. The tarball (1 MB, 23 files) was installed in an empty di
 built PDF, Word, Typst and the all-formats bundle. CI checks the same on every push. The name
 `foja` is free on npm (31/10/2026).
 
+## Pre-release review (2026-10-31)
+
+Before publishing: an independent code review (an independent reviewer with no prior context,
+24 findings) plus checks run here. Fixed, each with a test:
+
+| Area | Found | Fixed |
+| :--- | :--- | :--- |
+| Security | The CLI compiled with the filesystem root as Typst's root: a style inside someone else's project could `read()` any local file into the PDF (shown with `/etc/hostname`) | Each compilation gets an empty temporary root |
+| Security | A style could emit `link("javascript:…")`, which reached the preview as a clickable `<a>` | Links are removed from the preview SVG; production pages carry a CSP (scripts and connections only to the site) |
+| Security | LaTeX injection through contact URLs inside `\href` | URLs percent-encoded; hostile input compiled with tectonic, rendered as text |
+| Data loss | New project / example / import replaced the CV for good | The replaced project is kept and restorable from the project menu |
+| Data loss | Two tabs overwrote each other's autosave | One editing tab (Web Locks), with a takeover |
+| Correctness | Ids such as `constructor` passed validation and crashed the exporters; empty texts and a cleared contact made the editor save projects its own importer rejected; names could not be typed with spaces; a cleared date broke the preview; the JPG could be a stale render; `\\` followed by `[` in LaTeX; control characters in Word; non-Latin names gave empty file names; Portuguese labels missing | All fixed |
+| Robustness | A slow style froze the preview and exports for good | Worker watchdog (20 s); thumbnails only for built-in styles and the one in use |
+| Updates | The service worker took over open tabs and deleted the files they still needed | It waits for the tabs to close |
+| Privacy | The `/spike` page embedded Bautista's real CV and would have been published | It uses the fictional example |
+| Accessibility | Unlabelled controls, problems not tied to their fields, menus without Escape, a Tab trap in the code editor, the crop only by mouse | Fixed; a test checks every control of every panel has a name |
+
+**Real CVs** (the three profiles of `~/curriculum`, converted with `--public`: fake phone, no
+address, no photo; nothing of it committed): Legajo needed a wider main column to fit them on one
+page as the LaTeX CV did (margins 12 mm, sidebar 27 %, a little less vertical space); now all
+three fit. Banda and Minimal, airier one-column styles, take two pages for the long programmer
+profile. LaTeX and Word exports of the three were built and checked (LaTeX with tectonic, Word
+by XML validity). Known limitation: the LaTeX export breaks lines a little differently and can
+run a few lines past one page where the PDF fits (documented in the user guide).
+
+**Performance** with a long CV (80 entries, 9 pages, a 1.9 MB photo): compile ~480 ms per change
+(Typst itself; a one-page CV takes ~50 ms). The preview used to replace the whole multi-megabyte
+SVG on every change, blocking the page ~450 ms twice per keystroke; it now replaces only the
+changed pages and glyph definitions: round trip 1.9 s → 1 s, typing no longer blocks (long tasks
+60–170 ms). Edits share the photo data instead of copying it (undo stays light).
+
+**Docs**: English user guide (`docs/guide.md`), security model (`docs/security.md`), README.
+
 ## What is left (2026-10-31)
 
 Needs Bautista:

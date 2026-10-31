@@ -4,6 +4,18 @@ A no-code CV editor built on [Typst](https://typst.app): forms instead of code, 
 that is the real Typst output, and exports to Typst, PDF, JPG, LaTeX, Markdown, JSON and Word.
 Everything runs in the browser; CV data never leaves the user's machine.
 
+- **Profiles from one bank of entries**: one CV per kind of job, the entries written once.
+- **Three styles of its own** (Legajo, Banda, Minimal) with layout options, and **styles you
+  write in Typst** ("Edit in Typst" copies any style into one of your own).
+- **One-page discipline**: the preview says whether the CV fits and what spills over; click a
+  part of the preview to edit it.
+- **Exports**: PDF, JPG, Word, Typst, LaTeX, Markdown, JSON.
+- **Private and offline**: no accounts, no server; installable as an app; Spanish and English.
+
+User guide: [`docs/guide.md`](docs/guide.md). Writing a style: [`docs/templates.md`](docs/templates.md).
+Interface themes: [`docs/themes.md`](docs/themes.md). Security model: [`docs/security.md`](docs/security.md).
+Command line: [`packages/cli/README.md`](packages/cli/README.md).
+
 Status: the editor, the exporters and the CLI work; the site is not published yet. The plan and
 the results of each phase are in [`docs/plan.md`](docs/plan.md).
 
@@ -14,11 +26,9 @@ packages/core      project format (JSON Schema + types), validation, shared help
 packages/template  the Typst styles (Legajo, Banda, Minimal), their library, labels and fonts
 packages/cli       `foja` on Node: build PDF/SVG/Typst bundles from a project
 apps/web           the Astro site and editor
-examples/          a project with three profiles (fake phone, placeholder photo)
+examples/          fictional example projects (Spanish, English) and a test fixture (fake phone)
 ```
 
-Write your own CV style in Typst: [`docs/templates.md`](docs/templates.md). Make an interface
-theme: [`docs/themes.md`](docs/themes.md).
 
 ## Development
 
