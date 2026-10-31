@@ -45,15 +45,17 @@ export interface Section {
 }
 
 export interface Layout {
+  /** A built-in style (`legajo`, `banda`, `minimal`) or the id of one in `Project.templates`. */
+  template?: string;
   columns?: 1 | 2;
   sidebar?: "left" | "right";
   /** Percent of the text width. */
   sidebarWidth?: number;
   photo?: "square" | "rounded" | "circle" | "none";
-  font?: "XCharter";
+  font?: "XCharter" | "Noto Sans";
   /** Points. */
   fontSize?: number;
-  /** `#rrggbb`; absent means the default blue. */
+  /** `#rrggbb`; absent means the style's own colour. */
   accent?: string;
   /** Millimetres. */
   margins?: { top?: number; bottom?: number; left?: number; right?: number };
@@ -84,6 +86,13 @@ export interface Asset {
   data: string;
 }
 
+/** A CV style written in Typst by the user (see docs/templates.md). */
+export interface CustomTemplate {
+  name: string;
+  /** Typst source; it starts with `#import "/lib.typ": *`. */
+  source: string;
+}
+
 export interface Project {
   format: typeof FORMAT;
   /** BCP 47 tag of the CV text, e.g. `es`. */
@@ -99,4 +108,5 @@ export interface Project {
   entries: Record<string, Entry>;
   profiles: Record<string, Profile>;
   assets?: Record<string, Asset>;
+  templates?: Record<string, CustomTemplate>;
 }

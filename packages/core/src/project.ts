@@ -6,17 +6,19 @@ import type { Entry, Layout, Profile, Project } from "./types.ts";
 export type Labels = (typeof labelsJson)["es"];
 export const LABELS: Record<string, Labels> = labelsJson;
 
-/** The layout with every option filled in; the values match the Typst template's defaults. */
-export function resolveLayout(layout: Layout = {}): Required<Omit<Layout, "accent" | "labels">> & Pick<Layout, "accent" | "labels"> {
+/** The layout with every option filled in, with the defaults of the Legajo style (the exporters
+ * other than Typst follow it). */
+export function resolveLayout(layout: Layout = {}): Required<Omit<Layout, "accent" | "labels" | "template">> & Pick<Layout, "accent" | "labels" | "template"> {
   return {
+    template: layout.template,
     columns: layout.columns ?? 2,
     sidebar: layout.sidebar ?? "left",
-    sidebarWidth: layout.sidebarWidth ?? 26.93,
+    sidebarWidth: layout.sidebarWidth ?? 30,
     photo: layout.photo ?? "square",
     font: layout.font ?? "XCharter",
     fontSize: layout.fontSize ?? 10,
     accent: layout.accent,
-    margins: { top: 12, bottom: 12, left: 12, right: 8.7, ...layout.margins },
+    margins: { top: 14, bottom: 14, left: 15, right: 15, ...layout.margins },
     density: layout.density ?? "normal",
     paper: layout.paper ?? "a4",
     dateFormat: layout.dateFormat ?? "MM/YYYY",
@@ -24,8 +26,8 @@ export function resolveLayout(layout: Layout = {}): Required<Omit<Layout, "accen
   };
 }
 
-/** The accent colour as `#rrggbb` (the template's default blue is CMYK 100/50/0/0). */
-export const DEFAULT_ACCENT = "#0080ff";
+/** Foja's accent colour, deep teal ink: the default of the Legajo and Banda styles. */
+export const DEFAULT_ACCENT = "#1f5f5b";
 
 export function labelsFor(project: Project, profile: Profile): Labels {
   const lang = profile.layout?.labels ?? project.language.split("-")[0];

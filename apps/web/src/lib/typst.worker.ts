@@ -6,13 +6,27 @@ import { createTypstRenderer } from "@myriaddreamin/typst.ts/renderer";
 import { disableDefaultFontAssets, loadFonts } from "@myriaddreamin/typst.ts/options.init";
 import compilerWasm from "@myriaddreamin/typst-ts-web-compiler/wasm?url";
 import rendererWasm from "@myriaddreamin/typst-ts-renderer/wasm?url";
-import { LABELS_PATH, MAIN_PATH, PROJECT_PATH, fromBase64, projectForTypst, typstInputs, type Mark, type Project } from "@foja/core";
-import template from "@foja/template/cv.typ?raw";
+import {
+  LABELS_PATH,
+  LIB_PATH,
+  PROJECT_PATH,
+  builtinStylePath,
+  customStyleSources,
+  fromBase64,
+  projectForTypst,
+  styleOf,
+  typstInputs,
+  type Mark,
+  type Project,
+  type StyleGeometry,
+} from "@foja/core";
+import lib from "@foja/template/lib.typ?raw";
 import labels from "@foja/template/labels.json?raw";
 
 const fontUrls = Object.values(
-  import.meta.glob<string>("../../../../packages/template/fonts/*.otf", { query: "?url", import: "default", eager: true }),
+  import.meta.glob<string>("../../../../packages/template/fonts/*.{otf,ttf}", { query: "?url", import: "default", eager: true }),
 );
+const styleSources = import.meta.glob<string>("../../../../packages/template/styles/*.typ", { query: "?raw", import: "default", eager: true });
 
 export type WorkerRequest =
   | { type: "render"; id: number; project: Project; profile: string }
@@ -27,6 +41,7 @@ export type WorkerReply =
       svg?: string;
       pages?: number;
       marks?: Mark[];
+      geometry?: StyleGeometry;
       errors?: string[];
       warnings?: string[];
       compileMs: number;
@@ -48,7 +63,8 @@ async function init() {
     }),
     renderer.init({ getModule: () => rendererWasm }),
   ]);
-  compiler.addSource(MAIN_PATH, template);
+  compiler.addSource(LIB_PATH, lib);
+  for (const [path, source] of Object.entries(styleSources)) compiler.addSource(builtinStylePath(path.split("/").pop()!.replace(/\.typ$/, "")), source);
   compiler.mapShadow(LABELS_PATH, encoder.encode(labels));
   postMessage({ type: "ready", initMs: performance.now() - start } satisfies WorkerReply);
 }
@@ -60,9 +76,16 @@ const ready = init().catch((error) => {
 
 // Assets are mapped again only when they change: decoding a photo on every keystroke is waste.
 const mappedAssets = new Map<string, string>();
+const customSources = new Map<string, string>();
 
 function load(project: Project) {
   compiler.mapShadow(PROJECT_PATH, projectForTypst(project));
+  for (const [path, source] of customStyleSources(project)) {
+    if (customSources.get(path) !== source) {
+      compiler.addSource(path, source);
+      customSources.set(path, source);
+    }
+  }
   const assets = project.assets ?? {};
   for (const [name, data] of mappedAssets) {
     if (assets[name]?.data !== data) {
@@ -85,7 +108,7 @@ const asStrings = (d: unknown) => (d as string[] | undefined)?.length ? (d as st
 // from the same world.
 function withWorld<T>(project: Project, profile: string, fn: (world: TypstWorld) => Promise<T>): Promise<T> {
   load(project);
-  return compiler.runWithWorld({ mainFilePath: MAIN_PATH, inputs: typstInputs(profile) }, fn);
+  return compiler.runWithWorld({ mainFilePath: styleOf(project, profile).path, inputs: typstInputs(profile) }, fn);
 }
 
 async function render(req: Extract<WorkerRequest, { type: "render" }>): Promise<WorkerReply> {
@@ -97,6 +120,7 @@ async function render(req: Extract<WorkerRequest, { type: "render" }>): Promise<
     }
     const { result: vector } = await world.vector({ diagnostics: "unix" });
     const marks = await world.query<Mark[]>({ selector: "<foja>", field: "value" });
+    const geometry = (await world.query<StyleGeometry[]>({ selector: "<foja-geometry>", field: "value" }))[0];
     const t1 = performance.now();
     const svg = await renderer.renderSvg({ artifactContent: vector! });
     const pages = svg.match(/class="typst-page"/g)?.length ?? Math.max(1, ...marks.map((m) => m.page));
@@ -106,6 +130,7 @@ async function render(req: Extract<WorkerRequest, { type: "render" }>): Promise<
       svg,
       pages,
       marks,
+      geometry,
       warnings: asStrings(compiled.diagnostics),
       compileMs: t1 - t0,
       renderMs: performance.now() - t1,

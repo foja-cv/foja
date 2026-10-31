@@ -6,3 +6,4 @@ export * from "./zip.ts";
 export * from "./bundle.ts";
 export * from "./resolve.ts";
 export * from "./geometry.ts";
+export * from "./templates.ts";

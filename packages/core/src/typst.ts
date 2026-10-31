@@ -4,7 +4,6 @@
 
 import type { Project } from "./types.ts";
 
-export const MAIN_PATH = "/cv.typ";
 export const LABELS_PATH = "/labels.json";
 export const PROJECT_PATH = "/project.json";
 
@@ -38,10 +37,18 @@ export function typstInputs(profileId: string): Record<string, string> {
   return { profile: profileId };
 }
 
-/** A marker emitted by the template around each editable part (see `mark` in cv.typ). */
+/** A marker emitted by a style around each editable part (see `mark` in lib.typ). */
 export interface Mark {
   path: string;
   kind: "start" | "end";
+  column?: "main" | "side";
   page: number;
+  x?: number;
   y: number;
+}
+
+/** The columns a style declares with `geometry` in lib.typ, in pt from the left edge. */
+export interface StyleGeometry {
+  main: { x: number; width: number } | null;
+  side: { x: number; width: number } | null;
 }

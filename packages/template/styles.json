@@ -1,0 +1,20 @@
+[
+  {
+    "id": "legajo",
+    "name": "Legajo",
+    "description": "Serif, el nombre en versalitas sobre una regla, barra lateral en una tarjeta y las fechas en su propia columna, como un registro.",
+    "options": ["columns", "sidebar", "sidebarWidth", "photo", "font", "fontSize", "accent", "margins", "density", "paper", "dateFormat", "labels"]
+  },
+  {
+    "id": "banda",
+    "name": "Banda",
+    "description": "Una franja de color con el nombre y la foto; una columna en sans, títulos marcados con el color de acento.",
+    "options": ["photo", "font", "fontSize", "accent", "margins", "density", "paper", "dateFormat", "labels"]
+  },
+  {
+    "id": "minimal",
+    "name": "Minimal",
+    "description": "Blanco y negro con mucho aire; la jerarquía sale del tamaño y el peso, el color solo en el nombre.",
+    "options": ["photo", "font", "fontSize", "accent", "margins", "density", "paper", "dateFormat", "labels"]
+  }
+]

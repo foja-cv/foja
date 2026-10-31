@@ -1,8 +1,9 @@
-// LaTeX export: one self-contained `cv.tex` (memoir + flowfram, XCharter) that reproduces the
-// Typst layout, with its photo, in a `.zip`. The preamble is written for Foja; the measurements
-// are the template's, in big points (`bp`, the Typst point), so both outputs share one geometry.
+// LaTeX export: one self-contained `cv.tex` (memoir + flowfram) in Foja's Legajo look, whatever
+// the Typst style of the profile, with its photo, in a `.zip`. It follows the layout options;
+// the measurements are in big points (`bp`, the Typst point), as in the Legajo style.
 
 import type { ResolvedBlock, ResolvedCv, ResolvedSection } from "../resolve.ts";
+import { DEFAULT_ACCENT } from "../project.ts";
 import { resolveProfile } from "../resolve.ts";
 import type { Item, Project } from "../types.ts";
 import type { ZipInput } from "../zip.ts";
@@ -72,81 +73,87 @@ function photoCommand(cv: ResolvedCv, file: string, widthBp: number): string {
   ].join("");
 }
 
-/** Text width and column widths in bp, as in cv.typ. */
+/** Text width and column widths in bp, as in the Legajo style. */
 function geometry(cv: ResolvedCv) {
   const l = cv.layout;
   const paper = PAPER[l.paper];
   const textWidth = (paper.width - l.margins.left - l.margins.right) * MM;
-  const gutter = 18 * (l.fontSize / 10);
-  const side = (textWidth * l.sidebarWidth) / 100;
-  return { paper, textWidth, gutter, side, main: textWidth - side - gutter };
+  const textHeight = (paper.height - l.margins.top - l.margins.bottom) * MM;
+  const gutter = 7 * MM;
+  const side = l.columns === 2 ? (textWidth * l.sidebarWidth) / 100 : 0;
+  return { paper, textWidth, textHeight, gutter, side, main: l.columns === 2 ? textWidth - side - gutter : textWidth };
 }
 
 function preamble(cv: ResolvedCv): string[] {
   const l = cv.layout;
-  const { paper, textWidth, gutter, side, main } = geometry(cv);
+  const { paper, textHeight, gutter, side, main } = geometry(cv);
   const size = [9, 10, 11, 12].reduce((a, b) => (Math.abs(b - l.fontSize) < Math.abs(a - l.fontSize) ? b : a));
   const density = { compact: 0.7, normal: 1, relaxed: 1.3 }[l.density];
   const m = l.margins;
-  const textHeight = (paper.height - m.top - m.bottom) * MM;
-  const accent = l.accent ? `\\definecolor{accent}{HTML}{${l.accent.slice(1).toUpperCase()}}` : "\\definecolor{accent}{cmyk}{1,0.5,0,0}";
+  const accent = (l.accent ?? DEFAULT_ACCENT).slice(1).toUpperCase();
+  const font = l.font === "Noto Sans" ? "\\usepackage[sfdefault]{noto}" : "\\usepackage{XCharter}";
   const lines = [
     `\\documentclass[${paper.option},${size}pt]{memoir}`,
-    "% Made with Foja (https://github.com/foja-cv/foja). Compile with pdflatex, lualatex or tectonic.",
+    "% Made with Foja (https://github.com/foja-cv/foja), Legajo style. Compile with pdflatex, lualatex or tectonic.",
     "\\usepackage[T1]{fontenc}",
-    "\\usepackage{XCharter}",
+    font,
     `\\usepackage[${BABEL[cv.language.split("-")[0]] ?? "english"}]{babel}`,
     `\\usepackage[paperwidth=${paper.width}mm,paperheight=${paper.height}mm,top=${m.top}mm,bottom=${m.bottom}mm,left=${m.left}mm,right=${m.right}mm]{geometry}`,
     "\\usepackage{graphicx}",
     "\\usepackage{flowfram}",
-    "\\usepackage{url}",
     "\\usepackage{xcolor}",
     "\\usepackage{tikz}",
     "\\usepackage{enumitem}",
-    "\\setlist{noitemsep,nolistsep}",
-    accent,
+    "\\usepackage[hidelinks]{hyperref}",
+    `\\definecolor{accent}{HTML}{${accent}}`,
+    "\\definecolor{ink}{HTML}{1F2A2E}",
+    "\\colorlet{muted}{ink!62}",
+    "\\colorlet{tint}{accent!8}",
     "\\pagestyle{empty}",
     "\\setlength{\\parindent}{0pt}",
-    `\\newcommand{\\Sep}{\\vspace{${density}em}}`,
-    `\\newcommand{\\SmallSep}{\\vspace{${0.5 * density}em}}`,
-    "\\newcommand{\\Accent}[1]{\\textbf{\\color{accent}#1}}",
-    "\\newcommand{\\SideHeading}[1]{\\Accent{#1}\\\\}",
-    "\\newcommand{\\Bullet}{\\textcolor{accent}{$\\circ$}}",
-    "\\newcommand{\\CVSection}[1]{{\\Large\\textbf{#1}}\\par\\SmallSep}",
-    "\\newcommand{\\CVEntry}[3]{\\Accent{#1}\\hfill{\\small #3}\\par{\\itshape #2}\\par}",
-    "\\newcommand{\\CVCompact}[3]{\\textbf{#1}\\hfill{\\small #3}\\par{\\small\\itshape #2}\\par}",
+    `\\setlength{\\parskip}{${+(0.3 * density).toFixed(2)}em}`,
+    "\\color{ink}",
+    "\\setlist[itemize]{leftmargin=1em,label=\\textcolor{accent}{--},itemsep=0.2em,topsep=0.2em,parsep=0pt}",
+    `\\newcommand{\\Sep}{\\vspace{${+(1.1 * density).toFixed(2)}em}}`,
+    `\\newcommand{\\SmallSep}{\\vspace{${+(0.6 * density).toFixed(2)}em}}`,
+    "\\newcommand{\\Caps}[1]{{\\scshape\\MakeLowercase{#1}}}",
+    // A section title in small caps, then a hairline to the end of the line.
+    "\\newcommand{\\CVSection}[1]{\\par\\Sep\\needspace{3\\baselineskip}{\\color{accent}\\bfseries\\Caps{#1}}\\hspace{0.6em}{\\color{accent!50}\\leaders\\hrule height 0.36em depth -0.32em\\hfill}\\par\\SmallSep}",
+    "\\newcommand{\\SideHeading}[1]{{\\footnotesize\\color{accent}\\bfseries\\Caps{#1}}\\par}",
+    `\\newlength{\\DateWidth}\\setlength{\\DateWidth}{${bp(2.25 * 28.35 * (l.fontSize / 10))}}`,
+    // An entry: the period in its own column, the rest beside it.
+    "\\newcommand{\\CVEntry}[2]{\\par\\noindent\\parbox[t]{\\DateWidth}{\\raggedright\\small\\color{muted}#1}\\hspace{0.8em}\\parbox[t]{\\dimexpr\\linewidth-\\DateWidth-0.8em\\relax}{#2}\\par\\SmallSep}",
   ];
+  const header = 30 * MM * (l.fontSize / 10);
   if (l.columns === 2) {
     const left = l.sidebar === "left";
     const sideX = left ? 0 : main + gutter;
     const mainX = left ? side + gutter : 0;
-    const ruleX = left ? side + gutter / 3 - 0.75 : main + (gutter * 2) / 3 - 0.75;
+    const below = textHeight - header;
     lines.push(
-      "% The sidebar and the dotted rule exist on the first page only; the main column continues.",
-      `\\newflowframe[1]{${bp(side)}}{${bp(textHeight)}}{${bp(sideX)}}{0pt}[side]`,
-      `\\newflowframe[1]{${bp(main)}}{${bp(textHeight)}}{${bp(mainX)}}{0pt}[main]`,
+      "% Page 1: the header across the top, the sidebar and the main column below it; the main",
+      "% column continues on the next pages.",
+      `\\newstaticframe[1]{\\textwidth}{${bp(header)}}{0pt}{${bp(below)}}[header]`,
+      `\\newflowframe[1]{${bp(side)}}{${bp(below)}}{${bp(sideX)}}{0pt}[side]`,
+      `\\newflowframe[1]{${bp(main)}}{${bp(below)}}{${bp(mainX)}}{0pt}[main]`,
       `\\newflowframe[>1]{${bp(main)}}{${bp(textHeight)}}{${bp(mainX)}}{0pt}[continuation]`,
-      `\\newstaticframe[1]{1.5bp}{${bp(textHeight)}}{${bp(ruleX)}}{0pt}[rule]`,
-      "\\begin{staticcontents*}{rule}",
-      "\\tikz{\\draw[loosely dotted,color=accent,line width=1.5bp](0,0) -- (0,\\textheight);}",
-      "\\end{staticcontents*}",
+      // The sidebar exists on page 1 only: if it is taller than its frame, it is scaled to fit
+      // rather than pushing the main column off the page.
+      "\\newsavebox{\\SideBox}",
+      `\\newcommand{\\FitSide}[1]{\\sbox{\\SideBox}{#1}\\ifdim\\dimexpr\\ht\\SideBox+\\dp\\SideBox\\relax>${bp(below - 4)}\\resizebox*{!}{${bp(below - 4)}}{\\usebox{\\SideBox}}\\else\\usebox{\\SideBox}\\fi}`,
     );
   }
+  lines.push("\\usepackage{needspace}");
   return lines;
 }
 
 function items(list: Item[]): string[] {
   if (list.length === 0) return [];
-  return [
-    "\\begin{itemize}[leftmargin=1.2em,label=\\Bullet]",
-    ...list.map((it) => `\\item ${it.heading ? `\\textbf{${escapeLatex(it.heading)}.} ` : ""}${inlineLatex(it.text)}`),
-    "\\end{itemize}",
-  ];
+  return ["\\begin{itemize}", ...list.map((it) => `\\item ${it.heading ? `\\textbf{${escapeLatex(it.heading)}.} ` : ""}${inlineLatex(it.text)}`), "\\end{itemize}"];
 }
 
 function mainSection(s: ResolvedSection): string[] {
   const out = [`\\CVSection{${escapeLatex(s.title)}}`];
-  // Consecutive item blocks make one list.
   let pending: Item[] = [];
   const flush = () => {
     out.push(...items(pending));
@@ -161,81 +168,78 @@ function mainSection(s: ResolvedSection): string[] {
     if (b.type === "paragraph") out.push(`${inlineLatex(b.text)}\\par`);
     else {
       const e = b.entry;
-      out.push(`${s.compact ? "\\CVCompact" : "\\CVEntry"}{${escapeLatex(e.title)}}{${escapeLatex(e.place)}}{${escapeLatex(e.period)}}`);
-      if (e.note) out.push(`{\\small ${escapeLatex(e.note)}}\\par`);
-      if (!s.compact) out.push(...items(e.items));
-      out.push("\\SmallSep");
+      const content = [
+        `\\textbf{${escapeLatex(e.title)}}`,
+        e.place ? `\\\\{\\itshape\\color{muted}${escapeLatex(e.place)}}` : "",
+        e.note ? `\\par{\\small\\color{muted}${escapeLatex(e.note)}}` : "",
+        !s.compact && e.items.length ? `\\par${items(e.items).join("\n")}` : "",
+      ].join("");
+      out.push(`\\CVEntry{${escapeLatex(e.period)}}{${content}}`);
     }
   }
   flush();
-  out.push("\\Sep");
   return out;
 }
 
 function sideBlock(b: ResolvedBlock): string {
   if (b.type === "entry") {
     const e = b.entry;
-    const details = [e.place, e.period].filter(Boolean).map((v) => `{\\itshape ${escapeLatex(v)}}\\\\`);
-    return [`\\textbf{${escapeLatex(e.title)}}\\\\`, ...details].join("\n");
+    return [`\\textbf{${escapeLatex(e.title)}}`, ...[e.place, e.period].filter(Boolean).map((v) => `\\\\{\\itshape ${escapeLatex(v)}}`)].join("") + "\\par";
   }
-  if (b.type === "item" && b.heading) {
-    // A paragraph to read: justified, last line flush left.
-    return `{\\leftskip=0pt \\rightskip=0pt \\parfillskip=0pt plus 1fil \\textbf{${escapeLatex(b.heading)}.} ${inlineLatex(b.text)}\\par}`;
-  }
+  if (b.type === "item" && b.heading) return `{\\textbf{${escapeLatex(b.heading)}.} ${inlineLatex(b.text)}\\par}`;
   return `${inlineLatex(b.text)}\\par`;
 }
 
 function contactValue(c: ResolvedCv["contacts"][number]): string {
-  return c.kind === "phone" || c.kind === "location" ? escapeLatex(c.value) : `\\url{${c.value}}`;
+  return c.href && c.kind !== "phone" ? `\\href{${c.href.replace(/[%#]/g, "\\$&")}}{${escapeLatex(c.value)}}` : escapeLatex(c.value);
 }
 
 function sidebar(cv: ResolvedCv, photo: string | undefined): string[] {
-  const align = cv.layout.sidebar === "left" ? "flushright" : "flushleft";
-  const out = [`\\begin{${align}}`, "\\small"];
-  if (photo) out.push(`${photoCommand(cv, photo, geometry(cv).side)}\\\\[12bp]`);
-  const block = (title: string, values: string[]) => {
-    out.push(`\\SideHeading{${escapeLatex(title)}}`, ...values.map((v) => `${v}\\\\`), "\\Sep");
-  };
+  const { side } = geometry(cv);
+  const inner = side - 2 * 10;
+  const out = ["\\setlength{\\fboxsep}{10bp}", `\\FitSide{\\colorbox{tint}{\\begin{minipage}[t]{${bp(inner)}}`, "\\raggedright\\small"];
+  if (photo) out.push(`\\centering${photoCommand(cv, photo, inner)}\\par\\raggedright\\vspace{6bp}`);
+  const block = (title: string, values: string[]) => out.push(`\\SideHeading{${escapeLatex(title)}}`, values.join("\\\\"), "\\par\\SmallSep");
   if (cv.highlight) block(cv.highlight.title, [escapeLatex(cv.highlight.text)]);
   if (cv.contacts.length) block(cv.labels.contact, cv.contacts.map(contactValue));
-  const column = cv.layout.sidebar === "left" ? "r" : "l";
   for (const row of cv.skills) {
     if (row.length === 1) block(row[0].title, row[0].items.map(escapeLatex));
     else {
       const columns = row.map(
-        (g) => `\\begin{tabular}[t]{@{}${column}@{}}${[`\\Accent{${escapeLatex(g.title)}}`, ...g.items.map(escapeLatex)].join(" \\\\ ")}\\end{tabular}`,
+        (g) => `\\begin{tabular}[t]{@{}l@{}}{\\footnotesize\\color{accent}\\bfseries\\Caps{${escapeLatex(g.title)}}}\\\\ ${g.items.map(escapeLatex).join(" \\\\ ")}\\end{tabular}`,
       );
-      out.push(`${columns.join("\\hspace{1em}")}\\\\`, "\\Sep");
+      out.push(`${columns.join("\\hspace{1em}")}\\par\\SmallSep`);
     }
   }
   for (const s of cv.sections.filter((s) => s.side)) {
     out.push(`\\SideHeading{${escapeLatex(s.title)}}`);
-    for (const b of s.blocks) out.push(sideBlock(b), "\\SmallSep");
-    out.push("\\Sep");
+    for (const b of s.blocks) out.push(sideBlock(b), "\\vspace{0.3em}");
+    out.push("\\SmallSep");
   }
-  out.push(`\\end{${align}}`);
+  out.push("\\end{minipage}}}");
   return out;
 }
 
 function heading(cv: ResolvedCv): string[] {
   return [
-    `{\\Huge\\bfseries\\color{accent}${escapeLatex(cv.name)}}\\par\\vspace{.6\\baselineskip}`,
-    `{\\Large\\bfseries ${escapeLatex(cv.subtitle)}}\\par`,
+    `{\\fontsize{${+(cv.layout.fontSize * 2.3).toFixed(1)}}{${+(cv.layout.fontSize * 2.6).toFixed(1)}}\\selectfont\\scshape ${escapeLatex(cv.name)}\\par}`,
+    "\\vspace{-2bp}{\\color{accent}\\rule{\\linewidth}{1.6bp}}\\par\\vspace{-2bp}",
+    `{\\large\\itshape\\color{muted}${escapeLatex(cv.subtitle)}\\par}`,
   ];
 }
 
 function summary(cv: ResolvedCv): string[] {
-  return cv.summary ? [`\\Accent{${escapeLatex(cv.labels.profile)}}~~${inlineLatex(cv.summary)}\\par`, "\\Sep"] : [];
+  return cv.summary ? [`${inlineLatex(cv.summary)}\\par`] : [];
 }
 
 function body(cv: ResolvedCv, photo: string | undefined): string[] {
   const main = cv.sections.filter((s) => !s.side).flatMap(mainSection);
   if (cv.layout.columns === 2) {
-    return [...sidebar(cv, photo), "\\framebreak", ...heading(cv), "\\bigskip", ...summary(cv), ...main];
+    return ["\\begin{staticcontents*}{header}", ...heading(cv), "\\end{staticcontents*}", ...sidebar(cv, photo), "\\framebreak", ...summary(cv), ...main];
   }
   const contacts = cv.contacts.map(contactValue).join(" \\enspace$\\cdot$\\enspace ");
-  const head = [...heading(cv), ...(contacts ? ["\\vspace{4bp}", `{\\small ${contacts}\\par}`] : [])];
-  const photoWidth = cv.layout.fontSize * 9;
+  const head = [...heading(cv), ...(contacts ? ["\\vspace{4bp}", `{\\small\\color{muted}${contacts}\\par}`] : [])];
+  const photoWidth = cv.layout.fontSize * 8.5;
   const top = photo
     ? [
         `\\begin{minipage}[b]{\\dimexpr\\linewidth-${bp(photoWidth)}-1em\\relax}`,
@@ -245,14 +249,10 @@ function body(cv: ResolvedCv, photo: string | undefined): string[] {
       ]
     : head;
   const skills = cv.skills.length
-    ? [
-        `\\CVSection{${escapeLatex(cv.labels.skills)}}`,
-        ...cv.skills.flat().map((g) => `\\textbf{${escapeLatex(g.title)}:} ${g.items.map(escapeLatex).join(", ")}\\par`),
-        "\\Sep",
-      ]
+    ? [`\\CVSection{${escapeLatex(cv.labels.skills)}}`, ...cv.skills.flat().map((g) => `{\\color{muted}\\Caps{${escapeLatex(g.title)}}}:\\enspace ${g.items.map(escapeLatex).join(", ")}\\par`)]
     : [];
-  const highlight = cv.highlight ? [`\\Accent{${escapeLatex(cv.highlight.title)}}~~${escapeLatex(cv.highlight.text)}\\par`, "\\Sep"] : [];
-  return [...top, "\\bigskip", ...highlight, ...summary(cv), ...skills, ...main];
+  const highlight = cv.highlight ? [`{\\color{accent}\\bfseries ${escapeLatex(cv.highlight.title)}}~~${escapeLatex(cv.highlight.text)}\\par`] : [];
+  return [...top, "\\bigskip", ...highlight, ...summary(cv), ...skills, ...cv.sections.flatMap(mainSection)];
 }
 
 export function renderLatex(cv: ResolvedCv): string {
@@ -267,8 +267,9 @@ export function latexBundle(project: Project, profileId: string): ZipInput {
     "README.txt": [
       "CV made with Foja (https://github.com/foja-cv/foja).",
       "",
-      "Compile cv.tex with pdflatex (or lualatex, or tectonic); it needs the memoir, XCharter,",
-      "flowfram, tikz and enumitem packages, which come with TeX Live and MiKTeX.",
+      "Compile cv.tex with pdflatex (or lualatex, or tectonic); it needs the memoir, XCharter (or",
+      "noto), flowfram, tikz, enumitem, needspace and hyperref packages, which come with TeX Live",
+      "and MiKTeX. It is in Foja's Legajo look, whichever style the profile uses in Foja.",
       ...(cv.photo?.type === "image/svg+xml" ? ["", "The photo is an SVG, which pdflatex cannot include, so it was left out."] : []),
       "",
     ].join("\n"),

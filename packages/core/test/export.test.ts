@@ -50,12 +50,14 @@ describe("LaTeX", () => {
     expect(inlineLatex("a **b_c** d")).toBe("a \\textbf{b\\_c} d");
   });
 
-  test("two columns: flow frames, sidebar first, main after the frame break", () => {
+  test("two columns: header frame, sidebar first, main after the frame break", () => {
     const tex = renderLatex(resolveProfile(example, "programador"));
-    expect(tex).toContain("\\newflowframe[1]");
+    expect(tex).toContain("\\newstaticframe[1]{\\textwidth}");
+    expect(tex).toContain("\\FitSide{");
     expect(tex.indexOf("\\SideHeading{Fortalezas}")).toBeLessThan(tex.indexOf("\\framebreak"));
     expect(tex.indexOf("\\framebreak")).toBeLessThan(tex.indexOf("\\CVSection{Experiencia}"));
-    expect(tex).toContain("\\definecolor{accent}{cmyk}{1,0.5,0,0}");
+    expect(tex).toContain("\\definecolor{accent}{HTML}{1F5F5B}");
+    expect(tex).not.toMatch(/dotted|RoyalBlue|cmyk/);
     expect(tex).not.toContain("photo"); // the fixture's photo is an SVG, which pdflatex cannot take
   });
 
@@ -134,6 +136,8 @@ describe("files", () => {
     }
     expect(documentXml).toContain("Bautista Damián Fiori");
     expect(documentXml).toContain("Datalogger ATtiny85. ");
-    expect(documentXml).toContain('w:val="dotted"');
+    expect(documentXml).toContain("<w:smallCaps/>");
+    expect(documentXml).toMatch(/w:fill="[0-9A-F]{6}"/); // the shaded sidebar
+    expect(documentXml).not.toContain('w:val="dotted"');
   });
 });

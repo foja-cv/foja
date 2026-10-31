@@ -1,78 +1,134 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
 import { NodeCompiler } from "@myriaddreamin/typst-ts-node-compiler";
-import { typstBundle, validate, type Layout, type Project } from "@foja/core";
+import { BUILTIN_STYLES, STYLE_SKELETON, markBoxes, overflowLines, partAt, slug, typstBundle, validate, type Layout, type Project } from "@foja/core";
 import { Typst, templateFiles } from "../src/typst.ts";
-import { slug } from "@foja/core";
 import { parseMarkdown } from "../src/convert.ts";
 
-const example: Project = JSON.parse(readFileSync(new URL("../../../examples/curriculum.project.json", import.meta.url), "utf8"));
-const profiles = Object.keys(example.profiles);
+const read = (path: string): Project => JSON.parse(readFileSync(new URL(`../../../examples/${path}`, import.meta.url), "utf8"));
+const curriculum = read("curriculum.project.json");
+const example = read("example.project.json");
+const A4 = { width: 595.28, height: 841.89 };
 
-describe("every profile", () => {
+function withStyle(project: Project, style: string, layout: Layout = {}): Project {
+  const p = structuredClone(project);
+  for (const profile of Object.values(p.profiles)) profile.layout = { ...profile.layout, ...layout, template: style };
+  return p;
+}
+
+describe.each(BUILTIN_STYLES.map((s) => s.id))("style %s", (style) => {
+  test("compiles every profile, with marks in pairs and a declared geometry", () => {
+    for (const project of [curriculum, example]) {
+      const p = withStyle(project, style);
+      const typst = new Typst(p);
+      for (const id of Object.keys(p.profiles)) {
+        const doc = typst.compile(id);
+        expect(typst.pdf(doc).subarray(0, 5).toString()).toBe("%PDF-");
+        const marks = typst.marks(doc);
+        const paths = new Set(marks.map((m) => m.path));
+        for (const path of ["name", "subtitle", "sections.0", "sections.0.blocks.0"]) expect(paths).toContain(path);
+        for (const path of paths) expect(marks.filter((m) => m.path === path).map((m) => m.kind).sort()).toEqual(["end", "start"]);
+        expect(typst.geometry(doc)?.main?.width).toBeGreaterThan(200);
+      }
+    }
+  });
+});
+
+test("the example fits on one page in the default style", () => {
   const typst = new Typst(example);
-  test.each(profiles)("%s fits on one page", (id) => {
-    const doc = typst.compile(id);
-    expect(doc.numOfPages).toBe(1);
-    expect(typst.pdf(doc).subarray(0, 5).toString()).toBe("%PDF-");
+  for (const id of Object.keys(example.profiles)) expect(typst.compile(id).numOfPages).toBe(1);
+});
+
+describe("click geometry (Legajo)", () => {
+  const typst = new Typst(example);
+  const doc = typst.compile("desarrolladora");
+  const marks = typst.marks(doc);
+  const geometry = typst.geometry(doc)!;
+  const boxes = markBoxes(marks, geometry, A4);
+
+  test("the two columns are declared", () => {
+    expect(geometry.side!.x).toBeLessThan(geometry.main!.x);
   });
 
-  test("marks come in start/end pairs with positions", () => {
-    const marks = typst.marks(typst.compile("programador"));
-    const paths = new Set(marks.map((m) => m.path));
-    for (const path of ["name", "summary", "contacts", "sections.0", "sections.0.blocks.0", "sections.3.blocks.0"]) {
-      expect(paths).toContain(path);
-    }
-    for (const path of paths) {
-      const [start, end] = ["start", "end"].map((kind) => marks.find((m) => m.path === path && m.kind === kind)!);
-      expect(start.page).toBe(1);
-      expect(end.y).toBeGreaterThanOrEqual(start.y);
-    }
+  test("a point finds the innermost part in its column", () => {
+    const entry = boxes.find((b) => b.path === "sections.0.blocks.1")!;
+    expect(partAt(boxes, 1, entry.x + 10, entry.y + entry.height / 2)).toBe("sections.0.blocks.1");
+    const contacts = boxes.find((b) => b.path === "contacts")!;
+    expect(contacts.x).toBe(geometry.side!.x);
+    expect(partAt(boxes, 1, contacts.x + 20, contacts.y + contacts.height / 2)).toBe("contacts");
+  });
+
+  test("overflow is counted in lines", () => {
+    expect(overflowLines(marks)).toBe(0);
+    const long = structuredClone(example);
+    const s = long.profiles.desarrolladora.sections[0];
+    s.blocks = Array.from({ length: 6 }, () => s.blocks).flat();
+    const t2 = new Typst(long);
+    const m2 = t2.marks(t2.compile("desarrolladora"));
+    expect(Math.max(...m2.map((m) => m.page))).toBeGreaterThan(1);
+    expect(overflowLines(m2)).toBeGreaterThan(5);
   });
 });
 
 const variants: [string, Layout][] = [
   ["one column", { columns: 1 }],
   ["one column, round photo", { columns: 1, photo: "circle" }],
-  ["sidebar on the right", { sidebar: "right", sidebarWidth: 32 }],
-  ["no photo, rounded corners", { photo: "none" }],
-  ["rounded photo", { photo: "rounded" }],
+  ["sidebar on the right, wide", { sidebar: "right", sidebarWidth: 38 }],
+  ["no photo", { photo: "none" }],
   ["English labels, month names", { labels: "en", dateFormat: "MMM YYYY" }],
-  ["years only", { dateFormat: "YYYY" }],
-  ["letter paper, wide margins", { paper: "us-letter", margins: { top: 20, bottom: 20, left: 20, right: 20 } }],
+  ["years only, sans", { dateFormat: "YYYY", font: "Noto Sans" }],
+  ["letter paper, wide margins", { paper: "us-letter", margins: { top: 25, bottom: 25, left: 25, right: 25 } }],
   ["compact, small type", { density: "compact", fontSize: 9 }],
   ["relaxed, large type, accent", { density: "relaxed", fontSize: 11, accent: "#aa3355" }],
 ];
 
 describe("layout options", () => {
   test.each(variants)("%s", (_, layout) => {
-    const project = structuredClone(example);
-    project.profiles.programador.layout = layout;
-    expect(validate(project)).toEqual([]);
-    const typst = new Typst(project);
-    const doc = typst.compile("programador");
-    expect(doc.numOfPages).toBeGreaterThanOrEqual(1);
+    for (const style of BUILTIN_STYLES.map((s) => s.id)) {
+      const p = withStyle(curriculum, style, layout);
+      expect(validate(p)).toEqual([]);
+      expect(new Typst(p).compile("programador").numOfPages).toBeGreaterThanOrEqual(1);
+    }
+  });
+});
+
+describe("styles of one's own", () => {
+  test("the skeleton compiles as a project style", () => {
+    const p = structuredClone(example);
+    p.templates = { mio: { name: "Mío", source: STYLE_SKELETON } };
+    p.profiles.desarrolladora.layout = { template: "mio" };
+    expect(validate(p)).toEqual([]);
+    const typst = new Typst(p);
+    const doc = typst.compile("desarrolladora");
+    expect(new Set(typst.marks(doc).map((m) => m.path))).toContain("sections.0.blocks.0");
   });
 
-  test("the one-column layout lists the skills as a section", () => {
-    const project = structuredClone(example);
-    project.profiles.programador.layout = { columns: 1 };
-    const svg = new Typst(project).svg(new Typst(project).compile("programador"));
-    expect(svg.length).toBeGreaterThan(1000);
+  test("a style that does not exist is a validation error", () => {
+    const p = structuredClone(example);
+    p.profiles.desarrolladora.layout = { template: "nada" };
+    expect(validate(p).map((x) => x.path)).toEqual(["/profiles/desarrolladora/layout/template"]);
+  });
+
+  test("a style with a Typst error reports it", () => {
+    const p = structuredClone(example);
+    p.templates = { roto: { name: "Roto", source: '#import "/lib.typ": *\n#cv.nope' } };
+    p.profiles.desarrolladora.layout = { template: "roto" };
+    expect(() => new Typst(p).compile("desarrolladora")).toThrow(/Typst failed/);
   });
 });
 
 test("the Typst bundle compiles on its own", () => {
-  const files = typstBundle(example, "docente-ia", templateFiles());
+  const p = withStyle(example, "banda");
+  const files = typstBundle(p, "docente", templateFiles());
+  expect(Object.keys(files)).toEqual(expect.arrayContaining(["cv.typ", "lib.typ", "styles/legajo.typ", "styles/banda.typ", "styles/minimal.typ"]));
   const fontBlobs = Object.entries(files)
-    .filter(([name]) => name.endsWith(".otf"))
+    .filter(([name]) => /\.(otf|ttf)$/.test(name))
     .map(([, data]) => Buffer.from(data as Uint8Array));
-  // The bundle is compiled from its own directory, as `typst compile` would with the root there.
-  const compilerAtRoot = NodeCompiler.create({ workspace: "/bundle", fontArgs: [{ fontBlobs }] });
+  const compiler = NodeCompiler.create({ workspace: "/bundle", fontArgs: [{ fontBlobs }] });
   for (const [name, data] of Object.entries(files)) {
-    compilerAtRoot.mapShadow(`/bundle/${name}`, Buffer.from(typeof data === "string" ? new TextEncoder().encode(data) : data));
+    compiler.mapShadow(`/bundle/${name}`, Buffer.from(typeof data === "string" ? new TextEncoder().encode(data) : data));
   }
-  const result = compilerAtRoot.compile({ mainFilePath: "/bundle/cv.typ", inputs: { profile: "docente-ia" } });
+  const result = compiler.compile({ mainFilePath: "/bundle/cv.typ", inputs: { profile: "docente" } });
   expect(result.takeError()).toBeNull();
   expect(result.result?.numOfPages).toBe(1);
 });
@@ -88,39 +144,5 @@ describe("curriculum converter", () => {
       { heading: "Uno", text: "linea a linea b" },
       { heading: "Dos", text: "c" },
     ]);
-  });
-});
-
-describe("geometry of the marks", async () => {
-  const { markBoxes, partAt, overflowLines, pageGeometry } = await import("@foja/core");
-  const typst = new Typst(example);
-  const profile = example.profiles.programador;
-  const boxes = markBoxes(typst.marks(typst.compile("programador")), profile);
-
-  test("the columns match the template", () => {
-    const g = pageGeometry(profile.layout);
-    expect(g.side!.width).toBeCloseTo(144.5, 0);
-    expect(g.main.width).toBeCloseTo(374, 0);
-  });
-
-  test("a point in a column finds the innermost part there", () => {
-    const summary = boxes.find((b) => b.path === "summary")!;
-    expect(partAt(boxes, 1, summary.x + 50, summary.y + summary.height / 2)).toBe("summary");
-    const entry = boxes.find((b) => b.path === "sections.0.blocks.1")!;
-    expect(partAt(boxes, 1, entry.x + 10, entry.y + entry.height / 2)).toBe("sections.0.blocks.1");
-    const contacts = boxes.find((b) => b.path === "contacts")!;
-    expect(contacts.x).toBeLessThan(summary.x);
-    expect(partAt(boxes, 1, contacts.x + 100, contacts.y + 2)).toBe("contacts");
-  });
-
-  test("overflow is counted in lines", () => {
-    expect(overflowLines(typst.marks(typst.compile("programador")), profile.layout)).toBe(0);
-    const long = structuredClone(example);
-    const p = long.profiles.programador;
-    p.sections[0].blocks.push(...p.sections[0].blocks, ...p.sections[0].blocks);
-    const t2 = new Typst(long);
-    const marks = t2.marks(t2.compile("programador"));
-    expect(Math.max(...marks.map((m) => m.page))).toBeGreaterThan(1);
-    expect(overflowLines(marks, p.layout)).toBeGreaterThan(5);
   });
 });

@@ -5,6 +5,7 @@
 // the editor, the CLI and the tests on one contract without another dependency.
 
 import schema from "../schema/project.schema.json" with { type: "json" };
+import { isBuiltinStyle } from "./templates.ts";
 import type { Project } from "./types.ts";
 
 export interface Problem {
@@ -115,6 +116,8 @@ export function validateReferences(p: Project): Problem[] {
         if (!(group in p.skills)) error(`${base}/skills/${i}/${j}`, `no skill group "${group}"`);
       }),
     );
+    const style = profile.layout?.template;
+    if (style && !isBuiltinStyle(style) && !p.templates?.[style]) error(`${base}/layout/template`, `no style "${style}"`);
     const seen = new Set<string>();
     profile.sections.forEach((section, i) => {
       if (seen.has(section.id)) error(`${base}/sections/${i}/id`, `duplicate section id "${section.id}"`);

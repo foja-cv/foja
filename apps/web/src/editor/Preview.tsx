@@ -13,7 +13,7 @@ export function safeSvg(svg: string): string {
 }
 
 export function Preview() {
-  const { ready, failed, svg, pages, marks, errors, warnings, compileMs, renderMs } = usePreview();
+  const { ready, failed, svg, pages, marks, geometry, errors, warnings, compileMs, renderMs } = usePreview();
   const problems = useEditor((s) => s.problems);
   const profile = useEditor((s) => s.project!.profiles[s.profileId]);
   const selection = useEditor((s) => s.selection);
@@ -33,9 +33,10 @@ export function Preview() {
   const layout = useMemo(() => {
     if (!svg || !profile) return undefined;
     const docWidth = Number(/data-width="([\d.]+)"/.exec(svg)?.[1] ?? 596);
-    return { pages: pageBoxes(svg), boxes: markBoxes(marks, profile), docWidth };
-  }, [svg, marks, profile]);
-  const overflow = profile && pages > 1 ? overflowLines(marks, profile.layout) : 0;
+    const sheets = pageBoxes(svg);
+    return { pages: sheets, boxes: markBoxes(marks, geometry, sheets[0] ?? { width: docWidth, height: docWidth * 1.414 }), docWidth };
+  }, [svg, marks, geometry, profile]);
+  const overflow = profile && pages > 1 ? overflowLines(marks, profile.layout?.fontSize) : 0;
 
   const scale = layout && width ? width / layout.docWidth : 0;
   const place = (b: MarkedBox) => {

@@ -60,7 +60,7 @@ test("inline bold runs", () => {
 test("layout defaults", () => {
   const l = resolveLayout({ margins: { top: 20 } });
   expect(l.columns).toBe(2);
-  expect(l.margins).toEqual({ top: 20, bottom: 12, left: 12, right: 8.7 });
+  expect(l.margins).toEqual({ top: 20, bottom: 14, left: 15, right: 15 });
 });
 
 describe("zip", () => {
@@ -79,8 +79,9 @@ describe("zip", () => {
 });
 
 test("the Typst bundle carries the project without inline assets", () => {
-  const files = typstBundle(example, "programador", { "cv.typ": "//", "labels.json": "{}", fonts: { "X.otf": new Uint8Array(1) } });
-  expect(Object.keys(files).sort()).toEqual(["README.txt", "assets/photo.svg", "cv.typ", "fonts/X.otf", "labels.json", "project.json"]);
+  const files = typstBundle(example, "programador", { "lib.typ": "//", "labels.json": "{}", styles: { legajo: "// legajo" }, fonts: { "X.otf": new Uint8Array(1) } });
+  expect(Object.keys(files).sort()).toEqual(["README.txt", "assets/photo.svg", "cv.typ", "fonts/X.otf", "labels.json", "lib.typ", "project.json", "styles/legajo.typ"]);
+  expect(files["cv.typ"]).toBe("// legajo");
   expect(JSON.parse(files["project.json"] as string).assets).toBeUndefined();
   expect(files["README.txt"]).toContain("--input profile=programador");
 });

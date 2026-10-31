@@ -1,8 +1,10 @@
 // The template files for the Typst export, fetched once.
 
 import type { TemplateFiles } from "@foja/core";
-import template from "@foja/template/cv.typ?raw";
+import lib from "@foja/template/lib.typ?raw";
 import labels from "@foja/template/labels.json?raw";
+
+const styleSources = import.meta.glob<string>("../../../../packages/template/styles/*.typ", { query: "?raw", import: "default", eager: true });
 
 const fontUrls = import.meta.glob<string>("../../../../packages/template/fonts/*", { query: "?url", import: "default", eager: true });
 
@@ -14,7 +16,8 @@ export function templateFiles(): Promise<TemplateFiles> {
     for (const [path, url] of Object.entries(fontUrls)) {
       fonts[path.split("/").pop()!] = new Uint8Array(await (await fetch(url)).arrayBuffer());
     }
-    return { "cv.typ": template, "labels.json": labels, fonts };
+    const styles = Object.fromEntries(Object.entries(styleSources).map(([path, source]) => [path.split("/").pop()!.replace(/\.typ$/, ""), source]));
+    return { "lib.typ": lib, "labels.json": labels, styles, fonts };
   })();
   return cached;
 }

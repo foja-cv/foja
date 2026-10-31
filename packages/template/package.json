@@ -2,5 +2,5 @@
   "name": "@foja/template",
   "private": true,
   "license": "GPL-3.0-only",
-  "files": ["cv.typ", "labels.json", "fonts"]
+  "files": ["lib.typ", "styles", "styles.json", "labels.json", "fonts"]
 }

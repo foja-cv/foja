@@ -2,7 +2,7 @@
 // profile (debounced), plus PDF exports through the same worker.
 
 import { create } from "zustand";
-import type { Mark, Project } from "@foja/core";
+import type { Mark, Project, StyleGeometry } from "@foja/core";
 import type { WorkerReply, WorkerRequest } from "../lib/typst.worker";
 import { useEditor } from "./store";
 
@@ -12,6 +12,7 @@ export interface PreviewState {
   svg?: string;
   pages: number;
   marks: Mark[];
+  geometry?: StyleGeometry;
   errors?: string[];
   warnings?: string[];
   compileMs?: number;
@@ -43,7 +44,7 @@ function start(): Worker {
       // The last good render stays on screen when there is an error.
       usePreview.setState(
         data.svg
-          ? { svg: data.svg, pages: data.pages ?? 1, marks: data.marks ?? [], errors: undefined, warnings: data.warnings, compileMs: data.compileMs, renderMs: data.renderMs, renderedId: data.id }
+          ? { svg: data.svg, pages: data.pages ?? 1, marks: data.marks ?? [], geometry: data.geometry, errors: undefined, warnings: data.warnings, compileMs: data.compileMs, renderMs: data.renderMs, renderedId: data.id }
           : { errors: data.errors, compileMs: data.compileMs },
       );
     }

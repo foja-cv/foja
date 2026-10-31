@@ -1,50 +1,8 @@
-// Where things are on the page, in points (the Typst `pt`), computed with the same rules as
-// cv.typ: the editor uses it to turn a click on the preview into a part of the CV and to draw
-// highlights over it.
+// From the marks a style emits to boxes on the page: the editor turns a click on the preview into
+// a part of the CV and draws highlights with them. Columns come from the style's `geometry`
+// declaration; a style without one still works, with boxes from the mark to the right margin.
 
-import { resolveLayout } from "./project.ts";
-import type { Layout, Profile } from "./types.ts";
-import type { Mark } from "./typst.ts";
-
-const MM = 72 / 25.4;
-export const PAPER_PT = { a4: { width: 210 * MM, height: 297 * MM }, "us-letter": { width: 215.9 * MM, height: 279.4 * MM } };
-
-export interface Column {
-  x: number;
-  width: number;
-}
-
-export interface PageGeometry {
-  width: number;
-  height: number;
-  top: number;
-  bottom: number;
-  side?: Column;
-  main: Column;
-}
-
-export function pageGeometry(layout: Layout = {}): PageGeometry {
-  const l = resolveLayout(layout);
-  const paper = PAPER_PT[l.paper];
-  const left = l.margins.left * MM;
-  const textWidth = paper.width - left - l.margins.right * MM;
-  const base = { width: paper.width, height: paper.height, top: l.margins.top * MM, bottom: paper.height - l.margins.bottom * MM };
-  if (l.columns === 1) return { ...base, main: { x: left, width: textWidth } };
-  const gutter = 18 * (l.fontSize / 10);
-  const side = (textWidth * l.sidebarWidth) / 100;
-  const main = textWidth - side - gutter;
-  return l.sidebar === "left"
-    ? { ...base, side: { x: left, width: side }, main: { x: left + side + gutter, width: main } }
-    : { ...base, main: { x: left, width: main }, side: { x: left + main + gutter, width: side } };
-}
-
-/** Whether the part at `path` sits in the sidebar. */
-export function inSidebar(path: string, profile: Profile): boolean {
-  if ((profile.layout?.columns ?? 2) === 1) return false;
-  if (/^(photo|highlight|contacts|skills)/.test(path)) return true;
-  const section = /^sections\.(\d+)/.exec(path);
-  return !!section && profile.sections[Number(section[1])]?.column === "side";
-}
+import type { Mark, StyleGeometry } from "./typst.ts";
 
 export interface MarkedBox {
   path: string;
@@ -56,11 +14,13 @@ export interface MarkedBox {
 }
 
 /** One box per marked part (start to end, the width of its column); parts that cross a page
- * break get a box on each page. */
-export function markBoxes(marks: Mark[], profile: Profile): MarkedBox[] {
-  const g = pageGeometry(profile.layout);
+ * break get a box on each page. `page` is the page size in pt. */
+export function markBoxes(marks: Mark[], geometry: StyleGeometry | undefined, page: { width: number; height: number }): MarkedBox[] {
   const starts = new Map<string, Mark>();
   const boxes: MarkedBox[] = [];
+  // Where content starts and ends vertically, measured from the marks themselves.
+  const top = Math.min(...marks.map((m) => m.y));
+  const bottom = Math.max(...marks.map((m) => m.y));
   for (const m of marks) {
     if (m.kind === "start") {
       starts.set(m.path, m);
@@ -68,11 +28,13 @@ export function markBoxes(marks: Mark[], profile: Profile): MarkedBox[] {
     }
     const start = starts.get(m.path);
     if (!start) continue;
-    const column = inSidebar(m.path, profile) && g.side ? g.side : g.main;
-    for (let page = start.page; page <= m.page; page++) {
-      const y0 = page === start.page ? start.y : g.top;
-      const y1 = page === m.page ? m.y : g.bottom;
-      boxes.push({ path: m.path, page, x: column.x, width: column.width, y: y0, height: Math.max(0, y1 - y0) });
+    const declared = (start.column === "side" ? geometry?.side : geometry?.main) ?? geometry?.main;
+    const x = declared?.x ?? start.x ?? 0;
+    const width = declared?.width ?? page.width - 2 * x;
+    for (let p = start.page; p <= m.page; p++) {
+      const y0 = p === start.page ? start.y : top;
+      const y1 = p === m.page ? m.y : bottom;
+      boxes.push({ path: m.path, page: p, x, width, y: y0, height: Math.max(0, y1 - y0) });
     }
   }
   return boxes;
@@ -86,13 +48,13 @@ export function partAt(boxes: MarkedBox[], page: number, x: number, y: number): 
 }
 
 /** How far the CV runs past the first page, in lines of body text (0 when it fits). */
-export function overflowLines(marks: Mark[], layout: Layout = {}): number {
-  const l = resolveLayout(layout);
-  const g = pageGeometry(layout);
+export function overflowLines(marks: Mark[], fontSize = 10): number {
   const pages = Math.max(1, ...marks.map((m) => m.page));
   if (pages === 1) return 0;
-  const lastY = Math.max(...marks.filter((m) => m.page === pages).map((m) => m.y));
-  const usable = g.bottom - g.top;
-  const extra = (pages - 2) * usable + Math.max(0, lastY - g.top);
-  return Math.max(1, Math.ceil(extra / (l.fontSize * 1.2)));
+  let extra = 0;
+  for (let p = 2; p <= pages; p++) {
+    const ys = marks.filter((m) => m.page === p).map((m) => m.y);
+    if (ys.length) extra += Math.max(...ys) - Math.min(...ys);
+  }
+  return Math.max(1, Math.ceil(extra / (fontSize * 1.25)));
 }
