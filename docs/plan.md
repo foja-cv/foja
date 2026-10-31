@@ -1,8 +1,9 @@
 # Foja: a CV editor on Typst — research and plan
 
-Status: **phase 2 done** (2026-10-31): exporters to LaTeX, Markdown, JSON, Word and JPG, and
-the all-formats `.zip`; see [Phase 2 results](#phase-2-results-2026-10-31). Earlier:
-[phase 1](#phase-1-results-2026-10-31), [phase 0](#phase-0-results-2026-10-30). Moved here from `bafif/curriculum`
+Status: **phase 3 done** (2026-10-31): the web editor works end to end (profiles, forms, live
+preview, export dialog, IndexedDB); see [Phase 3 results](#phase-3-results-2026-10-31). Earlier:
+[phase 2](#phase-2-results-2026-10-31), [phase 1](#phase-1-results-2026-10-31),
+[phase 0](#phase-0-results-2026-10-30). Moved here from `bafif/curriculum`
 (`docs/gui-plan.md`), where the history of the earlier drafts stays.
 
 ## Goal
@@ -241,7 +242,7 @@ TanStack Query only where there is async work, dnd-kit, typst.ts, `docx`, Tauri 
 2. **Exporters** in `packages/core`: LaTeX (port of `latex.py`), Markdown, JSON, Word, JPG;
    `.zip` bundles; tests (**done 2026-10-31**).
 3. **Web app core**: editor, profiles, live preview, export dialog, IndexedDB; dev in Docker
-   Compose with nginx and hot reload.
+   Compose with nginx and hot reload (**done 2026-10-31**).
 4. **Polish**: drag-and-drop, undo/redo, click-to-edit, page-fit highlighting, palette,
    photo crop, Playwright tests.
 5. **PWA + public web**: manifest, service worker, offline; GitHub Pages at `foja-cv.github.io/foja/`;
@@ -386,6 +387,38 @@ neither is installed here.
 `overleaf.com/docs`, which sends the CV to a third party; it needs testing against the live
 service, so it is left for after the public release, as an explicit user action.
 
+## Phase 3 results (2026-10-31)
+
+`/editor` is a React island (`client:only`) in `apps/web/src/editor/`; `/` is a placeholder
+landing (phase 5). Dev: `docker compose up`, <http://127.0.0.1:8090/editor>.
+
+| Piece | Where |
+| :--- | :--- |
+| **State**: Zustand store with the project, the profile, the selection and the validation problems (recomputed on every change, whatever made it: an edit, undo, a load). Undo history with `zundo` (one step per burst of edits, 800 ms; 200 steps) | `store.ts` |
+| **Storage**: IndexedDB (`foja` / `projects` / `current`), autosave 500 ms after the last change, Ctrl+S, a warning before leaving with unsaved changes, state shown in the header | `storage.ts`, `App.tsx` |
+| **First run**: the example (a **fictional** person, `examples/example.project.json`, two profiles; Bautista's CV stays a test fixture only), an empty project, or import a `.foja.json` (validated; the problems are listed) | `Welcome.tsx`, `projects.ts` |
+| **Header**: profile selector, new, duplicate, delete (with an in-page confirmation), save state, undo/redo, project menu (new, example, import), Export (Ctrl+E) | `App.tsx` |
+| **Data panels**: person (names, CV language, photo upload: JPEG/PNG up to 5 MB, stored as an asset), contacts, skill groups (one item per line), the **entry bank** (where each entry is used; "used in N profiles" warning; deletion blocked while a profile uses it) and the entry form (month pickers, "ongoing" and "single date", note, items) | `forms/` |
+| **Profile panels**: name, subtitle, summary, highlight block, which contacts, skill rows (groups side by side); layout options (every option of phase 1); sections with typed blocks (include an entry of the bank, new entry, item, paragraph; reorder with ↑ ↓; column; compact) | `forms/` |
+| **Inline validation**: fields show the problem at their JSON Pointer; the preview header counts all problems and lists them on click | `store.ts` (`useProblem`), `Preview.tsx` |
+| **Preview**: the worker of phase 1, debounced 80 ms; badge "1 página ✓" / "N páginas ⚠"; compile errors shown above the last good render; timings | `preview.ts`, `Preview.tsx` |
+| **Export dialog**: PDF (worker), JPG (72/150/300 dpi), Word, Typst, LaTeX, Markdown, JSON (the project file), all formats (`.zip`, with the resolved JSON); remembers the last choice | `ExportDialog.tsx` |
+| **End-to-end tests**: Playwright 1.64 in the node container drives the host's Chrome over CDP (no browser download; Chrome on 127.0.0.1 with a throw-away profile); 12 tests: render, edit + autosave + reload, undo/redo, shared entry across profiles, layout, five exports, invalid import, markup injection | `scripts/e2e.sh`, `tests/e2e/` |
+
+**Security**: the SVG from typst.ts carries a `<script>` (its own interaction code) and a
+text-selection layer of HTML in `<foreignObject>` with the user's text. Both are removed before
+the SVG is shown or rasterised (`apps/web/src/lib/svg.ts`): an imported project could carry
+markup, and the script is not valid XML, which also broke the JPG export. The e2e test puts an
+`<img onerror>` in the subtitle and checks that nothing reaches the page.
+
+**Bugs found by the e2e tests and fixed**: a Zustand selector that returned a fresh `{}` (an
+endless render loop in the layout panel); buttons whose `title` became their accessible name
+("Exportar" was announced as "Ctrl+E"); the profile selector had no proper label; a stale Astro
+dev lock after restarting the container (`astro dev --force`).
+
+**Build**: `astro build` gives a static `dist/` of 30 MB (the compiler WASM is 28 MB, 7 MB with
+brotli). The fonts are emitted twice (once for the worker, once for the Typst export), 0.6 MB.
+
 ## 6. New dependencies (approved 2026-10-30)
 
 - Docker images, **pulled**: `node:24-alpine`, `nginx:alpine`.
@@ -396,6 +429,10 @@ service, so it is left for after the public release, as an explicit user action.
 - Installed in phase 1: `@myriaddreamin/typst-ts-node-compiler` 0.7.0, `vitest` 4.1.12 (dev).
   No ZIP or JSON Schema library: both are small enough to keep in `packages/core`.
 - Installed in phase 2: `docx` 9.12.0.
+- Installed in phase 3: `@astrojs/react` 7.1.0, `react` and `react-dom` 19.1.10, `tailwindcss`
+  and `@tailwindcss/vite` 4.3.3, `zustand` 5.0.15, `zundo` 2.3.0, `@dnd-kit/core` 6.3.1,
+  `@dnd-kit/sortable` 10.0.0, `@dnd-kit/utilities` 3.2.2, `@playwright/test` 1.64.1 (dev; no
+  browsers downloaded, the tests use the Chrome on the host).
 - Still to install, each in the phase that needs it (npm needs the workspace; Rust and
   `webkit2gtk-4.1` are system packages installed with pkexec, with Bautista at the PC):
 - npm (inside the container only): `astro`, `@astrojs/react`, `@vite-pwa/astro`, `react`,

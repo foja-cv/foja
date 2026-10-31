@@ -117,7 +117,8 @@
 #let mono-contacts = ("email", "website", "github", "linkedin")
 #let contact-value(kind) = {
   let value = project.contacts.at(kind)
-  if kind in mono-contacts { text(font: "Latin Modern Mono 9", value) } else { value }
+  // Addresses never get a hyphen; they may break after a slash.
+  if kind in mono-contacts { text(font: "Latin Modern Mono 9", hyphenate: false, value.replace("/", "/" + sym.zws)) } else { value }
 }
 
 #let photo(width) = {

@@ -4,15 +4,25 @@
   "license": "GPL-3.0-only",
   "type": "module",
   "scripts": {
-    "dev": "astro dev --host 0.0.0.0",
+    "dev": "astro dev --host 0.0.0.0 --force",
     "build": "astro build"
   },
   "dependencies": {
+    "@astrojs/react": "7.1.0",
+    "@dnd-kit/core": "6.3.1",
+    "@dnd-kit/sortable": "10.0.0",
+    "@dnd-kit/utilities": "3.2.2",
     "@foja/core": "*",
     "@foja/template": "*",
     "@myriaddreamin/typst-ts-renderer": "0.7.0",
     "@myriaddreamin/typst-ts-web-compiler": "0.7.0",
     "@myriaddreamin/typst.ts": "0.7.0",
-    "astro": "7.4.0"
+    "@tailwindcss/vite": "4.3.3",
+    "astro": "7.4.0",
+    "react": "19.1.10",
+    "react-dom": "19.1.10",
+    "tailwindcss": "4.3.3",
+    "zundo": "2.3.0",
+    "zustand": "5.0.15"
   }
 }

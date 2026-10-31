@@ -1,0 +1,102 @@
+{
+  "format": "foja/2",
+  "language": "es",
+  "person": { "givenNames": ["Lucía"], "familyNames": ["Romero"], "photo": null },
+  "contacts": {
+    "phone": "+54 11 5555-0100",
+    "email": "lucia.romero@example.com",
+    "github": "github.com/lucia-romero-ejemplo",
+    "location": "Córdoba, Argentina"
+  },
+  "skills": {
+    "lenguajes": { "title": "Lenguajes", "items": ["TypeScript", "Python", "SQL", "Go"] },
+    "herramientas": { "title": "Herramientas", "items": ["React", "PostgreSQL", "Docker", "Git"] },
+    "idiomas": { "title": "Idiomas", "items": ["Español (nativo)", "Inglés (C1)", "Portugués (B1)"] }
+  },
+  "entries": {
+    "nube-sur": {
+      "title": "Desarrolladora full stack",
+      "place": "Nube Sur (empresa ficticia)",
+      "start": "2023-03",
+      "end": null,
+      "items": [
+        { "heading": "Facturación", "text": "Rediseño del módulo de facturación en TypeScript y PostgreSQL; los tiempos de respuesta bajaron a la mitad." },
+        { "heading": "Calidad", "text": "Introduje pruebas de integración y revisión de código en un equipo de seis personas." },
+        { "text": "Acompañamiento de dos desarrolladores junior en su primer año." }
+      ]
+    },
+    "datos-abiertos": {
+      "title": "Pasante de desarrollo",
+      "place": "Observatorio de Datos Abiertos (ficticio)",
+      "start": "2022-02",
+      "end": "2022-12",
+      "items": [
+        { "text": "Limpieza y publicación de conjuntos de datos con **Python** y pandas." },
+        { "text": "Tablero de indicadores con React para el sitio institucional." }
+      ]
+    },
+    "ayudantia": {
+      "title": "Ayudante de cátedra, Algoritmos",
+      "place": "Universidad Nacional de Córdoba",
+      "start": "2021-03",
+      "end": "2023-12",
+      "items": [
+        { "text": "Clases prácticas de estructuras de datos para grupos de 40 estudiantes." },
+        { "text": "Corrección de parciales y armado de guías de ejercicios." }
+      ]
+    },
+    "licenciatura": {
+      "title": "Licenciatura en Ciencias de la Computación",
+      "place": "Universidad Nacional de Córdoba",
+      "start": "2018-03",
+      "end": "2023-12",
+      "note": "Promedio 8,7"
+    },
+    "curso-ux": {
+      "title": "Diseño de interfaces accesibles",
+      "place": "Curso en línea, 40 horas",
+      "start": "2024-06"
+    },
+    "biblioteca": {
+      "title": "Catálogo de la biblioteca barrial",
+      "place": "Proyecto voluntario · TypeScript · SQLite"
+    }
+  },
+  "profiles": {
+    "desarrolladora": {
+      "name": "Desarrolladora",
+      "subtitle": "Desarrolladora full stack",
+      "contacts": ["phone", "email", "github", "location"],
+      "skills": [["lenguajes", "herramientas"], ["idiomas"]],
+      "summary": "Desarrolladora con cuatro años de experiencia en aplicaciones web. Me interesan los sistemas que duran: código claro, pruebas y documentación que otra persona pueda seguir.",
+      "sections": [
+        { "id": "experiencia", "title": "Experiencia", "blocks": [{ "type": "entry", "entry": "nube-sur" }, { "type": "entry", "entry": "datos-abiertos" }] },
+        { "id": "formacion", "title": "Formación", "compact": true, "blocks": [{ "type": "entry", "entry": "licenciatura" }, { "type": "entry", "entry": "curso-ux" }] },
+        {
+          "id": "fortalezas",
+          "title": "Fortalezas",
+          "column": "side",
+          "blocks": [
+            { "type": "item", "heading": "Orden", "text": "Divido los problemas grandes en pasos que se pueden revisar." },
+            { "type": "item", "heading": "Comunicación", "text": "Explico decisiones técnicas a personas que no programan." }
+          ]
+        },
+        { "id": "proyectos", "title": "Proyectos", "column": "side", "blocks": [{ "type": "entry", "entry": "biblioteca" }] }
+      ]
+    },
+    "docente": {
+      "name": "Docente",
+      "subtitle": "Docente de programación",
+      "highlight": { "title": "Postulación", "text": "Introducción a la programación" },
+      "contacts": ["email", "location"],
+      "skills": [["lenguajes"], ["idiomas"]],
+      "summary": "Ayudante de cátedra durante tres años y desarrolladora en actividad: enseño con ejemplos del trabajo real.",
+      "sections": [
+        { "id": "docencia", "title": "Experiencia docente", "blocks": [{ "type": "entry", "entry": "ayudantia" }] },
+        { "id": "experiencia", "title": "Experiencia profesional", "compact": true, "blocks": [{ "type": "entry", "entry": "nube-sur" }, { "type": "entry", "entry": "datos-abiertos" }] },
+        { "id": "formacion", "title": "Formación", "compact": true, "blocks": [{ "type": "entry", "entry": "licenciatura" }, { "type": "entry", "entry": "curso-ux" }] }
+      ],
+      "layout": { "accent": "#2e7d5b", "photo": "none" }
+    }
+  }
+}

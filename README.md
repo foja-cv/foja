@@ -26,7 +26,10 @@ docker compose run --rm web npm test                # tests
 docker compose run --rm web npm run foja -- build examples/curriculum.project.json --out .out
 ```
 
-Open <http://127.0.0.1:8090/>. `node scripts/bench.mjs` measures the compile time per change in
+`scripts/e2e.sh` runs the end-to-end tests (Playwright in the container, driving the Chrome
+installed on the host) against the running dev stack.
+
+Open <http://127.0.0.1:8090/editor>. `node scripts/bench.mjs` measures the compile time per change in
 headless Chrome (`/spike?bench=N`).
 
 ## Licence

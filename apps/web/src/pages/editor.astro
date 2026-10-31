@@ -1,0 +1,10 @@
+---
+import Base from "../layouts/Base.astro";
+import App from "../editor/App";
+---
+
+<Base title="Foja — editor">
+  <div id="app" class="h-full">
+    <App client:only="react" />
+  </div>
+</Base>

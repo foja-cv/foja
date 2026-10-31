@@ -1,0 +1,19 @@
+---
+import Base from "../layouts/Base.astro";
+const base = import.meta.env.BASE_URL.replace(/\/?$/, "/");
+---
+
+<Base title="Foja — tu CV en Typst, sin escribir código">
+  <main class="mx-auto flex min-h-full max-w-2xl flex-col justify-center gap-6 p-6">
+    <h1 class="text-4xl font-semibold">Foja</h1>
+    <p class="text-lg">
+      Un editor de CV sobre <a class="underline" href="https://typst.app">Typst</a>: formularios en lugar de código, una vista previa
+      que es la salida real de Typst y exportación a PDF, JPG, Word, LaTeX, Markdown, JSON y Typst.
+    </p>
+    <p>Todo corre en tu navegador: tus datos no salen de tu computadora.</p>
+    <p><a class="inline-block rounded bg-sky-700 px-4 py-2 text-white hover:bg-sky-800" href={`${base}editor`}>Abrir el editor</a></p>
+    <p class="text-sm text-neutral-600 dark:text-neutral-400">
+      Software libre (GPL-3.0): <a class="underline" href="https://github.com/foja-cv/foja">github.com/foja-cv/foja</a>
+    </p>
+  </main>
+</Base>

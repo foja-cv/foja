@@ -2,3 +2,5 @@ node_modules/
 dist/
 .astro/
 .out/
+test-results/
+playwright-report/

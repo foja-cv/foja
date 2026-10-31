@@ -1,6 +1,8 @@
 // JPG export in the browser: the Typst SVG drawn on a canvas, one JPEG per page. The Node addon
 // has no raster output, so this exists only here.
 
+import { cleanSvg } from "./svg";
+
 export interface PageBox {
   y: number;
   width: number;
@@ -15,8 +17,7 @@ export function pageBoxes(svg: string): PageBox[] {
 }
 
 export async function svgToJpegs(svg: string, dpi = 150, quality = 0.92): Promise<Uint8Array[]> {
-  // The text-selection layer is HTML in <foreignObject>, which would taint the canvas.
-  const clean = svg.replace(/<foreignObject[\s\S]*?<\/foreignObject>/g, "");
+  const clean = cleanSvg(svg);
   const total = { width: Number(/data-width="([\d.]+)"/.exec(svg)?.[1]), height: Number(/data-height="([\d.]+)"/.exec(svg)?.[1]) };
   const url = URL.createObjectURL(new Blob([clean], { type: "image/svg+xml" }));
   try {
