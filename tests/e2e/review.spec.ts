@@ -60,3 +60,32 @@ test("a second tab does not edit at the same time, and can take over", async ({ 
   await expect(second.getByLabel("Subtítulo")).toBeVisible();
   await expect(page.getByText("Foja se abrió en otra pestaña")).toBeVisible();
 });
+
+test("a long CV updates page by page and ends up as a full render would", async ({ page }) => {
+  const { readFileSync } = await import("node:fs");
+  const long = JSON.parse(readFileSync("examples/example.project.json", "utf8"));
+  const exp = long.profiles.desarrolladora.sections[0];
+  exp.blocks = Array.from({ length: 10 }, () => exp.blocks).flat();
+  await page.goto("/editor");
+  await page.getByText("Importar JSON").locator("input").setInputFiles({ name: "long.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify(long)) });
+  await expect(page.getByTestId("page-badge")).toContainText(/páginas/);
+  const subtitle = page.getByLabel("Subtítulo");
+  for (const text of ["Ingeniera", "Ingeniera de datos", "Otra cosa"]) {
+    const before = await page.evaluate(() => (globalThis as any).__fojaPreview.getState().renderedId);
+    await subtitle.fill(text);
+    await page.waitForFunction((b) => (globalThis as any).__fojaPreview.getState().renderedId > b, before);
+  }
+  await page.waitForTimeout(300);
+  const same = await page.evaluate(() => {
+    const svg: string = (globalThis as any).__fojaPreview.getState().svg;
+    const fresh = new DOMParser().parseFromString(svg.replace(/<script[\s\S]*?<\/script>/g, "").replace(/<foreignObject[\s\S]*?<\/foreignObject>/g, ""), "image/svg+xml");
+    const shown = document.querySelector(".foja-page svg")!;
+    const count = (root: ParentNode, sel: string) => root.querySelectorAll(sel).length;
+    return {
+      pages: [count(shown, ".typst-page"), count(fresh, ".typst-page")],
+      glyphs: [count(shown, "use"), count(fresh, "use")],
+    };
+  });
+  expect(same.pages[0]).toBe(same.pages[1]);
+  expect(same.glyphs[0]).toBe(same.glyphs[1]);
+});

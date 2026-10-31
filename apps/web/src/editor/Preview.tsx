@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { markBoxes, overflowLines, partAt, type MarkedBox } from "@foja/core";
 import { pageBoxes } from "../lib/jpg";
 import { cleanSvg } from "../lib/svg";
+import { SvgView } from "./SvgView";
 import { t } from "./i18n";
 import { usePreview } from "./preview";
 import { pathsForSelection, selectionForPath } from "./selection";
@@ -102,7 +103,7 @@ export function Preview() {
         {svg ? (
           <div ref={sheet} className="relative mx-auto max-w-3xl cursor-pointer" onClick={onClick} title={t.clickToEdit}>
             {/* The SVG comes from our compiler worker, cleaned (see safeSvg). */}
-            <div className="foja-page" dangerouslySetInnerHTML={{ __html: html }} />
+            <SvgView svg={html} />
             {scale > 0 &&
               overflowing.map((b, i) => (
                 <div key={`o${i}`} data-testid="overflow-box" className="pointer-events-none absolute rounded-sm bg-red-500/10 ring-1 ring-red-500/60" style={place(b)} />
