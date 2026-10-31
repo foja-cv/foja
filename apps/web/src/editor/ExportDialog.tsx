@@ -3,7 +3,8 @@ import type { ExportFormat, ExportedFile } from "@foja/core/export";
 import { svgToJpegs } from "../lib/jpg";
 import { download } from "./download";
 import { t } from "./i18n";
-import { compilePdf, usePreview } from "./preview";
+import { styleOf } from "@foja/core";
+import { compilePdf, renderThumb } from "./preview";
 import { useEditor } from "./store";
 import { templateFiles } from "./template";
 
@@ -25,8 +26,10 @@ async function build(format: Choice, dpi: number): Promise<ExportedFile> {
   const stem = exportStem(project!, profileId);
   const pdf = async (): Promise<ExportedFile> => ({ name: `${stem}.pdf`, mime: "application/pdf", data: await compilePdf(project!, profileId) });
   const jpgs = async (): Promise<ExportedFile[]> => {
-    const svg = usePreview.getState().svg;
-    if (!svg) throw new Error(t.loadingCompiler);
+    // A fresh render of this very project and profile, not the preview (which can lag behind or
+    // be the last good one before an error).
+    const svg = await renderThumb(project!, profileId, styleOf(project!, profileId).id);
+    if (!svg) throw new Error(t.compileError);
     const pages = await svgToJpegs(svg, dpi);
     return pages.map((data, i) => ({ name: pages.length === 1 ? `${stem}.jpg` : `${stem}-${i + 1}.jpg`, mime: "image/jpeg", data }));
   };
@@ -87,6 +90,7 @@ export function ExportDialog({ onClose }: { onClose: () => void }) {
       >
         <h2 className="text-lg font-semibold">{t.exportTitle}</h2>
         <fieldset className="flex flex-col gap-1">
+          <legend className="sr-only">{t.format}</legend>
           {CHOICES.map((f) => (
             <label key={f} className="flex items-center gap-2 text-sm">
               <input type="radio" name="format" value={f} checked={choice.format === f} onChange={() => setChoice({ ...choice, format: f })} />

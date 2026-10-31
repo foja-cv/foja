@@ -4,6 +4,7 @@
 import { create } from "zustand";
 import type { Mark, Project, StyleGeometry } from "@foja/core";
 import type { WorkerReply, WorkerRequest } from "../lib/typst.worker";
+import { t } from "./i18n";
 import { useEditor } from "./store";
 
 export interface PreviewState {
@@ -31,11 +32,32 @@ let nextId = 1;
 const pdfWaiting = new Map<number, (reply: Extract<WorkerReply, { type: "pdf" }>) => void>();
 const thumbWaiting = new Map<number, (svg: string | undefined) => void>();
 
+// A style is code and can be slow (or loop for ever): a job that has not answered in this long
+// gets the worker replaced, with an error shown, instead of a preview and exports stuck for good.
+const WATCHDOG_MS = 20_000;
+let watchdog: ReturnType<typeof setTimeout> | undefined;
+
+function restart() {
+  worker?.terminate();
+  worker = undefined;
+  for (const [, reply] of pdfWaiting) reply({ type: "pdf", id: 0, errors: [t.workerTimeout] });
+  pdfWaiting.clear();
+  for (const [, resolve] of thumbWaiting) resolve(undefined);
+  thumbWaiting.clear();
+  usePreview.setState({ ready: false, errors: [t.workerTimeout] });
+  start();
+}
+
 function start(): Worker {
   if (worker) return worker;
   worker = new Worker(new URL("../lib/typst.worker.ts", import.meta.url), { type: "module" });
   worker.onerror = (event) => usePreview.setState({ failed: event.message || "the compiler did not load" });
   worker.onmessage = ({ data }: MessageEvent<WorkerReply>) => {
+    clearTimeout(watchdog);
+    if (data.type === "working") {
+      watchdog = setTimeout(restart, WATCHDOG_MS);
+      return;
+    }
     if (data.type === "ready") usePreview.setState({ ready: true });
     else if (data.type === "failed") usePreview.setState({ failed: data.error });
     else if (data.type === "thumb") {

@@ -4,6 +4,18 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 
 export function Field({ label, problem, hint, children }: { label: string; problem?: string; hint?: string; children: (id: string) => ReactNode }) {
   const id = useId();
+  // Tie the problem to the control (aria-describedby, aria-invalid) whatever control it is.
+  useEffect(() => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (problem) {
+      el.setAttribute("aria-invalid", "true");
+      el.setAttribute("aria-describedby", `${id}-problem`);
+    } else {
+      el.removeAttribute("aria-invalid");
+      el.removeAttribute("aria-describedby");
+    }
+  }, [id, problem]);
   return (
     <div className="flex flex-col gap-1">
       <label htmlFor={id} className="text-xs font-medium text-muted">
@@ -12,7 +24,7 @@ export function Field({ label, problem, hint, children }: { label: string; probl
       {children(id)}
       {hint && <p className="text-xs text-muted">{hint}</p>}
       {problem && (
-        <p role="alert" className="text-xs text-red-700 dark:text-red-400">
+        <p id={`${id}-problem`} aria-live="polite" className="text-xs text-danger">
           {problem}
         </p>
       )}
@@ -23,7 +35,7 @@ export function Field({ label, problem, hint, children }: { label: string; probl
 const control =
   "w-full rounded border border-line bg-surface px-2 py-1 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent";
 
-export function TextInput({ id, value, onChange, placeholder, type = "text", invalid }: { id?: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; invalid?: boolean }) {
+export function TextInput({ id, value, onChange, placeholder, type = "text", invalid, label }: { id?: string; value: string; onChange: (v: string) => void; placeholder?: string; type?: string; invalid?: boolean; label?: string }) {
   return (
     <input
       id={id}
@@ -32,13 +44,29 @@ export function TextInput({ id, value, onChange, placeholder, type = "text", inv
       value={value}
       placeholder={placeholder}
       aria-invalid={invalid || undefined}
+      aria-label={label}
       onChange={(e) => onChange(e.target.value)}
     />
   );
 }
 
-export function TextArea({ id, value, onChange, rows = 3 }: { id?: string; value: string; onChange: (v: string) => void; rows?: number }) {
-  return <textarea id={id} rows={rows} className={control + " resize-y"} value={value} onChange={(e) => onChange(e.target.value)} />;
+export function TextArea({ id, value, onChange, rows = 3, label }: { id?: string; value: string; onChange: (v: string) => void; rows?: number; label?: string }) {
+  return <textarea id={id} rows={rows} aria-label={label} className={control + " resize-y"} value={value} onChange={(e) => onChange(e.target.value)} />;
+}
+
+/** Closes a menu on Escape or on a click outside `ref`. */
+export function useDismiss(ref: React.RefObject<HTMLElement | null>, open: boolean, close: () => void) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && close();
+    const onDown = (e: PointerEvent) => ref.current && !ref.current.contains(e.target as Node) && close();
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("pointerdown", onDown);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("pointerdown", onDown);
+    };
+  }, [open]);
 }
 
 export function Select<T extends string | number>({ id, value, options, onChange }: { id?: string; value: T; options: [T, string][]; onChange: (v: T) => void }) {
@@ -68,7 +96,7 @@ export function Check({ label, checked, onChange }: { label: string; checked: bo
 }
 
 /** `label` names a button whose content is a symbol (↑, ✕); `title` is only a tooltip. */
-export function Button({ children, onClick, variant = "plain", title, label, disabled, type = "button" }: { children: ReactNode; onClick?: () => void; variant?: "plain" | "primary" | "danger" | "ghost"; title?: string; label?: string; disabled?: boolean; type?: "button" | "submit" }) {
+export function Button({ children, onClick, variant = "plain", title, label, disabled, type = "button", expanded }: { children: ReactNode; onClick?: () => void; variant?: "plain" | "primary" | "danger" | "ghost"; title?: string; label?: string; disabled?: boolean; type?: "button" | "submit"; expanded?: boolean }) {
   const styles = {
     plain: "border border-line bg-surface hover:bg-surface-2",
     primary: "bg-accent text-on-accent hover:opacity-90",
@@ -76,7 +104,7 @@ export function Button({ children, onClick, variant = "plain", title, label, dis
     ghost: "hover:bg-surface-2",
   }[variant];
   return (
-    <button type={type} title={title ?? label} aria-label={label} disabled={disabled} onClick={onClick} className={`rounded px-2 py-1 text-sm disabled:opacity-40 ${styles}`}>
+    <button type={type} title={title ?? label} aria-label={label} aria-expanded={expanded} disabled={disabled} onClick={onClick} className={`rounded px-2 py-1 text-sm disabled:opacity-40 ${styles}`}>
       {children}
     </button>
   );

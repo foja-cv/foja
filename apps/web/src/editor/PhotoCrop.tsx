@@ -45,7 +45,11 @@ export function PhotoCrop({ src, onDone, onCancel }: { src: string; onDone: (jpe
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(out);
     canvas.height = Math.round(out / aspect);
-    canvas.getContext("2d")!.drawImage(img, crop.x, crop.y, crop.w, crop.h, 0, 0, canvas.width, canvas.height);
+    const ctx = canvas.getContext("2d")!;
+    // JPEG has no transparency: a transparent PNG gets a white background, not black.
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, crop.x, crop.y, crop.w, crop.h, 0, 0, canvas.width, canvas.height);
     canvas.toBlob(async (blob) => blob && onDone(new Uint8Array(await blob.arrayBuffer())), "image/jpeg", 0.9);
   }
 
@@ -55,6 +59,17 @@ export function PhotoCrop({ src, onDone, onCancel }: { src: string; onDone: (jpe
         <h2 className="text-lg font-semibold">{t.crop.title}</h2>
         <div
           data-testid="crop-frame"
+          tabIndex={0}
+          role="application"
+          aria-label={`${t.crop.title}. ${t.crop.hint}`}
+          onKeyDown={(e) => {
+            const step = 0.02;
+            const moves: Record<string, [number, number]> = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
+            const m = moves[e.key];
+            if (!m) return;
+            e.preventDefault();
+            setCenter((c) => ({ x: Math.min(1, Math.max(0, c.x + m[0])), y: Math.min(1, Math.max(0, c.y + m[1])) }));
+          }}
           className="relative cursor-move touch-none overflow-hidden rounded bg-desk"
           style={{ width: view, height: view / aspect }}
           onPointerDown={(e) => {

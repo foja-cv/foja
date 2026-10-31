@@ -118,6 +118,12 @@ describe("styles of one's own", () => {
     }
   });
 
+  test("an incomplete date does not break the layout", () => {
+    const p = structuredClone(example);
+    p.entries[Object.keys(p.entries)[0]].end = "";
+    expect(new Typst(p).compile("desarrolladora").numOfPages).toBeGreaterThanOrEqual(1);
+  });
+
   test("a style with a Typst error reports it", () => {
     const p = structuredClone(example);
     p.templates = { roto: { name: "Roto", source: '#import "/lib.typ": *\n#cv.nope' } };

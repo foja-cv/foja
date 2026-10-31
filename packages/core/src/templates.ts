@@ -17,20 +17,21 @@ export const DEFAULT_STYLE = "legajo";
 export const LIB_PATH = "/lib.typ";
 
 export const isBuiltinStyle = (id: string) => BUILTIN_STYLES.some((s) => s.id === id);
+const ownStyle = (project: Project, id: string) => !!project.templates && Object.hasOwn(project.templates, id);
 export const builtinStylePath = (id: string) => `/styles/${id}.typ`;
 export const customStylePath = (id: string) => `/custom/${id}.typ`;
 
 /** The style a profile uses, falling back to the default when it names one that is missing. */
 export function styleOf(project: Project, profileId: string): { id: string; custom: boolean; path: string } {
   const id = project.profiles[profileId]?.layout?.template ?? DEFAULT_STYLE;
-  if (project.templates?.[id]) return { id, custom: true, path: customStylePath(id) };
+  if (ownStyle(project, id)) return { id, custom: true, path: customStylePath(id) };
   if (isBuiltinStyle(id)) return { id, custom: false, path: builtinStylePath(id) };
   return { id: DEFAULT_STYLE, custom: false, path: builtinStylePath(DEFAULT_STYLE) };
 }
 
 /** The main file of a style by id (built-in or the user's), whichever profile uses it. */
 export function stylePath(project: Project, id: string): string {
-  if (project.templates?.[id]) return customStylePath(id);
+  if (ownStyle(project, id)) return customStylePath(id);
   return builtinStylePath(isBuiltinStyle(id) ? id : DEFAULT_STYLE);
 }
 

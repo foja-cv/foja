@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, test } from "vitest";
-import { resolveProfile, imageSize, toBase64, type Project } from "../src/index.ts";
+import { resolveProfile, imageSize, toBase64, validate, type Project } from "../src/index.ts";
 import { bundleExports, escapeLatex, exportFiles, inlineLatex, inlineMarkdown, renderLatex, renderMarkdown } from "../src/export/index.ts";
 
 const example: Project = JSON.parse(readFileSync(new URL("../../../examples/curriculum.project.json", import.meta.url), "utf8"));
@@ -139,5 +139,76 @@ describe("files", () => {
     expect(documentXml).toContain("<w:smallCaps/>");
     expect(documentXml).toMatch(/w:fill="[0-9A-F]{6}"/); // the shaded sidebar
     expect(documentXml).not.toContain('w:val="dotted"');
+  });
+});
+
+describe("hostile or unusual input", () => {
+  test("a contact cannot inject LaTeX", () => {
+    const p = structuredClone(example);
+    p.contacts.email = "a}{x}\\input{/etc/passwd}\\iffalse{";
+    p.contacts.website = "https://ex.com/a b_c~d#e%f&g";
+    p.profiles.programador.contacts = ["email", "website"];
+    const tex = renderLatex(resolveProfile(p, "programador"));
+    const hrefs = [...tex.matchAll(/\\href\{([^}]*)\}/g)].map((m) => m[1]);
+    expect(hrefs).toHaveLength(2);
+    // Only plain characters and escaped percent signs are left.
+    for (const h of hrefs) expect(h.replace(/\\%/g, "%")).toMatch(/^[A-Za-z0-9\-./:?=@+,;%]+$/);
+    expect(tex).not.toContain("\\input{/etc/passwd}");
+  });
+
+  test("ids that are Object.prototype members are not found", () => {
+    const p = structuredClone(example);
+    p.profiles.programador.sections[0].blocks.push({ type: "entry", entry: "constructor" });
+    p.profiles.programador.skills.push(["tostring"]);
+    expect(validate(p).filter((x) => x.severity === "error").map((x) => x.message)).toEqual(['no skill group "tostring"', 'no entry "constructor"']);
+  });
+
+  test("empty texts and a dropped contact are warnings, not errors", () => {
+    const p = structuredClone(example);
+    p.profiles.programador.subtitle = "";
+    p.profiles.programador.sections[0].blocks.push({ type: "item", text: "" });
+    delete p.contacts.phone;
+    const problems = validate(p);
+    expect(problems.length).toBeGreaterThan(0);
+    expect(problems.every((x) => x.severity === "warning")).toBe(true);
+  });
+
+  test("names without Latin letters still give file names", async () => {
+    const p = structuredClone(example);
+    p.person.givenNames = ["Мария"];
+    p.person.familyNames = ["Иванова"];
+    const [md] = await exportFiles(p, "programador", "md");
+    expect(md.name).toBe("cv-programador.md");
+  });
+
+  test("a skill starting with [ or * keeps LaTeX line breaks sound", () => {
+    const p = structuredClone(example);
+    const first = Object.keys(p.skills)[0];
+    p.skills[first].items = ["[C++]", "*nix", "Go"];
+    const tex = renderLatex(resolveProfile(p, "programador"));
+    expect(tex).toContain("[C++]\\\\{}*nix\\\\{}Go");
+    expect(tex).not.toMatch(/\\\\\s*\[C/);
+  });
+
+  test("control characters do not reach the Word XML", async () => {
+    const p = structuredClone(example);
+    p.profiles.programador.summary = "uno\u000bdos\u000ctres";
+    const [docx] = await exportFiles(p, "programador", "docx");
+    const { inflateRawSync } = await import("node:zlib");
+    const view = new DataView(docx.data.buffer, docx.data.byteOffset);
+    let at = 0;
+    let xml = "";
+    while (view.getUint32(at, true) === 0x04034b50) {
+      const method = view.getUint16(at + 8, true);
+      const size = view.getUint32(at + 18, true);
+      const nameLength = view.getUint16(at + 26, true);
+      const extra = view.getUint16(at + 28, true);
+      const name = decoder.decode(docx.data.subarray(at + 30, at + 30 + nameLength));
+      const body = docx.data.subarray(at + 30 + nameLength + extra, at + 30 + nameLength + extra + size);
+      if (name === "word/document.xml") xml = decoder.decode(method === 8 ? inflateRawSync(body) : body);
+      at += 30 + nameLength + extra + size;
+    }
+    expect(xml).toContain("uno dos tres");
+    expect(xml).not.toMatch(/[\u000b\u000c]/);
   });
 });

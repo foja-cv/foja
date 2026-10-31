@@ -47,7 +47,8 @@ function section(s: ResolvedSection): string[] {
 export function renderMarkdown(cv: ResolvedCv): string {
   const out = [`# ${esc(cv.name)}`, "", `**${esc(cv.subtitle)}**`, ""];
   if (cv.contacts.length) {
-    out.push(cv.contacts.map((c) => (c.href && c.kind !== "phone" ? `[${esc(c.value)}](${c.href})` : esc(c.value))).join(" · "), "");
+    const target = (href: string) => href.replace(/[\s()<>]/g, (ch) => encodeURIComponent(ch));
+    out.push(cv.contacts.map((c) => (c.href && c.kind !== "phone" ? `[${esc(c.value)}](${target(c.href)})` : esc(c.value))).join(" · "), "");
   }
   if (cv.highlight) out.push(`**${esc(cv.highlight.title)}:** ${esc(cv.highlight.text)}`, "");
   if (cv.summary) out.push(`## ${esc(cv.labels.profile)}`, "", inlineMarkdown(cv.summary), "");

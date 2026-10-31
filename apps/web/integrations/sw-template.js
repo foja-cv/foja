@@ -9,8 +9,9 @@ self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
       .open(CACHE)
-      .then((cache) => cache.addAll(PRECACHE.map((path) => new URL(path, self.registration.scope).href)))
-      .then(() => self.skipWaiting()),
+      // No skipWaiting: a new version takes over once the open tabs close, so a tab never loses the
+      // files of the version it started with (its lazily loaded chunks would be gone).
+      .then((cache) => cache.addAll(PRECACHE.map((path) => new URL(path, self.registration.scope).href))),
   );
 });
 

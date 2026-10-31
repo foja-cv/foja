@@ -145,7 +145,8 @@
           "data": {
             "type": "string",
             "pattern": "^[A-Za-z0-9+/]*={0,2}$",
-            "description": "Base64."
+            "description": "Base64; at most about 10 MB of image.",
+            "maxLength": 14000000
           }
         }
       }
@@ -441,7 +442,8 @@
         "labels": {
           "enum": [
             "es",
-            "en"
+            "en",
+            "pt"
           ]
         }
       }

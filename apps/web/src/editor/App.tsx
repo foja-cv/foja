@@ -1,7 +1,7 @@
 // The editor island: header (profiles, history, saving, export), navigation, the panel of the
 // selection and the live preview.
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { profileName } from "@foja/core";
 import { ExportDialog } from "./ExportDialog";
 import { ContactsForm } from "./forms/Contacts";
@@ -16,9 +16,9 @@ import { t, useLanguage } from "./i18n";
 import { connectPreview, usePreview } from "./preview";
 import { overflowingSections } from "./selection";
 import { emptyProject, exampleProject, newProfile } from "./projects";
-import { loadSaved, save } from "./storage";
+import { loadPrevious, loadSaved, save } from "./storage";
 import { redo, undo, useEditor, type Selection } from "./store";
-import { Button, move } from "./ui";
+import { Button, move, useDismiss } from "./ui";
 import { SortableItem, SortableList } from "./Sortable";
 import { ImportButton, Welcome } from "./Welcome";
 import { Preview } from "./Preview";
@@ -87,9 +87,32 @@ function useShortcuts(openExport: () => void, openPalette: () => void) {
   }, [openExport, openPalette]);
 }
 
+/** One editor per browser: two tabs would overwrite each other's autosave. The first tab holds
+ * a Web Lock; another one says so and can take over (the first then stops editing). */
+function useSingleTab(): ["ok" | "elsewhere" | "taken", () => void] {
+  const [state, setState] = useState<"ok" | "elsewhere" | "taken">("ok");
+  const hold = (steal: boolean) => {
+    if (!("locks" in navigator)) return;
+    navigator.locks
+      .request("foja-editor", steal ? { steal: true } : { ifAvailable: true }, (lock) => {
+        if (!lock) {
+          setState("elsewhere");
+          return;
+        }
+        setState("ok");
+        if (steal) void loadSaved().then((saved) => saved && useEditor.getState().load(saved.project, saved.profileId));
+        return new Promise<void>(() => undefined); // held while the tab lives
+      })
+      .catch(() => setState("taken")); // another tab took over
+  };
+  useEffect(() => hold(false), []);
+  return [state, () => hold(true)];
+}
+
 export default function App() {
   const project = useEditor((s) => s.project);
   const [booted, setBooted] = useState(false);
+  const [tab, takeOver] = useSingleTab();
 
   useEffect(() => {
     loadSaved()
@@ -109,6 +132,19 @@ export default function App() {
   // A change of interface language renders everything again with the new strings.
   const lang = useLanguage((s) => s.lang);
   if (!booted) return null;
+  if (tab !== "ok") {
+    return (
+      <main className="mx-auto flex min-h-full max-w-lg flex-col justify-center gap-4 p-6">
+        <h1 className="text-2xl font-semibold">{tab === "taken" ? t.tabs.takenTitle : t.tabs.elsewhereTitle}</h1>
+        <p className="text-muted">{t.tabs.text}</p>
+        <div>
+          <Button variant="primary" onClick={takeOver}>
+            {t.tabs.useHere}
+          </Button>
+        </div>
+      </main>
+    );
+  }
   if (!project) return <Welcome key={lang} />;
   return <Editor key={lang} />;
 }
@@ -175,6 +211,11 @@ function TopBar({ onExport }: { onExport: () => void }) {
   const [confirming, setConfirming] = useState(false);
   const [projectMenu, setProjectMenu] = useState(false);
   const [more, setMore] = useState(false);
+  const [hasPrevious, setHasPrevious] = useState(false);
+  const projectBox = useRef<HTMLDivElement>(null);
+  const moreBox = useRef<HTMLDivElement>(null);
+  useDismiss(projectBox, projectMenu, () => setProjectMenu(false));
+  useDismiss(moreBox, more, () => setMore(false));
   const [importError, setImportError] = useState<string>();
   const ids = Object.keys(project.profiles);
 
@@ -244,14 +285,23 @@ function TopBar({ onExport }: { onExport: () => void }) {
       {/* Secondary actions: inline on wide screens, a "more" menu on narrow ones. */}
       <div
         id="more-actions"
+        ref={moreBox}
         className={`${more ? "flex" : "hidden"} absolute top-full right-2 z-30 mt-1 w-64 flex-col items-stretch gap-1 rounded-lg border border-line bg-surface p-2 shadow-lg lg:contents`}
       >
         <Button onClick={addProfile}>+ {t.newProfile}</Button>
         <Button onClick={duplicate}>{t.duplicate}</Button>
         {deleteControls}
         <span className="hidden lg:ml-auto lg:block" />
-        <div className="relative">
-          <Button onClick={() => setProjectMenu(!projectMenu)}>{t.project} ▾</Button>
+        <div className="relative" ref={projectBox}>
+          <Button
+            expanded={projectMenu}
+            onClick={() => {
+              if (!projectMenu) void loadPrevious().then((p) => setHasPrevious(!!p)).catch(() => undefined);
+              setProjectMenu(!projectMenu);
+            }}
+          >
+            {t.project} ▾
+          </Button>
           {projectMenu && (
             <div className="absolute right-0 z-10 mt-1 flex w-56 flex-col gap-1 rounded border border-line bg-surface p-2 shadow-lg">
               <Button variant="ghost" onClick={() => (load(emptyProject()), setProjectMenu(false))}>
@@ -260,6 +310,18 @@ function TopBar({ onExport }: { onExport: () => void }) {
               <Button variant="ghost" onClick={() => (load(exampleProject()), setProjectMenu(false))}>
                 {t.startExample}
               </Button>
+              {hasPrevious && (
+                <Button
+                  variant="ghost"
+                  onClick={async () => {
+                    const previous = await loadPrevious();
+                    if (previous) load(previous.project, previous.profileId);
+                    setProjectMenu(false);
+                  }}
+                >
+                  {t.restorePrevious}
+                </Button>
+              )}
               <ImportButton
                 className="cursor-pointer rounded px-2 py-1 text-sm hover:bg-surface-2"
                 onError={(m) => {
@@ -291,7 +353,7 @@ function TopBar({ onExport }: { onExport: () => void }) {
           ↷
         </Button>
         <span className="lg:hidden">
-          <Button variant="ghost" label={t.more} onClick={() => setMore(!more)}>
+          <Button variant="ghost" label={t.more} expanded={more} onClick={() => setMore(!more)}>
             ⋯
           </Button>
         </span>

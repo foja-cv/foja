@@ -47,7 +47,7 @@ export function SectionForm({ index }: { index: number }) {
     return (
       <div key={i} className="flex gap-2 rounded border border-line p-2">
         <div className="flex-1">
-          <TextArea rows={3} value={block.text} onChange={(v) => editBlock((b) => ((b as { text: string }).text = v))} />
+          <TextArea rows={3} label={t.sectionKinds.paragraph} value={block.text} onChange={(v) => editBlock((b) => ((b as { text: string }).text = v))} />
         </div>
         {controls}
       </div>

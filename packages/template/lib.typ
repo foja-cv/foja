@@ -33,6 +33,8 @@
 
 /// `2026-05` in the profile's date format: `05/2026`, `may 2026` or `2026`.
 #let month(value) = {
+  // An incomplete date (the editor may store one while it is being typed) shows as is.
+  if type(value) != str or value.split("-").len() != 2 { return if type(value) == str { value } else { "" } }
   let (year, m) = value.split("-")
   let format = opt("dateFormat", "MM/YYYY")
   if format == "YYYY" { year } else if format == "MMM YYYY" { labels.months.at(int(m) - 1) + " " + year } else {

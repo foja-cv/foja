@@ -4,7 +4,20 @@
     "contact": "Contacto",
     "skills": "Habilidades",
     "present": "actualidad",
-    "months": ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"],
+    "months": [
+      "ene",
+      "feb",
+      "mar",
+      "abr",
+      "may",
+      "jun",
+      "jul",
+      "ago",
+      "sep",
+      "oct",
+      "nov",
+      "dic"
+    ],
     "contacts": {
       "phone": "Teléfono",
       "email": "Correo",
@@ -19,7 +32,20 @@
     "contact": "Contact",
     "skills": "Skills",
     "present": "present",
-    "months": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    "months": [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec"
+    ],
     "contacts": {
       "phone": "Phone",
       "email": "Email",
@@ -27,6 +53,34 @@
       "github": "GitHub",
       "linkedin": "LinkedIn",
       "location": "Location"
+    }
+  },
+  "pt": {
+    "profile": "Perfil",
+    "contact": "Contato",
+    "skills": "Competências",
+    "present": "atual",
+    "months": [
+      "jan",
+      "fev",
+      "mar",
+      "abr",
+      "mai",
+      "jun",
+      "jul",
+      "ago",
+      "set",
+      "out",
+      "nov",
+      "dez"
+    ],
+    "contacts": {
+      "phone": "Telefone",
+      "email": "E-mail",
+      "website": "Site",
+      "github": "GitHub",
+      "linkedin": "LinkedIn",
+      "location": "Localização"
     }
   }
 }

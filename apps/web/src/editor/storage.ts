@@ -36,3 +36,9 @@ export interface Saved {
 export const loadSaved = () => run<Saved | undefined>("readonly", (s) => s.get(KEY));
 export const save = (saved: Saved) => run("readwrite", (s) => s.put(saved, KEY));
 export const clearSaved = () => run("readwrite", (s) => s.delete(KEY));
+
+// The project that a new one, the example or an import replaced: one step back, kept until the
+// next replacement.
+const PREVIOUS = "previous";
+export const loadPrevious = () => run<Saved | undefined>("readonly", (s) => s.get(PREVIOUS));
+export const savePrevious = (saved: Saved) => run("readwrite", (s) => s.put(saved, PREVIOUS));

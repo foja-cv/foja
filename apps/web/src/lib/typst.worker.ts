@@ -37,6 +37,8 @@ export type WorkerRequest =
 
 export type WorkerReply =
   | { type: "ready"; initMs: number }
+  /** A job started: the page restarts the worker if no reply follows in time. */
+  | { type: "working" }
   | { type: "failed"; error: string }
   | {
       type: "render";
@@ -176,6 +178,7 @@ async function drain() {
   busy = true;
   await ready;
   while (pendingRender || exports.length || thumbs.size) {
+    postMessage({ type: "working" } satisfies WorkerReply);
     const next = exports.shift();
     if (next) {
       const reply = await pdf(next).catch((e): WorkerReply => ({ type: "pdf", id: next.id, errors: [errorText(e)] }));

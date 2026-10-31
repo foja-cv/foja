@@ -63,7 +63,7 @@ export interface Layout {
   paper?: "a4" | "us-letter";
   dateFormat?: "MM/YYYY" | "MMM YYYY" | "YYYY";
   /** Language of the fixed labels; defaults to the project language. */
-  labels?: "es" | "en";
+  labels?: "es" | "en" | "pt";
 }
 
 export interface Profile {

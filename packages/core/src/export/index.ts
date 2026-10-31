@@ -1,7 +1,7 @@
 // Every export of a profile, by format. PDF and JPG come from the Typst compiler, which lives in
 // the caller (a web worker, the Node addon); everything else is built here.
 
-import { fullName, slug } from "../project.ts";
+import { fileStem } from "../project.ts";
 import { resolveProfile } from "../resolve.ts";
 import type { Project } from "../types.ts";
 import { typstBundle, type TemplateFiles } from "../bundle.ts";
@@ -29,7 +29,7 @@ const encoder = new TextEncoder();
 
 /** `bautista-fiori-programador`: the stem of every exported file. */
 export function exportStem(project: Project, profileId: string): string {
-  return `${slug(fullName(project))}-${profileId}`;
+  return `${fileStem(project)}-${profileId}`;
 }
 
 /** The exports that need no compiler. `typ` needs the template files. */
@@ -50,7 +50,7 @@ export async function exportFiles(
       return [{ name: `${stem}.md`, mime: "text/markdown", data: encoder.encode(renderMarkdown(resolveProfile(project, profileId))) }];
     case "json":
       return [
-        { name: `${slug(fullName(project))}.foja.json`, mime: "application/json", data: encoder.encode(projectJson(project)) },
+        { name: `${fileStem(project)}.foja.json`, mime: "application/json", data: encoder.encode(projectJson(project)) },
         { name: `${stem}.resolved.json`, mime: "application/json", data: encoder.encode(resolvedJson(resolveProfile(project, profileId))) },
       ];
     case "docx":

@@ -1,7 +1,7 @@
 ---
 // Phase 0 spike: edit the project JSON, see the Typst output. `?bench=N` runs N edits in a row
 // and prints the timings (used by scripts/bench.mjs).
-import project from "../../../../examples/curriculum.project.json?raw";
+import project from "../../../../examples/example.project.json?raw";
 ---
 
 <html lang="es">
@@ -38,7 +38,7 @@ import project from "../../../../examples/curriculum.project.json?raw";
       const status = document.querySelector<HTMLDivElement>("#status")!;
 
       for (const name of Object.keys(JSON.parse(editor.value).profiles)) {
-        select.append(new Option(name, name, false, name === "programador"));
+        select.append(new Option(name, name, false, name === "desarrolladora"));
       }
 
       let nextId = 0;

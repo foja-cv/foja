@@ -67,7 +67,11 @@ function check(value: unknown, s: Schema, path: string, out: Problem[]): void {
   }
 
   if (typeof value === "string") {
-    if (s.minLength !== undefined && value.length < s.minLength) err(s.minLength === 1 ? "must not be empty" : `must have at least ${s.minLength} characters`);
+    // An empty text is a warning: the editor creates them (a new item) and Typst lays them out fine.
+    if (s.minLength !== undefined && value.length < s.minLength) {
+      out.push({ path: path || "/", message: s.minLength === 1 ? "must not be empty" : `must have at least ${s.minLength} characters`, severity: "warning" });
+    }
+    if (s.maxLength !== undefined && value.length > s.maxLength) err(`is longer than ${s.maxLength} characters`);
     if (s.pattern && !new RegExp(s.pattern, "u").test(value)) err(`does not match ${s.pattern}`);
   }
   if (typeof value === "number") {
@@ -104,26 +108,29 @@ export function validateSchema(value: unknown): Problem[] {
 export function validateReferences(p: Project): Problem[] {
   const out: Problem[] = [];
   const error = (path: string, message: string) => out.push({ path, message, severity: "error" });
-  const assets = p.assets ?? {};
-  if (p.person.photo && !(p.person.photo in assets)) error("/person/photo", `no asset named "${p.person.photo}"`);
+  const warning = (path: string, message: string) => out.push({ path, message, severity: "warning" });
+  // Own keys only: an id such as "constructor" must not find Object.prototype.
+  const has = (o: object | undefined, key: string) => !!o && Object.hasOwn(o, key);
+  if (p.person.photo && !has(p.assets, p.person.photo)) error("/person/photo", `no asset named "${p.person.photo}"`);
   for (const [id, profile] of Object.entries(p.profiles)) {
     const base = `/profiles/${escape(id)}`;
     profile.contacts.forEach((kind, i) => {
-      if (!p.contacts[kind]) error(`${base}/contacts/${i}`, `the project has no ${kind} contact`);
+      // Not shown, nothing breaks: a warning (clearing a contact leaves it listed in profiles).
+      if (!has(p.contacts, kind) || !p.contacts[kind]) warning(`${base}/contacts/${i}`, `the project has no ${kind} contact`);
     });
     profile.skills.forEach((row, i) =>
       row.forEach((group, j) => {
-        if (!(group in p.skills)) error(`${base}/skills/${i}/${j}`, `no skill group "${group}"`);
+        if (!has(p.skills, group)) error(`${base}/skills/${i}/${j}`, `no skill group "${group}"`);
       }),
     );
     const style = profile.layout?.template;
-    if (style && !isBuiltinStyle(style) && !p.templates?.[style]) error(`${base}/layout/template`, `no style "${style}"`);
+    if (style && !isBuiltinStyle(style) && !has(p.templates, style)) error(`${base}/layout/template`, `no style "${style}"`);
     const seen = new Set<string>();
     profile.sections.forEach((section, i) => {
       if (seen.has(section.id)) error(`${base}/sections/${i}/id`, `duplicate section id "${section.id}"`);
       seen.add(section.id);
       section.blocks.forEach((block, j) => {
-        if (block.type === "entry" && !(block.entry in p.entries)) {
+        if (block.type === "entry" && !has(p.entries, block.entry)) {
           error(`${base}/sections/${i}/blocks/${j}/entry`, `no entry "${block.entry}"`);
         }
       });
@@ -138,8 +145,8 @@ export function validateReferences(p: Project): Problem[] {
   return out;
 }
 
-/** All problems: structure first; references only once the structure is sound. */
+/** All problems: structure first; references only once the structure has no errors. */
 export function validate(value: unknown): Problem[] {
   const structural = validateSchema(value);
-  return structural.length ? structural : validateReferences(value as Project);
+  return structural.some((p) => p.severity === "error") ? structural : [...structural, ...validateReferences(value as Project)];
 }

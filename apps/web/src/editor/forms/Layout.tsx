@@ -39,7 +39,7 @@ function firstPage(svg: string): string {
   return clean.replace(/viewBox="0 0 ([\d.]+) [\d.]+"/, `viewBox="0 0 $1 ${pages[0].height}"`);
 }
 
-function StyleCard({ id, name, description, active, onPick }: { id: string; name: string; description?: string; active: boolean; onPick: () => void }) {
+function StyleCard({ id, name, description, active, onPick, thumb = true }: { id: string; name: string; description?: string; active: boolean; onPick: () => void; thumb?: boolean }) {
   return (
     <button
       type="button"
@@ -48,7 +48,7 @@ function StyleCard({ id, name, description, active, onPick }: { id: string; name
       onClick={onPick}
       className={`flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition ${active ? "border-accent bg-accent-soft ring-2 ring-accent" : "border-line hover:border-accent"}`}
     >
-      <Thumb style={id} />
+      {thumb && <Thumb style={id} />}
       <span className="font-heading text-sm font-semibold">{name}</span>
       {description && <span className="text-xs text-muted">{description}</span>}
     </button>
@@ -110,7 +110,9 @@ export function LayoutForm() {
             <h3 className="mt-2 text-xs font-semibold tracking-wide text-muted uppercase">{t.styles.own}</h3>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               {Object.entries(project.templates!).map(([id, s]) => (
-                <StyleCard key={id} id={id} name={s.name} active={style.id === id} onPick={() => set("template", id)} />
+                // Only the style in use gets a thumbnail: compiling every style of one's own (one may be
+                // slow or broken) on each edit is not worth it.
+                <StyleCard key={id} id={id} name={s.name} active={style.id === id} thumb={style.id === id} onPick={() => set("template", id)} />
               ))}
             </div>
           </>
@@ -257,13 +259,14 @@ export function LayoutForm() {
         {shown.has("labels") && (
           <Field label={L.labels}>
             {(id) => (
-              <Select<"" | "es" | "en">
+              <Select<"" | "es" | "en" | "pt">
                 id={id}
                 value={layout.labels ?? ""}
                 options={[
                   ["", L.sameAsCv],
                   ["es", "Español"],
                   ["en", "English"],
+                  ["pt", "Português"],
                 ]}
                 onChange={(v) => set("labels", v || undefined)}
               />

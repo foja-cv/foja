@@ -58,8 +58,11 @@ interface Ctx {
 
 type RunOptions = { bold?: boolean; italics?: boolean; size?: number; color?: string; smallCaps?: boolean };
 
+// Control characters (a pasted \\v or \\f) are not valid XML: Word would refuse the file.
+const xmlSafe = (text: string) => text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, " ");
+
 const plain = (ctx: Ctx, text: string, o: RunOptions = {}) =>
-  new TextRun({ text, font: ctx.font, size: o.size ?? ctx.size, bold: o.bold, italics: o.italics, color: o.color ?? INK, smallCaps: o.smallCaps });
+  new TextRun({ text: xmlSafe(text), font: ctx.font, size: o.size ?? ctx.size, bold: o.bold, italics: o.italics, color: o.color ?? INK, smallCaps: o.smallCaps });
 
 function runs(ctx: Ctx, text: string, o: RunOptions = {}): TextRun[] {
   return inlineRuns(text).map((r) => plain(ctx, r.text, { ...o, bold: o.bold || r.bold }));

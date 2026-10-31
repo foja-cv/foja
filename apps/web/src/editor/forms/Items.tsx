@@ -32,6 +32,7 @@ export function ItemRow({ item, path, edit, children }: { item: { heading?: stri
         <TextInput
           value={item.heading ?? ""}
           placeholder={t.heading}
+          label={t.heading}
           onChange={(v) =>
             edit((it) => {
               if (v) it.heading = v;
@@ -39,7 +40,7 @@ export function ItemRow({ item, path, edit, children }: { item: { heading?: stri
             })
           }
         />
-        <TextArea rows={2} value={item.text} onChange={(v) => edit((it) => (it.text = v))} />
+        <TextArea rows={2} label={t.text} value={item.text} onChange={(v) => edit((it) => (it.text = v))} />
         {problem && <p className="text-xs text-red-700 dark:text-red-400">{problem}</p>}
       </div>
       {children}

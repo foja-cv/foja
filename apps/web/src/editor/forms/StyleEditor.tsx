@@ -19,9 +19,17 @@ export function StyleEditor({ id }: { id: string }) {
   const inUse = (project.profiles[profileId]?.layout?.template ?? "legajo") === id;
   const edit = (fn: (s: { name: string; source: string }) => void) => update((p) => fn(p.templates![id]));
 
-  // Tab indents (two spaces) instead of leaving the editor; Escape then Tab leaves it.
+  // Tab indents (two spaces) instead of leaving the editor; Escape, then Tab (or Shift+Tab) leaves it.
+  const escaped = useRef(false);
   function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key !== "Tab" || e.shiftKey) return;
+    if (e.key === "Escape") {
+      escaped.current = true;
+      return;
+    }
+    if (e.key !== "Tab" || e.shiftKey || escaped.current) {
+      escaped.current = false;
+      return;
+    }
     e.preventDefault();
     const el = e.currentTarget;
     const { selectionStart: a, selectionEnd: b, value } = el;

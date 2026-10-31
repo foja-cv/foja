@@ -34,6 +34,11 @@ export function labelsFor(project: Project, profile: Profile): Labels {
   return LABELS[lang] ?? LABELS.en;
 }
 
+/** The stem of exported file names: the name in Latin letters, or "cv" when it has none. */
+export function fileStem(project: Project): string {
+  return slug(fullName(project)) || "cv";
+}
+
 export function fullName(project: Project): string {
   return [...project.person.givenNames, ...project.person.familyNames].join(" ");
 }

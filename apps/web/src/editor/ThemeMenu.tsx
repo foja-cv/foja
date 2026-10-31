@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { download } from "./download";
 import { LANGUAGES, setLanguage, t, useLanguage, type Language } from "./i18n";
 import { allThemes, useThemes, type Mode } from "./themes";
-import { Button } from "./ui";
+import { Button, useDismiss } from "./ui";
 
 export function ThemeMenu() {
   const state = useThemes();
@@ -10,6 +10,8 @@ export function ThemeMenu() {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string>();
   const themes = allThemes(state);
+  const box = useRef<HTMLDivElement>(null);
+  useDismiss(box, open, () => setOpen(false));
   const current = themes.find((th) => th.id === state.current) ?? themes[0];
 
   async function importTheme(file: File | undefined) {
@@ -24,8 +26,8 @@ export function ThemeMenu() {
   }
 
   return (
-    <div className="relative">
-      <Button variant="ghost" onClick={() => setOpen(!open)}>
+    <div className="relative" ref={box}>
+      <Button variant="ghost" expanded={open} onClick={() => setOpen(!open)}>
         {t.themes.menu} ▾
       </Button>
       {open && (

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toBase64 } from "@foja/core";
 import { PhotoCrop } from "../PhotoCrop";
 import { t } from "../i18n";
@@ -6,6 +6,24 @@ import { pointer, useEditor, useProblem } from "../store";
 import { Button, Field, Panel, Select, TextInput } from "../ui";
 
 const words = (s: string) => s.split(/\s+/).filter(Boolean);
+
+/** Names typed as text, stored as words: the field keeps its own text so that a space can be typed. */
+function WordsInput({ id, value, onChange }: { id: string; value: string[]; onChange: (v: string[]) => void }) {
+  const [text, setText] = useState(value.join(" "));
+  useEffect(() => {
+    if (words(text).join(" ") !== value.join(" ")) setText(value.join(" "));
+  }, [value]);
+  return (
+    <TextInput
+      id={id}
+      value={text}
+      onChange={(v) => {
+        setText(v);
+        onChange(words(v));
+      }}
+    />
+  );
+}
 
 export function PersonForm() {
   const project = useEditor((s) => s.project!);
@@ -40,10 +58,10 @@ export function PersonForm() {
   return (
     <Panel title={t.personal}>
       <Field label={t.givenNames} problem={namesProblem}>
-        {(id) => <TextInput id={id} value={person.givenNames.join(" ")} onChange={(v) => update((p) => (p.person.givenNames = words(v)))} />}
+        {(id) => <WordsInput id={id} value={person.givenNames} onChange={(v) => update((p) => (p.person.givenNames = v))} />}
       </Field>
       <Field label={t.familyNames}>
-        {(id) => <TextInput id={id} value={person.familyNames.join(" ")} onChange={(v) => update((p) => (p.person.familyNames = words(v)))} />}
+        {(id) => <WordsInput id={id} value={person.familyNames} onChange={(v) => update((p) => (p.person.familyNames = v))} />}
       </Field>
       <Field label={t.language} problem={languageProblem}>
         {(id) => (

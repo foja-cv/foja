@@ -191,8 +191,17 @@ function sideBlock(b: ResolvedBlock): string {
   return `${inlineLatex(b.text)}\\par`;
 }
 
+/** A URL safe inside \\href: everything but a few plain characters is percent-encoded, then
+ * the percent signs are escaped. No brace, backslash or space can reach TeX. */
+export function latexUrl(url: string): string {
+  const encoded = [...new TextEncoder().encode(url)]
+    .map((b) => (/[A-Za-z0-9\-./:?=@+,;]/.test(String.fromCharCode(b)) && b < 128 ? String.fromCharCode(b) : `%${b.toString(16).toUpperCase().padStart(2, "0")}`))
+    .join("");
+  return encoded.replace(/%/g, "\\%");
+}
+
 function contactValue(c: ResolvedCv["contacts"][number]): string {
-  return c.href && c.kind !== "phone" ? `\\href{${c.href.replace(/[%#]/g, "\\$&")}}{${escapeLatex(c.value)}}` : escapeLatex(c.value);
+  return c.href && c.kind !== "phone" ? `\\href{${latexUrl(c.href)}}{${escapeLatex(c.value)}}` : escapeLatex(c.value);
 }
 
 function sidebar(cv: ResolvedCv, photo: string | undefined): string[] {
@@ -200,14 +209,15 @@ function sidebar(cv: ResolvedCv, photo: string | undefined): string[] {
   const inner = side - 2 * 10;
   const out = ["\\setlength{\\fboxsep}{10bp}", `\\FitSide{\\colorbox{tint}{\\begin{minipage}[t]{${bp(inner)}}`, "\\raggedright\\small"];
   if (photo) out.push(`\\centering${photoCommand(cv, photo, inner)}\\par\\raggedright\\vspace{6bp}`);
-  const block = (title: string, values: string[]) => out.push(`\\SideHeading{${escapeLatex(title)}}`, values.join("\\\\"), "\\par\\SmallSep");
+  // `\\\\{}`: a line break that a next line starting with [ or * cannot extend.
+  const block = (title: string, values: string[]) => out.push(`\\SideHeading{${escapeLatex(title)}}`, values.join("\\\\{}"), "\\par\\SmallSep");
   if (cv.highlight) block(cv.highlight.title, [escapeLatex(cv.highlight.text)]);
   if (cv.contacts.length) block(cv.labels.contact, cv.contacts.map(contactValue));
   for (const row of cv.skills) {
     if (row.length === 1) block(row[0].title, row[0].items.map(escapeLatex));
     else {
       const columns = row.map(
-        (g) => `\\begin{tabular}[t]{@{}l@{}}{\\footnotesize\\color{accent}\\bfseries\\Caps{${escapeLatex(g.title)}}}\\\\ ${g.items.map(escapeLatex).join(" \\\\ ")}\\end{tabular}`,
+        (g) => `\\begin{tabular}[t]{@{}l@{}}{\\footnotesize\\color{accent}\\bfseries\\Caps{${escapeLatex(g.title)}}}\\\\{} ${g.items.map(escapeLatex).join(" \\\\{} ")}\\end{tabular}`,
       );
       out.push(`${columns.join("\\hspace{1em}")}\\par\\SmallSep`);
     }

@@ -140,7 +140,7 @@ export function EntryForm({ id }: { id: string }) {
                 edit((e) => {
                   if (v === "single") delete e.end;
                   else if (v === "ongoing") e.end = null;
-                  else e.end = e.start ?? "";
+                  else if (e.start) e.end = e.start;
                 })
               }
             />
@@ -148,7 +148,19 @@ export function EntryForm({ id }: { id: string }) {
         </Field>
         {mode === "date" && (
           <Field label={t.end} problem={problems.end}>
-            {(fid) => <TextInput id={fid} type="month" value={entry.end ?? ""} onChange={(v) => edit((e) => (e.end = v))} />}
+            {(fid) => (
+              <TextInput
+                id={fid}
+                type="month"
+                value={entry.end ?? ""}
+                onChange={(v) =>
+                  edit((e) => {
+                    // A cleared end is "ongoing", never an empty date.
+                    e.end = v || null;
+                  })
+                }
+              />
+            )}
           </Field>
         )}
       </div>

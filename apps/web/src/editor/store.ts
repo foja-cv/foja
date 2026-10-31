@@ -4,6 +4,7 @@
 import { create } from "zustand";
 import { temporal } from "zundo";
 import { validate, type Problem, type Project } from "@foja/core";
+import { savePrevious } from "./storage";
 
 export type Selection =
   | { kind: "person" }
@@ -57,6 +58,9 @@ export const useEditor = create<EditorState>()(
         set({ pane });
       },
       load(project, profileId) {
+        // Keep what this replaces, so a misclick on "new project" can be undone from the menu.
+        const replaced = get().project;
+        if (replaced && replaced !== project) void savePrevious({ project: replaced, profileId: get().profileId }).catch(() => undefined);
         const id = profileId && project.profiles[profileId] ? profileId : Object.keys(project.profiles)[0];
         set({ project, profileId: id, problems: validate(project), selection: { kind: "profile" } });
         useEditor.temporal.getState().clear();
@@ -64,7 +68,11 @@ export const useEditor = create<EditorState>()(
       update(fn) {
         const current = get().project;
         if (!current) return;
-        const draft = structuredClone(current);
+        // The assets (the photo, megabytes of base64) are shared, not copied: an edit replaces an
+        // asset object, it never changes one in place. This keeps typing and undo light.
+        const { assets, ...rest } = current;
+        const draft = structuredClone(rest) as Project;
+        if (assets) draft.assets = { ...assets };
         fn(draft);
         set({ project: draft, saveState: "unsaved" });
       },
