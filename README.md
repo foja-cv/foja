@@ -1,14 +1,15 @@
 # curriculum
-Tools to build a CV from the data in `data/`, with two independent generators that read the
-same files and produce the same layout:
+I keep my CV as data, in `data/`, and build it with two generators I wrote for it. They work
+independently, read the same files and produce the same layout:
 
 - **`python/`** (`cvgen`): builds LaTeX on the Wenneker template and compiles it with
   [tectonic](https://tectonic-typesetting.github.io/). Typeset with XCharter.
 - **`c/`** (`cvgen-c`): writes the PDF directly in C17, with no dependencies beyond libc.
   Typeset with the PDF base fonts (Helvetica), which are a bit wider, so it fills pages sooner.
 
-Each CV is a *profile*: a small JSON file that picks which sections and entries to show, so one
-set of data yields a CV per application.
+Each CV is a *profile*: a small JSON file that picks which sections and entries to show, so from
+one set of data I get a CV for each kind of job I apply to. The data is my real CV, except for
+my address, phone and email, which stay out of the repository (see [`privado.json`](#privadojson)).
 
 ## Requirements
 - Python generator: [uv](https://docs.astral.sh/uv/) and tectonic (`pacman -S tectonic`).
