@@ -16,8 +16,8 @@ User guide: [`docs/guide.md`](docs/guide.md). Writing a style: [`docs/templates.
 Interface themes: [`docs/themes.md`](docs/themes.md). Security model: [`docs/security.md`](docs/security.md).
 Command line: [`packages/cli/README.md`](packages/cli/README.md).
 
-Status: the editor, the exporters and the CLI work; the site is not published yet. The plan and
-the results of each phase are in [`docs/plan.md`](docs/plan.md).
+Status: the editor, the exporters and the CLI work; the site is not published yet. What is
+built, what comes next and why: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
 ## Layout
 
