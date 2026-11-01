@@ -11,7 +11,7 @@ from cvgen.latex import escape, render
 from cvgen.sources import DataError, parse_markdown
 
 DATA = Path(__file__).resolve().parents[2] / "data"
-# Tests never read the real address: they use the example private file.
+# Tests never read the real address, phone or email: they use the example private file.
 PRIVATE = DATA / "privado.ejemplo.json"
 
 
@@ -55,7 +55,11 @@ def test_cine_debate_profile_contents():
     cv = build_cv(DATA, "docente-cine-debate", PRIVATE)
     assert cv.application == "Cine debate"
     assert cv.sections[0].entries[0].title == "Docente particular"
-    assert ("Correo", "correo@ejemplo.com") in cv.contacts
+    assert cv.contacts == [
+        ("Teléfono", "+54 9 341 000-0000"),
+        ("Correo", "correo@ejemplo.com"),
+        ("LinkedIn", "linkedin.com/in/b-d-fiori"),
+    ]
 
 
 @pytest.mark.parametrize("profile", sorted(p.stem for p in (DATA / "perfiles").glob("*.json")))
@@ -72,7 +76,21 @@ def test_address_only_where_the_profile_asks(profile):
 def test_missing_private_file_is_reported(tmp_path):
     with pytest.raises(DataError, match="address"):
         build_cv(DATA, "docente-cine-debate", tmp_path / "privado.json")
-    assert build_cv(DATA, "programador", tmp_path / "privado.json").address == []
+    with pytest.raises(DataError, match="telefono"):
+        build_cv(DATA, "programador", tmp_path / "privado.json")
+
+
+def test_public_contacts_need_no_private_file(tmp_path):
+    write_profile(tmp_path, '"secciones": []', contacts='["linkedin"]')
+    cv = build_cv(tmp_path, "x")
+    assert cv.contacts == [("LinkedIn", "linkedin.com/in/b-d-fiori")]
+    assert cv.address == []
+
+
+def test_unknown_contact_is_reported(tmp_path):
+    write_profile(tmp_path, '"secciones": []', contacts='["fax"]')
+    with pytest.raises(DataError, match="fax"):
+        build_cv(tmp_path, "x")
 
 
 def test_side_sections_go_in_the_sidebar():
@@ -94,11 +112,11 @@ def test_skill_pairs_share_a_row():
     assert sidebar.count(r"\begin{tabular}") == 2
 
 
-def write_profile(tmp_path, body: str) -> None:
+def write_profile(tmp_path, body: str, contacts: str = "[]") -> None:
     (tmp_path / "perfiles").mkdir()
     (tmp_path / "cv.json").write_text((DATA / "cv.json").read_text())
     (tmp_path / "perfiles" / "x.json").write_text(
-        '{"subtitulo": "", "perfil": "p.md", "contactos": [], ' + body + "}"
+        '{"subtitulo": "", "perfil": "p.md", "contactos": ' + contacts + ", " + body + "}"
     )
     (tmp_path / "p.md").write_text("perfil")
 

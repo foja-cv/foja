@@ -77,7 +77,7 @@ static void test_profiles(Arena *arena, const char *data) {
     const char *profiles[] = {"docente-cine-debate", "docente-ia", "programador"};
     size_t nprofiles = sizeof profiles / sizeof profiles[0];
     char err[512];
-    /* Never the real address: the example private file. */
+    /* Never the real address, phone or email: the example private file. */
     const char *private = arena_printf(arena, "%s/privado.ejemplo.json", data);
     for (size_t p = 0; p < nprofiles; p++) {
         Cv cv;
@@ -112,6 +112,9 @@ static void test_profiles(Arena *arena, const char *data) {
             CHECK(strcmp(cv.side[0].title, "Curso") == 0);
             CHECK(strcmp(cv.side[1].title, "Domicilio") == 0);
             CHECK(strcmp(cv.side[1].lines[0], "Calle Falsa 123") == 0);
+            CHECK(strcmp(cv.side[2].title, "Contacto") == 0);
+            CHECK(strcmp(cv.side[2].lines[0], "+54 9 341 000-0000") == 0);
+            CHECK(strcmp(cv.side[2].lines[1], "correo@ejemplo.com") == 0);
             CHECK(strcmp(cv.sections[0].entries[0].title, "Docente particular") == 0);
             CHECK(cv.sections[0].entries[0].ntasks == 4);
         }
@@ -136,7 +139,8 @@ static void test_profiles(Arena *arena, const char *data) {
     const char *missing = arena_printf(arena, "%s/no-such-private.json", data);
     CHECK(!cv_build(arena, data, missing, "docente-cine-debate", &cv, err, sizeof err));
     CHECK(strstr(err, "address") != NULL);
-    CHECK(cv_build(arena, data, missing, "programador", &cv, err, sizeof err));
+    CHECK(!cv_build(arena, data, missing, "programador", &cv, err, sizeof err));
+    CHECK(strstr(err, "telefono") != NULL);
 }
 
 int main(int argc, char **argv) {

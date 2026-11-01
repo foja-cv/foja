@@ -37,7 +37,7 @@ and exit with status 1 and a message on stderr when the data is invalid.
 ```
 data/
 ├── cv.json          personal data, contacts, skill groups and every entry, keyed by id
-├── privado.json     the address; git-ignored, see privado.ejemplo.json
+├── privado.json     address, phone and email; ignored by git, see privado.ejemplo.json
 ├── img/foto.jpg     photo for the sidebar
 ├── perfiles/*.json  one file per CV
 └── textos/*.md      prose: profile texts, task lists, strengths
@@ -45,7 +45,8 @@ data/
 
 ### `cv.json`
 - `nombres`, `apellidos`, `foto` (path relative to `data/`).
-- `contactos`: `telefono`, `correo`, `github`, `linkedin`, `web`.
+- `contactos`: the public ones, `github`, `linkedin` and `web`. The phone and email go in
+  `privado.json`.
 - `habilidades`: groups of skills for the sidebar, e.g. `{"Idiomas": ["Español (nativo)", …]}`.
 - `entradas`: every experience, education or project entry, keyed by id:
 
@@ -65,10 +66,16 @@ Dates are `YYYY-MM`. An entry with only `desde` is a single date; `"hasta": null
 in compact sections.
 
 ### `privado.json`
-The address is not in the repository. It goes in `data/privado.json` (git-ignored; copy
-`privado.ejemplo.json`), as `domicilio`: `calle`, `ciudad`, `provincia`, `pais`. It is only read,
-and only shown, by profiles with `"domicilio": true`; without that key the CV has no address.
-A profile that asks for it fails if the file is missing.
+My address, phone and email are not in the repository. They go in `data/privado.json`, which
+git ignores; to start one, copy `privado.ejemplo.json`, which has made-up values:
+
+- `contactos`: `telefono` and `correo`. They are added to the ones in `cv.json`, and a profile
+  shows them by listing them in its `contactos`, like any other.
+- `domicilio`: `calle`, `ciudad`, `provincia`, `pais`. Only profiles with `"domicilio": true`
+  show it; without that key the CV has no address.
+
+The file is optional, but a profile that shows any of these fails if it is missing. The tests
+always use `privado.ejemplo.json`, never the real file.
 
 ### Profiles
 `data/perfiles/<perfil>.json` describes one CV:

@@ -8,7 +8,8 @@
 typedef struct {
     Arena *arena;
     const char *dir;
-    const char *private_path; /* the address, kept out of git */
+    const char *private_path; /* address, phone and email, kept out of the repo */
+    const Json *private;      /* NULL when that file does not exist */
     char *err;
     size_t errlen;
 } Ctx;
@@ -27,12 +28,7 @@ static const char *data_path(Ctx *ctx, const char *relative) {
     return arena_printf(ctx->arena, "%s/%s", ctx->dir, relative);
 }
 
-static const Json *load_json_at(Ctx *ctx, const char *path) {
-    const char *text = read_file(ctx->arena, path, NULL);
-    if (text == NULL) {
-        fail(ctx, "missing file: %s", path);
-        return NULL;
-    }
+static const Json *parse_json(Ctx *ctx, const char *path, const char *text) {
     char why[160];
     const Json *json = json_parse(ctx->arena, text, why, sizeof why);
     if (json == NULL) fail(ctx, "invalid JSON in %s: %s", path, why);
@@ -40,7 +36,13 @@ static const Json *load_json_at(Ctx *ctx, const char *path) {
 }
 
 static const Json *load_json(Ctx *ctx, const char *relative) {
-    return load_json_at(ctx, data_path(ctx, relative));
+    const char *path = data_path(ctx, relative);
+    const char *text = read_file(ctx->arena, path, NULL);
+    if (text == NULL) {
+        fail(ctx, "missing file: %s", path);
+        return NULL;
+    }
+    return parse_json(ctx, path, text);
 }
 
 static const char *load_text(Ctx *ctx, const char *relative) {
@@ -177,11 +179,9 @@ static bool build_side(Ctx *ctx, const Json *base, const Json *profile, Cv *cv) 
     /* Only profiles that ask for it show the address. */
     const Json *show_address = json_get(profile, "domicilio");
     if (show_address != NULL && show_address->type == JSON_BOOL && show_address->boolean) {
-        if (read_file(ctx->arena, ctx->private_path, NULL) == NULL)
-            return fail(ctx, "profile shows the address but %s is missing", ctx->private_path);
-        const Json *private = load_json_at(ctx, ctx->private_path);
-        if (private == NULL) return false;
-        const Json *address = json_get(private, "domicilio");
+        const Json *address = json_get(ctx->private, "domicilio");
+        if (address == NULL)
+            return fail(ctx, "profile shows the address but it is not in %s", ctx->private_path);
         const char *street = required(ctx, address, "calle", "domicilio");
         const char *city = required(ctx, address, "ciudad", "domicilio");
         const char *province = required(ctx, address, "provincia", "domicilio");
@@ -201,8 +201,13 @@ static bool build_side(Ctx *ctx, const Json *base, const Json *profile, Cv *cv) 
         bool known = false;
         for (size_t k = 0; k < sizeof CONTACTS / sizeof *CONTACTS; k++)
             known = known || strcmp(keys[i], CONTACTS[k]) == 0;
-        const char *value = json_string(json_get(base, "contactos"), keys[i]);
-        if (!known || value == NULL) return fail(ctx, "unknown contact \"%s\"", keys[i]);
+        if (!known) return fail(ctx, "unknown contact \"%s\"", keys[i]);
+        /* The phone and email come from the private file, the public ones from cv.json. */
+        const char *value = json_string(json_get(ctx->private, "contactos"), keys[i]);
+        if (value == NULL) value = json_string(json_get(base, "contactos"), keys[i]);
+        if (value == NULL)
+            return fail(ctx, "profile shows the %s contact but it is in neither cv.json nor %s",
+                        keys[i], ctx->private_path);
         block->lines[i] = value;
     }
 
@@ -249,9 +254,13 @@ static bool build_name(Ctx *ctx, const Json *base, Cv *cv) {
 
 bool cv_build(Arena *arena, const char *data_dir, const char *private_path,
               const char *profile_name, Cv *cv, char *err, size_t errlen) {
-    Ctx ctx = {arena, data_dir, private_path, err, errlen};
+    Ctx ctx = {arena, data_dir, private_path, NULL, err, errlen};
     if (ctx.private_path == NULL) ctx.private_path = data_path(&ctx, "privado.json");
     *cv = (Cv){0};
+    const char *private_text = read_file(arena, ctx.private_path, NULL);
+    if (private_text != NULL &&
+        (ctx.private = parse_json(&ctx, ctx.private_path, private_text)) == NULL)
+        return false;
     const Json *base = load_json(&ctx, "cv.json");
     if (base == NULL) return false;
     const Json *profile = load_json(&ctx, arena_printf(arena, "perfiles/%s.json", profile_name));

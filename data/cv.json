@@ -3,8 +3,6 @@
     "apellidos": ["Fiori"],
     "foto": "img/foto.jpg",
     "contactos": {
-        "telefono": "+54 9 341 000-0000",
-        "correo": "correo@ejemplo.com",
         "linkedin": "linkedin.com/in/b-d-fiori"
     },
     "habilidades": {

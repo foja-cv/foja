@@ -36,8 +36,8 @@ typedef struct {
     size_t nsections;
 } Cv;
 
-/* private_path holds the address (NULL: <data_dir>/privado.json); it is only read when the
-   profile has "domicilio": true. */
+/* private_path holds the address, phone and email (NULL: <data_dir>/privado.json). The file
+   is optional; a profile that shows any of them fails without it. */
 bool cv_build(Arena *arena, const char *data_dir, const char *private_path, const char *profile,
               Cv *cv, char *err, size_t errlen);
 
