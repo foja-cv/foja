@@ -60,18 +60,18 @@ One product, three ways to run it, all from the same release:
 
 ### How it is delivered
 
-I compared three options: a local web app in Docker, a native Tauri app with a Python sidecar,
+I compared three options: a local web app in a container, a native Tauri app with a Python sidecar,
 and a web core that does all the rendering in the browser, wrapped by Tauri for the desktop.
 
-The third one won on every count that mattered. Docker is a poor install for people who are not
-developers, especially on macOS and Windows. A frozen Python sidecar makes the installers large
+The third one won on every count that mattered. A container runtime is a poor install for people
+who are not developers, especially on macOS and Windows. A frozen Python sidecar makes the installers large
 and signing painful (the sidecar has to be signed on its own, and the macOS hardened runtime
 breaks PyInstaller without extra work). The in-browser core gives a public web app with static
 hosting and no server, small installers that use the system webview, and a preview with no
 network round trip. The only thing it cannot do is compile LaTeX in the app (the WebAssembly
 TeX distributions download about 120 MB), so LaTeX is exported as source instead.
 
-Docker stays for development only, with hot reload behind nginx.
+Containers (rootless Podman) stay for development only, with hot reload behind nginx.
 
 ### Free distribution channels
 

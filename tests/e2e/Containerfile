@@ -1,0 +1,3 @@
+# The browser for the end-to-end tests: Alpine's Chromium, which Playwright attaches to over CDP.
+FROM docker.io/library/node:24-alpine
+RUN apk add --no-cache chromium

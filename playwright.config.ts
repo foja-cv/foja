@@ -1,6 +1,6 @@
 import { defineConfig } from "@playwright/test";
 
-// Run through scripts/e2e.sh, which starts Chrome and passes CDP_URL.
+// Run through scripts/e2e.sh, which starts Chromium in the test container and passes CDP_URL.
 export default defineConfig({
   testDir: "tests/e2e",
   timeout: 90_000,

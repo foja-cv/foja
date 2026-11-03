@@ -32,20 +32,20 @@ examples/          fictional example projects (Spanish, English) and a test fixt
 
 ## Development
 
-Node dependencies live only inside the container.
+Node dependencies live only inside rootless Podman containers, and the repository is mounted read-only there:
+nothing that runs in a container can change the sources or `.git`. Dependencies, caches and output live in volumes.
 
 ```sh
-docker compose up                                   # Astro dev server with hot reload behind nginx
-docker compose run --rm web npm test                # tests
-docker compose run --rm web npm run foja -- build examples/curriculum.project.json --out .out
+mkdir -p node_modules apps/web/node_modules apps/web/.astro apps/web/dist .out   # once: their mount points
+podman compose up                                   # Astro dev server with hot reload behind nginx
+podman compose run --rm web npm test                # tests
+podman compose run --rm web npm run foja -- build examples/curriculum.project.json --out .out
+podman volume export foja_out | tar -x -C .out      # copies what the CLI wrote to .out/
 ```
 
 `scripts/e2e-pwa.sh` builds the site as GitHub Pages serves it (under `/foja/`) and checks it,
-offline use included. `scripts/e2e.sh` runs the end-to-end tests (Playwright in the container, driving the Chrome
-installed on the host) against the running dev stack.
-
-Open <http://127.0.0.1:8090/editor>. `node scripts/bench.mjs` measures the compile time per change in
-headless Chrome (`/spike?bench=N`).
+offline use included. `scripts/e2e.sh` runs the end-to-end tests against the running dev stack, with Playwright and a
+headless Chromium in a container that shares the stack's network; nothing on the host is reachable from it.
 
 ## Licence
 
