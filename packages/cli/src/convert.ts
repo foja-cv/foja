@@ -1,4 +1,4 @@
-// Convert the multi-file `data/` layout of bafif/curriculum (the cvgen generator) into a Foja
+// Convert the multi-file `data/` layout of the cvgen generator (`cvgen/data`) into a Foja
 // project. Texts referenced by path are inlined and Markdown task lists become items.
 // `privado.json` (the address) is never read. `publicFixture` replaces the phone number and the
 // photo, for fixtures committed to a public repository.

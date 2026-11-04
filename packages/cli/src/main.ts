@@ -11,7 +11,7 @@ const USAGE = `usage:
       formats: pdf (default), svg, typ, tex, md, json, docx, all (every one in a .zip);
       every profile unless --profile is given
   foja validate <project.json>
-  foja convert-curriculum <curriculum/data> <out.json> [--public]`;
+  foja convert-curriculum <cvgen/data> <out.json> [--public]`;
 
 function fail(message: string, code = 1): never {
   console.error(message);

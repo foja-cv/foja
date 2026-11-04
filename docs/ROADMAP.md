@@ -12,7 +12,7 @@ and the reasons behind the main decisions. How to use the editor is in the
 ## Why I am building it
 
 My own CV was a set of JSON files turned into a PDF by a Python generator through LaTeX (it still
-lives in `bafif/curriculum`). It worked, but every change meant editing files by hand and waiting
+lives in [`cvgen/`](../cvgen/README.md), next to a second generator in C). It worked, but every change meant editing files by hand and waiting
 for a LaTeX compile, and nobody else could use it. I wanted the same idea, one bank of entries
 and one CV per kind of job, with a real interface on top and Typst underneath.
 
@@ -204,7 +204,7 @@ The name comes from *foja de servicios*, the record of someone's career. `foja` 
 on GitHub, so the handle is `foja-cv`.
 
 - Code: [`foja-cv/foja`](https://github.com/foja-cv/foja), public, GPL-3.0 (an OSI licence, as
-  SignPath requires). My own CV data and the old generators stay in `bafif/curriculum`.
+  SignPath requires). My own CV data and the first generators live in `cvgen/`.
 - Web: `foja-cv.github.io/foja/`. A custom domain can later serve the same site at its root with
   no other change.
 - npm: `foja`. Flathub app ID: `io.github.foja_cv.Foja` (Flathub turns the hyphen of a GitHub

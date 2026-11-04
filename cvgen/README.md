@@ -1,6 +1,7 @@
-# curriculum
-I keep my CV as data, in `data/`, and build it with two generators I wrote for it. They work
-independently, read the same files and produce the same layout:
+# cvgen
+Foja started here, as the generator I wrote for my own CV, and I still build my CVs with it.
+I keep my CV as data, in `data/`, and build it with two generators. They work independently,
+read the same files and produce the same layout:
 
 - **`python/`** (`cvgen`): builds LaTeX on the Wenneker template and compiles it with
   [tectonic](https://tectonic-typesetting.github.io/). Typeset with XCharter.
@@ -17,6 +18,8 @@ my address, phone and email, which stay out of the repository (see [`privado.jso
 - C generator: a C17 compiler and `make`.
 
 ## Usage
+From `cvgen/`:
+
 ```sh
 make python PERFIL=docente-ia   # build/cv-docente-ia.pdf
 make c PERFIL=docente-ia        # build/cv-docente-ia-c.pdf
@@ -125,4 +128,4 @@ fails: the sidebar stays on the first page and the main column continues on the 
   the real data (the teacher CVs on one page, `programador` overflowing onto a second).
 
 ## License
-GPL-3.0. See [LICENSE](LICENSE).
+GPL-3.0. See [LICENSE](../LICENSE).

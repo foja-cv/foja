@@ -16,6 +16,10 @@ User guide: [`docs/guide.md`](docs/guide.md). Writing a style: [`docs/templates.
 Interface themes: [`docs/themes.md`](docs/themes.md). Security model: [`docs/security.md`](docs/security.md).
 Command line: [`packages/cli/README.md`](packages/cli/README.md).
 
+Foja started as cvgen, the generator I wrote for my own CV: JSON files turned into a PDF by a
+Python generator through LaTeX and by a second one in C. It still lives here, in
+[`cvgen/`](cvgen/README.md), with my CV data, and its history is where this repository's begins.
+
 Status: the editor, the exporters and the CLI work; the site is not published yet. What is
 built, what comes next and why: [`docs/ROADMAP.md`](docs/ROADMAP.md).
 
@@ -27,6 +31,7 @@ packages/template  the Typst styles (Legajo, Banda, Minimal), their library, lab
 packages/cli       `foja` on Node: build PDF/SVG/Typst bundles from a project
 apps/web           the Astro site and editor
 examples/          fictional example projects (Spanish, English) and a test fixture (fake phone)
+cvgen/             the first version: my CV data and the Python (LaTeX) and C generators
 ```
 
 
