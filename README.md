@@ -38,7 +38,9 @@ cvgen/             the first version: my CV data and the Python (LaTeX) and C ge
 ## Development
 
 Node dependencies live only inside rootless Podman containers, and the repository is mounted read-only there:
-nothing that runs in a container can change the sources or `.git`. Dependencies, caches and output live in volumes.
+nothing that runs in a container can change the sources or `.git`. Dependencies and output live in volumes;
+Astro's cache is a tmpfs, new in every container (Astro 7 stops the pid it finds in `.astro/dev.json`, which in a
+fresh container can be the new server itself).
 
 ```sh
 mkdir -p node_modules apps/web/node_modules apps/web/.astro apps/web/dist .out   # once: their mount points
