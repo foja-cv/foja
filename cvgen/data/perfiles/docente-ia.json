@@ -1,0 +1,13 @@
+{
+    "subtitulo": "Docente de Inteligencia Artificial",
+    "perfil": "textos/perfil_docente_ia.md",
+    "contactos": ["telefono", "correo", "linkedin"],
+    "habilidades": ["Programación", "Idiomas"],
+    "secciones": [
+        {"titulo": "Experiencia docente", "entradas": ["docencia"]},
+        {"titulo": "Experiencia laboral", "entradas": ["obrok", "reparacion"]},
+        {"titulo": "Fortalezas", "lateral": true, "items": "textos/fortalezas_docente_ia.md"},
+        {"titulo": "Educación", "entradas": ["tuia", "tecnico"], "compacto": true},
+        {"titulo": "Proyecto personal", "entradas": ["mapa-enciclopedico"], "items": ["Más proyectos en **bafif.github.io**."], "compacto": true}
+    ]
+}

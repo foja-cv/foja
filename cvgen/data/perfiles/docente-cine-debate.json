@@ -1,0 +1,14 @@
+{
+    "subtitulo": "Docente de cine debate",
+    "postulacion": "Cine debate",
+    "perfil": "textos/perfil_cine_debate.md",
+    "domicilio": true,
+    "contactos": ["telefono", "correo", "linkedin"],
+    "habilidades": ["Idiomas"],
+    "secciones": [
+        {"titulo": "Experiencia docente y de debate", "entradas": ["docencia", "simulacro"]},
+        {"titulo": "Fortalezas", "items": "textos/fortalezas_cine_debate.md"},
+        {"titulo": "Educación", "entradas": ["tuia", "lcc", "tecnico"], "compacto": true},
+        {"titulo": "Otra experiencia laboral", "entradas": ["obrok", "tecso", "reparacion"], "compacto": true}
+    ]
+}

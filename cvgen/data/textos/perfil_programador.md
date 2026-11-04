@@ -1,0 +1,1 @@
+Soy técnico electrónico y actualmente estudiante de Ciencias de la Computación y de Inteligencia Artificial. Me muevo cómodamente en trabajos que involucren independencia y resolución. Busco una oportunidad de aprender nuevas herramientas laborales (técnicas o humanas) y de aplicar activamente lo que ya conozco.
