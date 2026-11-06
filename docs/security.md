@@ -38,4 +38,4 @@ same checks; it exists for scripts the user runs, and the page loads none from o
 ## Reporting
 
 Report a security problem privately through GitHub's "Report a vulnerability" on
-[foja-cv/foja](https://github.com/foja-cv/foja/security), not in a public issue.
+[bafif/foja](https://github.com/bafif/foja/security), not in a public issue.

@@ -15,10 +15,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/foja-cv/foja.git",
+    "url": "git+https://github.com/bafif/foja.git",
     "directory": "packages/cli"
   },
-  "homepage": "https://github.com/foja-cv/foja",
+  "homepage": "https://github.com/bafif/foja",
   "keywords": [
     "cv",
     "resume",

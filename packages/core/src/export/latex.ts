@@ -94,7 +94,7 @@ function preamble(cv: ResolvedCv): string[] {
   const font = l.font === "Noto Sans" ? "\\usepackage[sfdefault]{noto}" : "\\usepackage{XCharter}";
   const lines = [
     `\\documentclass[${paper.option},${size}pt]{memoir}`,
-    "% Made with Foja (https://github.com/foja-cv/foja), Legajo style. Compile with pdflatex, lualatex or tectonic.",
+    "% Made with Foja (https://github.com/bafif/foja), Legajo style. Compile with pdflatex, lualatex or tectonic.",
     "\\usepackage[T1]{fontenc}",
     font,
     `\\usepackage[${BABEL[cv.language.split("-")[0]] ?? "english"}]{babel}`,
@@ -276,7 +276,7 @@ export function latexBundle(project: Project, profileId: string): ZipInput {
   const files: ZipInput = {
     "cv.tex": renderLatex(cv),
     "README.txt": [
-      "CV made with Foja (https://github.com/foja-cv/foja).",
+      "CV made with Foja (https://github.com/bafif/foja).",
       "",
       "Compile cv.tex with pdflatex (or lualatex, or tectonic); it needs the memoir, XCharter (or",
       "noto), flowfram, tikz, enumitem and hyperref packages, which come with TeX Live",

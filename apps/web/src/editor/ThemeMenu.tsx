@@ -94,7 +94,7 @@ export function ThemeMenu() {
             >
               {t.themes.exportCurrent}
             </Button>
-            <a className="px-2 text-xs text-accent underline" href="https://github.com/foja-cv/foja/blob/main/docs/themes.md" target="_blank" rel="noreferrer">
+            <a className="px-2 text-xs text-accent underline" href="https://github.com/bafif/foja/blob/main/docs/themes.md" target="_blank" rel="noreferrer">
               {t.themes.docs}
             </a>
             {error && (

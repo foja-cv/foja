@@ -25,7 +25,7 @@ export function typstBundle(project: Project, profileId: string, template: Templ
     "labels.json": template["labels.json"],
     "project.json": JSON.stringify(rest, null, 2) + "\n",
     "README.txt": [
-      "CV made with Foja (https://github.com/foja-cv/foja).",
+      "CV made with Foja (https://github.com/bafif/foja).",
       "",
       "Compile it with Typst:",
       "",

@@ -164,7 +164,7 @@ The work so far, in the order it happened:
 
 In this order:
 
-1. **Publish the site** on GitHub Pages at `foja-cv.github.io/foja/`: switch the Pages source to
+1. **Publish the site** on GitHub Pages at `bafif.github.io/foja/`: switch the Pages source to
    GitHub Actions and run the deployment workflow (or let it run on every push to `main`). Then
    promote it.
 2. **Publish the CLI on npm** as `foja` (the name was still free at the end of October 2026). The
@@ -200,15 +200,14 @@ open without building it now; until then everything stays focused on CVs.
 
 ## Name and addresses
 
-The name comes from *foja de servicios*, the record of someone's career. `foja` alone is taken
-on GitHub, so the handle is `foja-cv`.
+The name comes from *foja de servicios*, the record of someone's career. The code lives under my
+own GitHub account.
 
-- Code: [`foja-cv/foja`](https://github.com/foja-cv/foja), public, GPL-3.0 (an OSI licence, as
+- Code: [`bafif/foja`](https://github.com/bafif/foja), public, GPL-3.0 (an OSI licence, as
   SignPath requires). My own CV data and the first generators live in `cvgen/`.
-- Web: `foja-cv.github.io/foja/`. A custom domain can later serve the same site at its root with
+- Web: `bafif.github.io/foja/`. A custom domain can later serve the same site at its root with
   no other change.
-- npm: `foja`. Flathub app ID: `io.github.foja_cv.Foja` (Flathub turns the hyphen of a GitHub
-  name into an underscore).
+- npm: `foja`. Flathub app ID: `io.github.bafif.Foja`.
 
 ## Dependencies
 

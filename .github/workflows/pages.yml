@@ -1,4 +1,4 @@
-# Deploys the site to GitHub Pages (https://foja-cv.github.io/foja/).
+# Deploys the site to GitHub Pages (https://bafif.github.io/foja/).
 # Manual only (Actions → Deploy to GitHub Pages → Run workflow) until publishing is approved;
 # then add `push: branches: [main]` under `on:`. Pages must be set to "GitHub Actions" in the
 # repository settings.

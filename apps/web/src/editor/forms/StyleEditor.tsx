@@ -4,7 +4,7 @@ import { useEditor } from "../store";
 import { addStyle, profilesUsingStyle } from "../styles";
 import { Button, Field, Panel, TextInput } from "../ui";
 
-const DOCS = "https://github.com/foja-cv/foja/blob/main/docs/templates.md";
+const DOCS = "https://github.com/bafif/foja/blob/main/docs/templates.md";
 
 /** The editor of a style of one's own: its name and its Typst source. */
 export function StyleEditor({ id }: { id: string }) {

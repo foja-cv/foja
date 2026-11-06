@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://foja-cv.github.io/foja/schema/project.schema.json",
+  "$id": "https://bafif.github.io/foja/schema/project.schema.json",
   "title": "Foja project",
   "description": "One CV project: personal data, a bank of entries shared by every profile, and the profiles that pick from it.",
   "type": "object",

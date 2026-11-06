@@ -1,6 +1,6 @@
 # foja
 
-The command line of [Foja](https://github.com/foja-cv/foja), a CV editor on Typst: builds CVs
+The command line of [Foja](https://github.com/bafif/foja), a CV editor on Typst: builds CVs
 from a Foja project (`.foja.json`, made in the editor or by hand) with the same Typst styles the
 web editor uses.
 
@@ -15,9 +15,9 @@ Formats: `pdf`, `svg`, `typ` (a `.zip` that compiles with plain `typst compile`)
 (LaTeX), `md`, `json`, `docx` (Word), `all`. Needs Node 24 or later.
 
 The project format is described by its JSON Schema
-([`project.schema.json`](https://github.com/foja-cv/foja/blob/main/packages/core/schema/project.schema.json));
+([`project.schema.json`](https://github.com/bafif/foja/blob/main/packages/core/schema/project.schema.json));
 styles of your own, written in Typst, are explained in
-[`docs/templates.md`](https://github.com/foja-cv/foja/blob/main/docs/templates.md).
+[`docs/templates.md`](https://github.com/bafif/foja/blob/main/docs/templates.md).
 
 Licence: GPL-3.0. The bundled fonts keep their own licences (files next to them in
 `dist/template/fonts`).
